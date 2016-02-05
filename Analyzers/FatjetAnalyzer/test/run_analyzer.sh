@@ -1,6 +1,7 @@
 # RUN OVER BACKGROUND
 ## QCD:
-cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8" &
+### Pythia
+#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8" &
@@ -11,6 +12,27 @@ cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8" &
 
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp50.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp80.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp120.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp170.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp300.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp470.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp600.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp800.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp1000.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp1400.log 2>&1 &
+
+### MadGraph
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg100.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg200.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg300.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg500.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg700.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg1000.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg1500.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg2000.log 2>&1 &
+
 ## TTbar:
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8" nevents=200000 &
 
@@ -20,6 +42,12 @@ cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_250" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=1 dataset="SqToJJJJ_200" verbose=True &
+
+cmsRun jetanalyzer_cfg.py maxEvents=5 dataset="SqToJJJJ_150"
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_150" > logs/jetanalyzer_sq150tojjjj.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" > logs/jetanalyzer_sq200tojjjj.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_250" > logs/jetanalyzer_sq250tojjjj.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_300" > logs/jetanalyzer_sq300tojjjj.log 2>&1 &
 
 # RUN OVER LqToUE:
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-200_BetaOne_TuneCUETP8M1_13TeV-pythia8" &

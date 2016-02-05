@@ -467,10 +467,8 @@ void FatjetAnalyzer::analyze(
 						branches[name]["dm"].push_back(dm);
 						branches[name]["m_avg"].push_back(m_avg);
 						branches[name]["pt_hat"].push_back(pt_hat);
-						branches[name]["sigma"].push_back(sigma_);
-						branches[name]["nevents"].push_back(nevents_);
-					
-	//					cout << branches[name]["phi"].size() << endl;
+						branches[name]["sigma"].push_back(sigma_);        // Provided in the configuration file.
+						branches[name]["nevents"].push_back(nevents_);    // Provided in the configuration file.
 					}
 				}
 				else {
