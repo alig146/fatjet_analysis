@@ -47,13 +47,13 @@ options.register ('method',
 	"What kind of background is this?"
 )
 options.register ('m',
-	100,
+	150,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.int,
 	"Squark mass"
 )
-options.register ('cut',
-	150,
+options.register ('cutPt',
+	175,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.int,
 	"Cut on squark pT"
@@ -153,8 +153,7 @@ if options.crab:
 else:
 	out_location = "{0}/{1}".format(options.outDir, options.outFile)
 
-process.out = cms.OutputModule(
-	"PoolOutputModule",
+process.out = cms.OutputModule("PoolOutputModule",
 	fileName = cms.untracked.string(out_location),
 	outputCommands = cms.untracked.vstring(
 		'drop *',
@@ -177,9 +176,11 @@ process.out = cms.OutputModule(
 #		"keep *_generalTracks_*_*",
 #		"keep *_electronGsfTracks_*_*",
 		"keep *_FatjetProducer_*_*"		# Anything my producer makes, which is not hooked up at the moment.
+	),
+	SelectEvents = cms.untracked.PSet(
+		SelectEvents = cms.vstring("p")
 	)
 )
-process.outpath = cms.EndPath(process.out)
 
 ## Add jet collections using the JetToolbox:
 from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
@@ -287,4 +288,13 @@ process.GlobalTag.globaltag = cms.string(autoCond['run2_mc'])		# Set global tags
 process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 
+# Filter:
+process.filter = cms.EDFilter("JetFilter",
+	cut_pt=cms.double(options.cutPt)
+)
 
+# PATH:
+process.p = cms.Path(
+	process.filter
+)
+process.outpath = cms.EndPath(process.out)

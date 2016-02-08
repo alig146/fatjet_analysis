@@ -12,6 +12,7 @@ from decortication import dataset
 # /CLASSES
 
 # VARIABLES:
+cmslpc = True
 # /VARIABLES
 
 # FUNCTIONS:
@@ -25,9 +26,9 @@ def make_load_trees():
 	for key, dss in dsd.iteritems():
 		script += "\tTChain {}(\"analyzer/events\");\n".format(key)
 		for ds in dss:
-			script += "\t{}.Add(\"root://cmsxrootd.fnal.gov/{}\");\n".format(key, ds.tuple_path)
+			script += "\t{}.Add(\"{}{}\");\n".format(key, "root://cmsxrootd.fnal.gov/" if cmslpc else "", ds.tuple_path)
 		script += "\t\n"
-	script += "\tgROOT->SetBatch();\n"
+	script += "//\tgROOT->SetBatch();\n"
 	script += "}"
 	
 	# Output the script:

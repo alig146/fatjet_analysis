@@ -36,7 +36,7 @@ variables_out = {
 	# Event variables:
 	"w": 1,            # The event weight
 	"sigma": 1,        # The process cross section
-	"n0": 1,
+	"nevents": 1,
 	"n1": 1,
 	"n2": 1,
 	"njets": 1,        # Njettiness of the event (the pt_cut is a parameter)
@@ -128,7 +128,7 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 	n_jets = len(event.ak4_pf_pt)         # This is the number of AK4 jets in the event with pT > 10 GeV.
 	
 	# Selection:
-	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=False, r=8)
+	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=True, r=12)
 	if pair:
 		# Pair variables:
 		mavg = numpy.mean([p.m for p in pair])
@@ -151,9 +151,10 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		deta = abs(pair[0].eta - pair[1].eta)
 		
 		# Fill non-pair branches:
-		branches["n0"][0] = nevents
+		branches["nevents"][0] = nevents
 		branches["n1"][0] = n_events_tc
 		branches["n2"][0] = n_events
+		branches["sigma"][0] = sigma
 		branches["w"][0] = w
 		branches["njets"][0] = n_jets
 		branches["pt_hat"][0] = pt_hat

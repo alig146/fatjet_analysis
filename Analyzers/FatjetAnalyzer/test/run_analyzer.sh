@@ -43,11 +43,11 @@
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" &
 #cmsRun fatjetanalyzer_cfg.py maxEvents=1 dataset="SqToJJJJ_200" verbose=True &
 
-cmsRun jetanalyzer_cfg.py maxEvents=5 dataset="SqToJJJJ_150"
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_150" > logs/jetanalyzer_sq150tojjjj.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" > logs/jetanalyzer_sq200tojjjj.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_250" > logs/jetanalyzer_sq250tojjjj.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_300" > logs/jetanalyzer_sq300tojjjj.log 2>&1 &
+#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_150"
+cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_150" > logs/jetanalyzer_sq150tojjjj.log 2>&1 &
+cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" > logs/jetanalyzer_sq200tojjjj.log 2>&1 &
+cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_250" > logs/jetanalyzer_sq250tojjjj.log 2>&1 &
+cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_300" > logs/jetanalyzer_sq300tojjjj.log 2>&1 &
 
 # RUN OVER LqToUE:
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-200_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
