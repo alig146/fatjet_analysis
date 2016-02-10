@@ -56,7 +56,7 @@ options.register ('cutPt',
 	175,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.int,
-	"Cut on squark pT"
+	"Cut on the second leading jet pT. The default is 175."
 )
 options.register ('outDir',
 	out_dir_default,

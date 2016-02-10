@@ -185,7 +185,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"tau2",       // Nsubjettiness 2
 		"tau3",       // Nsubjettiness 3
 		"tau4",       // Nsubjettiness 4
-		"ht"          // Sum of jet pTs
+		"ht",          // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
 	};
 	for (collection_it i = collections.begin(); i != collections.end(); i++) {
 		string name = i->first;
@@ -342,8 +342,8 @@ void JetAnalyzer::analyze(
 		/// Save variables for each jet collection in the input sample:
 		for(collection_it collection = collections.begin(); collection != collections.end(); collection++) {
 			// Collection variables:
-			string name = collection->first;
-			string collection_type = collection->second[0];
+			string name = collection->first;		// The key
+			string collection_type = collection->second[0];		// The first value
 			int n_saved_jets = 0;
 			
 			// Print some info:
@@ -385,7 +385,14 @@ void JetAnalyzer::analyze(
 					double eta = jet->eta();
 					double y = jet->y();
 					
-					ht += pt;
+					if (name == "ak8_pf") {
+						if (pt > 150) {
+							ht += pt;
+						}
+					}
+					else {
+						ht += pt;
+					}
 					
 					if (pt > cut_pt_) {
 						n_saved_jets ++;
@@ -436,7 +443,14 @@ void JetAnalyzer::analyze(
 					double phi = jet->phi();
 					double eta = jet->eta();
 					double y = jet->y();
-					ht += pt;
+					if (name == "ak8_gn") {
+						if (pt > 150) {
+							ht += pt;
+						}
+					}
+					else {
+						ht += pt;
+					}
 					
 					if (pt > cut_pt_) {
 						n_saved_jets ++;

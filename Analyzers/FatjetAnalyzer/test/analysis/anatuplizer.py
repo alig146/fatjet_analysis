@@ -41,7 +41,9 @@ variables_out = {
 	"n2": 1,
 	"njets": 1,        # Njettiness of the event (the pt_cut is a parameter)
 	"pt_hat": 1,       #
-	"ht": 1,           # HT of the event (calculated from AK4 PF jets)
+	"ht": 1,           # HT of the event calculated from all AK4 PF jets
+#	"htak4": 1,           # HT of the event calculated from all AK4 PF jets
+#	"htak8": 1,           # HT of the event calculated from AK8 PF jets with pT>150
 	# Fatjet pair variables:
 	"m": 2,            # Trimmed Mass
 	"dm": 1,           # Delta m of the fatjet pair
@@ -128,7 +130,7 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 	n_jets = len(event.ak4_pf_pt)         # This is the number of AK4 jets in the event with pT > 10 GeV.
 	
 	# Selection:
-	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=True, r=12)
+	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=True, r=12, leading=True)
 	if pair:
 		# Pair variables:
 		mavg = numpy.mean([p.m for p in pair])

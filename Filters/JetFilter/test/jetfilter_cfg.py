@@ -52,10 +52,10 @@ options.register('outFile',
 	"The output file name. This will overwrite the default one assigned by the dataset."
 )
 options.register ('cutPt',
-	175,
+	175
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"The pT filtering cut. The default is 150 GeV."
+	"The pT filtering cut. The default is 175 GeV."
 )
 
 options.parseArguments()
