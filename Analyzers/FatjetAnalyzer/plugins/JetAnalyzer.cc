@@ -42,6 +42,9 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+//// Tools:
+#include <boost/algorithm/string.hpp>
+
 //// ROOT includes:
 #include "TH1.h"
 #include "TH2.h"
@@ -86,9 +89,9 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 	// Member data
 	/// Configuration variables (filled by setting the python configuration file)
-	int in_type_, nevents_;		// Input type (0: B2G, 1: fatjets)
-	bool v_;		// Verbose control
-	double sigma_, cut_pt_;
+	int in_type_;               // Input type (0: B2G, 1: fatjets)
+	bool v_;                    // Verbose control
+	double sigma_, weight_, cut_pt_;
 	bool make_gen_, make_pf_;		// Controls to make gen fatjets or pf fatjets
 	/// Parameters
 	double L;
@@ -111,7 +114,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	vector<int> outliers;
 	
 	// Input collections:
-	map<string, vector<string>> collections;
+	vector<string> jet_names, jet_types;
 	
 	// Ntuple information:
 	vector<string> variables, variables_all, variables_total;
@@ -125,7 +128,6 @@ class JetAnalyzer : public edm::EDAnalyzer {
 // Constants, enums and typedefs
 	// Simple algorithm variables:
 	/// Custom iterators:
-	typedef map<string, vector<string>>::iterator collection_it;
 	typedef map<string, vector<double>>::iterator branch_it_inner;
 	typedef map<string, map<string, vector<double>>>::iterator branch_it_outer;
 	
@@ -138,37 +140,42 @@ class JetAnalyzer : public edm::EDAnalyzer {
 // constructors and destructors
 JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	in_type_(iConfig.getParameter<int>("in_type")),
-	nevents_(iConfig.getParameter<int>("nevents")),
-	v_(iConfig.getParameter<bool>("v")),
+//	v_(iConfig.getParameter<bool>("v")),
 	sigma_(iConfig.getParameter<double>("sigma")),
+	weight_(iConfig.getParameter<double>("weight")),
 	cut_pt_(iConfig.getParameter<double>("cut_pt"))
 //	make_gen_(iConfig.getParameter<bool>("make_gen")),
 //	make_pf_(iConfig.getParameter<bool>("make_pf")),
 {
 //do what ever initialization is needed
+	// Variables:
+	v_ = false;               // Verbose mode.
 	
 	// Parameters:
 	L = 10000;                // Luminosity (in inverse pb)
 	
 	// Collections variables setup:
-	collections["ak4_pf"] = {"pf", "selectedPatJetsAK4PFCHS", "", "ak4PFJetsCHSTrimmedMass", ""};
-	collections["ak8_pf"] = {"pf", "selectedPatJetsAK8PFCHS", "", "ak8PFJetsCHSTrimmedMass", "NjettinessAK8CHS"};
-	collections["ca8_pf"] = {"pf", "selectedPatJetsCA8PFCHS", "", "ca8PFJetsCHSTrimmedMass", "NjettinessCA8CHS"};
-	collections["ak10_pf"] = {"pf", "selectedPatJetsAK10PFCHS", "", "ak10PFJetsCHSTrimmedMass", "NjettinessAK10CHS"};
-	collections["ca10_pf"] = {"pf", "selectedPatJetsCA10PFCHS", "", "ca10PFJetsCHSTrimmedMass", "NjettinessCA10CHS"};
-	collections["ak12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK12CHS"};
-	collections["ca12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA12CHS"};
-	collections["ak14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK14CHS"};
-	collections["ca14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA14CHS"};
-	collections["ak4_gn"] = {"gn", "selectedPatJetsAK4PFCHS", "genJets" ""};
-	collections["ak8_gn"] = {"gn", "selectedPatJetsAK8PFCHS", "genJets", ""};
-	collections["ca8_gn"] = {"gn", "selectedPatJetsCA8PFCHS", "genJets", ""};
-	collections["ak10_gn"] = {"gn", "selectedPatJetsAK10PFCHS", "genJets", ""};
-	collections["ca10_gn"] = {"gn", "selectedPatJetsCA10PFCHS", "genJets", ""};
-	collections["ak12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-	collections["ca12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-	collections["ak14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-	collections["ca14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
+	jet_names = {"ak4", "ak8", "ca8", "ak10", "ca10", "ak12", "ca12"};
+	jet_types = {"pf", "gn"};
+	
+//	collections["ak4_pf"] = {"pf", "selectedPatJetsAK4PFCHS", "", "ak4PFJetsCHSTrimmedMass", ""};
+//	collections["ak8_pf"] = {"pf", "selectedPatJetsAK8PFCHS", "", "ak8PFJetsCHSTrimmedMass", "NjettinessAK8CHS"};
+//	collections["ca8_pf"] = {"pf", "selectedPatJetsCA8PFCHS", "", "ca8PFJetsCHSTrimmedMass", "NjettinessCA8CHS"};
+//	collections["ak10_pf"] = {"pf", "selectedPatJetsAK10PFCHS", "", "ak10PFJetsCHSTrimmedMass", "NjettinessAK10CHS"};
+//	collections["ca10_pf"] = {"pf", "selectedPatJetsCA10PFCHS", "", "ca10PFJetsCHSTrimmedMass", "NjettinessCA10CHS"};
+//	collections["ak12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK12CHS"};
+//	collections["ca12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA12CHS"};
+//	collections["ak14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK14CHS"};
+//	collections["ca14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA14CHS"};
+//	collections["ak4_gn"] = {"gn", "selectedPatJetsAK4PFCHS", "genJets" ""};
+//	collections["ak8_gn"] = {"gn", "selectedPatJetsAK8PFCHS", "genJets", ""};
+//	collections["ca8_gn"] = {"gn", "selectedPatJetsCA8PFCHS", "genJets", ""};
+//	collections["ak10_gn"] = {"gn", "selectedPatJetsAK10PFCHS", "genJets", ""};
+//	collections["ca10_gn"] = {"gn", "selectedPatJetsCA10PFCHS", "genJets", ""};
+//	collections["ak12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
+//	collections["ca12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
+//	collections["ak14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
+//	collections["ca14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
 	
 	// Ntuple setup:
 	edm::Service<TFileService> fs;		// Open output services
@@ -179,19 +186,27 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	//// Per collection:
 	variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
-		"M",          // Untrimmed mass
-		"m",          // Trimmed mass
+		"M",          // Ungroomed mass
+		"m_t",        // Trimmed mass
+		"m_p",        // Pruned mass
+		"m_s",        // Soft Drop mass
+		"m_f",        // Filtered mass
 		"tau1",       // Nsubjettiness 1
 		"tau2",       // Nsubjettiness 2
 		"tau3",       // Nsubjettiness 3
 		"tau4",       // Nsubjettiness 4
-		"ht",          // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
+		"ht",         // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
 	};
-	for (collection_it i = collections.begin(); i != collections.end(); i++) {
-		string name = i->first;
-		for (vector<string>::iterator j = variables.begin(); j != variables.end(); j++) {
-			string branch_name = name + "_" + *j;
-			tbranches[name][*j] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name][*j]), 64000, 0);
+	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
+		string name = *i;
+		for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
+			string type = *j;
+			string name_type = name + "_" + type;
+			for (vector<string>::const_iterator k = variables.begin(); k != variables.end(); k++) {
+				string variable = *k;
+				string branch_name = name + "_" + type + "_" + variable;
+				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+			}
 		}
 	}
 	//// Per event:
@@ -199,7 +214,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"pt_hat",
 		"sigma",      // Cross section of the event
 		"nevent",     // The unique event number
-		"nevents",    // The total number of events that were run over
+//		"nevents",    // The total number of events that were run over
 		"w"           // Event weight
 		
 	};
@@ -235,7 +250,7 @@ void JetAnalyzer::beginJob()
 {
 	n_event = 0;
 //	cout << "maxEvents = " << nevents_ << endl;
-	cout << "Running over " << nevents_ << " events ..." << endl;
+//	cout << "Running over " << nevents_ << " events ..." << endl;
 }
 
 // CLASS METHODS ("method" = "member function")
@@ -313,10 +328,14 @@ void JetAnalyzer::analyze(
 		if (v_) {cout << "Running over JetToolbox collections ..." << endl;}
 		
 		// Clear branches:
-		for(collection_it collection = collections.begin(); collection != collections.end(); collection++) {
-			string name = collection->first;
-			for (vector<string>::iterator i = variables.begin(); i != variables.end(); i++) {
-				branches[name][*i].clear();
+		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
+			string name = *i;
+			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
+				string type = *j;
+				string name_type = name + "_" + type;
+				for (vector<string>::iterator k = variables.begin(); k != variables.end(); k++) {
+					branches[name_type][*k].clear();
+				}
 			}
 		}
 		for (vector<string>::iterator i = variables_all.begin(); i != variables_all.end(); i++) {
@@ -334,149 +353,156 @@ void JetAnalyzer::analyze(
 		branches["all"]["sigma"].push_back(sigma_);             // Provided in the configuration file
 //		cout << n_event << endl;
 		branches["all"]["nevent"].push_back(n_event);           // Event counter
-		branches["all"]["nevents"].push_back(nevents_);         // Provided in the configuration file
-		branches["all"]["w"].push_back((sigma_*L)/nevents_);    // The event weight
+//		branches["all"]["nevents"].push_back(nevents_);         // Provided in the configuration file
+		branches["all"]["w"].push_back(weight_);                // The event weight
 		branches["all"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
 		
 		// Get jet-specific variables:
 		/// Save variables for each jet collection in the input sample:
-		for(collection_it collection = collections.begin(); collection != collections.end(); collection++) {
-			// Collection variables:
-			string name = collection->first;		// The key
-			string collection_type = collection->second[0];		// The first value
-			int n_saved_jets = 0;
-			
-			// Print some info:
-			if (v_) {cout << ">> Reading collection " << name << " ..." << endl;}
-			
-			// Grab the collection:
-			if (collection_type == "pf") {
-				Handle<vector<pat::Jet>> jets_edm;
-				iEvent.getByLabel(collection->second[1], collection->second[2], jets_edm);
+		
+		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
+			string name = *i;
+			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
+				string type = *j;
+				string name_type = name + "_" + type;
+				int n_saved_jets = 0;
 				
 				// Print some info:
-				if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name << " collection." << endl;}
+				if (v_) {cout << ">> Reading collection " << name_type << " ..." << endl;}
 				
-				// Loop over the collection:
-				double ht = 0;
-				for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
-					// Define some useful event variables:
-					double M = jet->mass();
-					double m = -1;
-					if (collection->second[3] != ""){
-						m = jet->userFloat(collection->second[3]);
-					}
-					double tau1 = -1;
-					double tau2 = -1;
-					double tau3 = -1;
-					double tau4 = -1;
-					if (collection->second[4] != ""){
-						tau1 = jet->userFloat(string(collection->second[4]) + string(":tau") + string("1"));
-						tau2 = jet->userFloat(string(collection->second[4]) + string(":tau") + string("2"));
-						tau3 = jet->userFloat(string(collection->second[4]) + string(":tau") + string("3"));
-						tau4 = jet->userFloat(string(collection->second[4]) + string(":tau") + string("4"));
-					}
-					double px = jet->px();
-					double py = jet->py();
-					double pz = jet->pz();
-					double e = jet->energy();
-					double pt = jet->pt();
-					double phi = jet->phi();
-					double eta = jet->eta();
-					double y = jet->y();
-					
-					if (name == "ak8_pf") {
-						if (pt > 150) {
+				// Grab the collection:
+				if (type == "pf") {
+					Handle<vector<pat::Jet>> jets_edm;
+					string module = string("selectedPatJets") + boost::to_upper_copy<string>(name) + string("PFCHS");
+					string label = "";
+					iEvent.getByLabel(module, label, jets_edm);
+				
+					// Print some info:
+					if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
+				
+					// Loop over the collection:
+					double ht = 0;
+					for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
+						// Define some useful event variables:
+						double M = jet->mass();
+						double m_t = jet->userFloat(name + string("PFJetsCHSTrimmedMass"));
+						double m_p = jet->userFloat(name + string("PFJetsCHSPrunedMass"));
+						double m_s = jet->userFloat(name + string("PFJetsCHSSoftDropMass"));
+						double m_f = jet->userFloat(name + string("PFJetsCHSFilteredMass"));
+						double tau1 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau1"));
+						double tau2 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau2"));
+						double tau3 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau3"));
+						double tau4 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau4"));
+						double px = jet->px();
+						double py = jet->py();
+						double pz = jet->pz();
+						double e = jet->energy();
+						double pt = jet->pt();
+						double phi = jet->phi();
+						double eta = jet->eta();
+						double y = jet->y();
+						if (name_type == "ak8_pf") {
+							if (pt > 150) {
+								ht += pt;
+							}
+						}
+						else {
 							ht += pt;
 						}
-					}
-					else {
-						ht += pt;
-					}
-					
-					if (pt > cut_pt_) {
-						n_saved_jets ++;
 						
-						// Fill branches:
-						branches[name]["phi"].push_back(phi);
-						branches[name]["eta"].push_back(eta);
-						branches[name]["y"].push_back(y);
-						branches[name]["px"].push_back(px);
-						branches[name]["py"].push_back(py);
-						branches[name]["pz"].push_back(pz);
-						branches[name]["e"].push_back(e);
-						branches[name]["pt"].push_back(pt);
-						branches[name]["M"].push_back(M);
-						branches[name]["m"].push_back(m);
-						branches[name]["tau1"].push_back(tau1);
-						branches[name]["tau2"].push_back(tau2);
-						branches[name]["tau3"].push_back(tau3);
-						branches[name]["tau4"].push_back(tau4);
-					}
-				}
+						if (pt > cut_pt_) {
+							n_saved_jets ++;
+						
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["M"].push_back(M);
+							branches[name_type]["m_t"].push_back(m_t);
+							branches[name_type]["m_p"].push_back(m_p);
+							branches[name_type]["m_s"].push_back(m_s);
+							branches[name_type]["m_f"].push_back(m_f);
+							branches[name_type]["tau1"].push_back(tau1);
+							branches[name_type]["tau2"].push_back(tau2);
+							branches[name_type]["tau3"].push_back(tau3);
+							branches[name_type]["tau4"].push_back(tau4);
+						}
+					}		// :End collection loop
+					
+					branches[name_type]["ht"].push_back(ht);
+				}		// :End type == "PF"
+				else if (type == "gn") {
+					Handle<vector<reco::GenJet>> jets_edm;
+					string module = "selectedPatJets" + boost::to_upper_copy<string>(name) + "PFCHS";
+					string label = "genJets";
+					iEvent.getByLabel(module, label, jets_edm);
 				
-				branches[name]["ht"].push_back(ht);
-				// :End of collection loop
-			}		// :End 1, PF
-			else if (collection_type == "gn") {
-				Handle<vector<reco::GenJet>> jets_edm;
-				iEvent.getByLabel(collection->second[1], collection->second[2], jets_edm);
+					// Print some info:
+					if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
 				
-				// Print some info:
-				if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name << " collection." << endl;}
-				
-				// Loop over the collection:
-				double ht = 0;
-				for (vector<reco::GenJet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
-					// Define some useful event variables:
-					double M = jet->mass();
-					double m = -1;            // There is no corrected mass for GN jets.
-					double tau1 = -1;         // There is no nsubjettiness for GN jets.
-					double tau2 = -1;         // There is no nsubjettiness for GN jets.
-					double tau3 = -1;         // There is no nsubjettiness for GN jets.
-					double tau4 = -1;         // There is no nsubjettiness for GN jets.
-					double px = jet->px();
-					double py = jet->py();
-					double pz = jet->pz();
-					double e = jet->energy();
-					double pt = jet->pt();
-					double phi = jet->phi();
-					double eta = jet->eta();
-					double y = jet->y();
-					if (name == "ak8_gn") {
-						if (pt > 150) {
+					// Loop over the collection:
+					double ht = 0;
+					for (vector<reco::GenJet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
+						// Define some useful event variables:
+						double M = jet->mass();
+						double m_t = -1;          // There is no groomed mass for GN jets.
+						double m_p = -1;          // There is no groomed mass for GN jets.
+						double m_s = -1;          // There is no groomed mass for GN jets.
+						double m_f = -1;          // There is no groomed mass for GN jets.
+						double tau1 = -1;         // There is no nsubjettiness for GN jets.
+						double tau2 = -1;         // There is no nsubjettiness for GN jets.
+						double tau3 = -1;         // There is no nsubjettiness for GN jets.
+						double tau4 = -1;         // There is no nsubjettiness for GN jets.
+						double px = jet->px();
+						double py = jet->py();
+						double pz = jet->pz();
+						double e = jet->energy();
+						double pt = jet->pt();
+						double phi = jet->phi();
+						double eta = jet->eta();
+						double y = jet->y();
+						if (name_type == "ak8_gn") {
+							if (pt > 150) {
+								ht += pt;
+							}
+						}
+						else {
 							ht += pt;
 						}
-					}
-					else {
-						ht += pt;
-					}
 					
-					if (pt > cut_pt_) {
-						n_saved_jets ++;
+						if (pt > cut_pt_) {
+							n_saved_jets ++;
 						
-						// Fill branches:
-						branches[name]["phi"].push_back(phi);
-						branches[name]["eta"].push_back(eta);
-						branches[name]["y"].push_back(y);
-						branches[name]["px"].push_back(px);
-						branches[name]["py"].push_back(py);
-						branches[name]["pz"].push_back(pz);
-						branches[name]["e"].push_back(e);
-						branches[name]["pt"].push_back(pt);
-						branches[name]["M"].push_back(M);
-						branches[name]["m"].push_back(m);
-						branches[name]["tau1"].push_back(tau1);
-						branches[name]["tau2"].push_back(tau2);
-						branches[name]["tau3"].push_back(tau3);
-						branches[name]["tau4"].push_back(tau4);
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["M"].push_back(M);
+							branches[name_type]["m_t"].push_back(m_t);
+							branches[name_type]["m_p"].push_back(m_p);
+							branches[name_type]["m_s"].push_back(m_s);
+							branches[name_type]["m_f"].push_back(m_f);
+							branches[name_type]["tau1"].push_back(tau1);
+							branches[name_type]["tau2"].push_back(tau2);
+							branches[name_type]["tau3"].push_back(tau3);
+							branches[name_type]["tau4"].push_back(tau4);
+						}
 					}
-				}
 				
-				branches[name]["ht"].push_back(ht);
-				// :End of collection loop
-			}		// :End 1, GN
-		}
+					branches[name_type]["ht"].push_back(ht);
+				}         // :End type == "GN"
+			}             // :End jet name_type
+		}                 // :End in_type == 1
 		// END collection loop
 		
 //		branches["all"]["pt_hat"].push_back(pt_hat);

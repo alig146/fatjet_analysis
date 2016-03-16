@@ -69,6 +69,9 @@ class JetFilter : public edm::EDFilter {
 JetFilter::JetFilter(const edm::ParameterSet& iConfig) :
 	cut_pt_(iConfig.getParameter<double>("cut_pt"))
 {
+//	cout << "=================================" << endl;
+//	cout << "FILTER START" << endl;
+//	cout << "=================================" << endl;
 	nevents = 0;
 	nevents_passed = 0;
 }
@@ -100,10 +103,21 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //	for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
 //		cout << jet->pt() << endl;
 //	}
-	pat::Jet jet1 = jets_edm->at(1);
-	if (jet1.pt() > cut_pt_) {
-		nevents_passed ++;
-		return true;
+	if (jets_edm.isValid()) {
+//		cout << jets_edm->size() << endl;
+		if (jets_edm->size() > 1) {
+			pat::Jet jet1 = jets_edm->at(1);
+			if (jet1.pt() > cut_pt_) {
+				nevents_passed ++;
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
 	}
 	else {
 		return false;
@@ -112,13 +126,18 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-JetFilter::beginJob()
-{
+JetFilter::beginJob() {
+//	cout << "=================================" << endl;
+//	cout << "FILTER BEGIN" << endl;
+//	cout << "=================================" << endl;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 JetFilter::endJob() {
+//	cout << "=================================" << endl;
+//	cout << "FILTER END" << endl;
+//	cout << "=================================" << endl;
 	cout << nevents << endl;
 	cout << nevents_passed << endl;
 }

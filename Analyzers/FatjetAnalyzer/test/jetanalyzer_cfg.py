@@ -87,11 +87,11 @@ options.register ('sigma',
 	VarParsing.varType.float,
 	"The cross section of the input dataset. (Not needed when using \"dataset\".)"
 )
-options.register ('nevents',
+options.register ('weight',
 	-1,
 	VarParsing.multiplicity.singleton,
-	VarParsing.varType.int,
-	"The number of events in the input dataset. (Not needed when using \"dataset\".)"
+	VarParsing.varType.float,
+	"The event weight of the input dataset. (Not needed when using \"dataset\".)"
 )
 options.register ('cutPt',
 	10,
@@ -113,28 +113,25 @@ out_file = ""
 nevents = options.maxEvents
 if options.dataset:
 	in_files = []
-	result = dataset.get_datasets(name=options.dataset, generation=options.generation)
+	result = dataset.get_datasets(name=options.dataset, generation=options.generation, set_info=True)
 	if result:
 		if len(result) == 1:		# Only one process
 			dss = result.values()[0]
-			if len(dss) == 1:		# Only one dataset
+			if len(dss) == 1:		# Only one subprocess (there should be only one corresponding to each dataset name).
 				ds = dss[0]
-				if ds.set_info():
-					print "Getting info about the {0} dataset ...".format(ds.name)
-					if options.sigma < 0:
-						options.sigma = ds.sigma
-					if nevents < 0:		# If maxEvents is -1 to run over everything
-						ds.set_nevents()
-#						print "\tThere are {0} events in the {1} dataset.".format(options.nevents, options.dataset)
-						nevents = ds.n
-					print "Sigma = {0}".format(options.sigma)
-#					print "NEvents = {0}".format(options.nevents)
-#					in_files.extend(["file:{0}".format(f) for f in ds.jets_path])
-					in_files.extend(["root://cmsxrootd.fnal.gov/{0}".format(f) for f in ds.jets_path])
-					out_file = "{0}_tuple.root".format(options.dataset)
+				if options.sigma < 0:
+					options.sigma = ds.sigma
+				if nevents > 0:		# If maxEvents is -1, run over everything
+					factor = ds.jets_n/nevents
 				else:
-					print "ERROR: I can't find the info about the dataset named {0}".format(options.dataset)
-					options.nevents = 0
+					factor = 1
+				options.weight = ds.weight*factor
+				print "Sigma = {0}".format(options.sigma)
+#				in_files.extend(["file:{0}".format(f) for f in ds.jets_path])
+#				in_files.extend(["root://cmsxrootd.fnal.gov/{0}".format(f) for f in ds.jets_path])
+				in_files.extend(["root://cmseos.fnal.gov/{0}".format(f) for f in ds.jets_path])
+#				print in_files
+				out_file = "{0}_tuple.root".format(options.dataset)
 			else:
 				print "ERROR: There were multiple datasets found for the name {}. They are listed below:\n{}".format(options.dataset, dss)
 		else:
@@ -188,7 +185,7 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	in_type=cms.int32(options.inType),      # Input type (0: B2G, 1: fatjets)
 	v=cms.bool(options.verbose),            # Verbose mode
 	sigma=cms.double(options.sigma),        # The dataset's cross section
-	nevents=cms.int32(nevents),             # The number of events to run over
+	weight=cms.double(options.weight),               # The number of events to run over
 	cut_pt=cms.double(options.cutPt)
 )
 # PATH:
