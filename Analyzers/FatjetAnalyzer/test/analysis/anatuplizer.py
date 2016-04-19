@@ -22,15 +22,18 @@ from ROOT import *
 # /CLASSES
 
 ## VARIABLES:
-precut_pt = 200           # pT cut applied to all jets in the pair selection
-precut_m = 50             # m cut applied to all jets in the pair selection
-precut_eta = 2.5          # eta cut applied to all jets in the pair selection
+#precut_pt = 400           # pT cut applied to all jets in the pair selection
+#precut_m = 50             # m cut applied to all jets in the pair selection
+#precut_eta = 2.5          # eta cut applied to all jets in the pair selection
+precut_pt = 0           # pT cut applied to all jets in the pair selection
+precut_m = 0             # m cut applied to all jets in the pair selection
+precut_eta = 10          # eta cut applied to all jets in the pair selection
 L = 10000                 # Luminosity (in inverse pb)
 variables = [
 	 "sigma", "w", "pt_hat", "ak4_pf_ht",
 	"ak4_pf_pt",
-	"ak8_pf_px", "ak8_pf_py", "ak8_pf_pz", "ak8_pf_e", "ak8_pf_pt", "ak8_pf_M", "ak8_pf_m_t", "ak8_pf_m_p", "ak8_pf_m_s", "ak8_pf_m_f", "ak8_pf_eta", "ak8_pf_phi","ak8_pf_tau1", "ak8_pf_tau2","ak8_pf_tau3", "ak8_pf_tau4", "ak8_pf_ht",
-	"ca12_pf_px", "ca12_pf_py", "ca12_pf_pz", "ca12_pf_e", "ca12_pf_pt", "ca12_pf_M", "ca12_pf_m_t", "ca12_pf_m_p", "ca12_pf_m_s", "ca12_pf_m_f", "ca12_pf_eta", "ca12_pf_phi","ca12_pf_tau1", "ca12_pf_tau2","ca12_pf_tau3", "ca12_pf_tau4", "ca12_pf_ht",
+	"ak8_pf_px", "ak8_pf_py", "ak8_pf_pz", "ak8_pf_e", "ak8_pf_pt", "ak8_pf_M", "ak8_pf_m_t", "ak8_pf_m_p", "ak8_pf_m_s", "ak8_pf_m_f", "ak8_pf_eta", "ak8_pf_phi","ak8_pf_tau1", "ak8_pf_tau2","ak8_pf_tau3", "ak8_pf_tau4", "ak8_pf_tau5", "ak8_pf_ht",
+	"ca12_pf_px", "ca12_pf_py", "ca12_pf_pz", "ca12_pf_e", "ca12_pf_pt", "ca12_pf_M", "ca12_pf_m_t", "ca12_pf_m_p", "ca12_pf_m_s", "ca12_pf_m_f", "ca12_pf_eta", "ca12_pf_phi","ca12_pf_tau1", "ca12_pf_tau2","ca12_pf_tau3", "ca12_pf_tau4", "ca12_pf_tau5", "ca12_pf_ht",
 ]
 variables_out = {
 	# Event variables:
@@ -75,8 +78,11 @@ variables_out = {
 	"tau2": 2,         # Nsubjettiness of the fatjets in the pair
 	"tau3": 2,         # Nsubjettiness of the fatjets in the pair
 	"tau4": 2,         # Nsubjettiness of the fatjets in the pair
+#	"tau5": 2,         # Nsubjettiness of the fatjets in the pair
 	"tau42": 2,        # Nsubjettiness of the fatjets in the pair
 	"tau42s": 1,       # Product of tau42 of each fatjet in the pair
+	"tau43": 2,        # Nsubjettiness of the fatjets in the pair
+	"tau43s": 1,       # Product of tau43 of each fatjet in the pair
 	"tau21": 2,        # Nsubjettiness of the fatjets in the pair
 	"tau21s": 1,       # Product of tau21 of each fatjet in the pair
 	# Preselection:
@@ -103,9 +109,16 @@ def arguments():
 	parser.add_argument(
 		"-n", "--nevents", dest="n",
 		type=int,
-		default=1000,
+		default=-1,
 		help="The number of events you want to process for each dataset",
 		metavar="INT"
+	)
+	parser.add_argument(
+		"-s", "--suffix", dest="s",
+		type=str,
+		default='',
+		help="The words after 'tuple_' if there are any in the dataset you want.",
+		metavar="STR"
 	)
 	
 	args = parser.parse_args()
@@ -115,7 +128,7 @@ def arguments():
 	if processes:
 		processes = processes.split(",")
 	results["args"] = args
-	results["datasets"] = dataset.get_datasets(process=processes, set_info=True)
+	results["datasets"] = dataset.get_datasets(process=processes, set_info=True, suffix=args.s)
 	
 	return results
 
@@ -167,20 +180,25 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		masy_s = dm_s/mavg_s/2
 		masy_f = dm_f/mavg_f/2
 		tau = {}
+#		for i in xrange(1, 6):
 		for i in xrange(1, 5):
 			tau[i] = (getattr(pair[0], "tau{}".format(i)), getattr(pair[1], "tau{}".format(i)))
 		try:
 			tau[42] = (pair[0].tau4/pair[0].tau2, pair[1].tau4/pair[1].tau2)
 		except:		# Division by zero!
-			tau[42] = 100
+			tau[42] = (100, 100)
+		try:
+			tau[43] = (pair[0].tau4/pair[0].tau3, pair[1].tau4/pair[1].tau3)
+		except:		# Division by zero!
+			tau[43] = (100, 100)
 		try:
 			tau[24] = (1/tau[42][0], 1/tau[42][1])
 		except:
-			tau[24] = 0
+			tau[24] = (0, 0)
 		try:
 			tau[21] = (pair[0].tau2/pair[0].tau1, pair[1].tau2/pair[1].tau1)
 		except:
-			tau[21] = 100
+			tau[21] = (100, 100)
 		deta = abs(pair[0].eta - pair[1].eta)
 		
 		# Fill non-pair branches:
@@ -249,11 +267,13 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		branches["masy_p"][0] = masy_p
 		branches["masy_s"][0] = masy_s
 		branches["masy_f"][0] = masy_f
-		for ntau in [1, 2, 3, 4, 42, 21]:
+		for ntau in [1, 2, 3, 4, 42, 43, 21]:
+#		for ntau in [1, 2, 3, 4, 5, 42, 43, 21]:
 			word = "tau{}".format(ntau)
 			branches[word][0] = tau[ntau][0]
 			branches[word][1] = tau[ntau][1]
 		branches["tau42s"][0] = tau[42][0]*tau[42][1]
+		branches["tau43s"][0] = tau[43][0]*tau[43][1]
 		branches["tau21s"][0] = tau[21][0]*tau[21][1]
 		# Preselection:
 		branches["precut_pt"][0] = 1
@@ -282,7 +302,8 @@ def main():
 		for ds in dss:
 			if ds.analyze:
 				for path in ds.tuple_path:
-					tuples[process].append("root://cmsxrootd.fnal.gov/" + path)
+					path_full = "root://cmsxrootd.fnal.gov/" + path
+					tuples[process].append(path_full)
 	ana = analyzer.analyzer(tuples, save=True, v=True)		# Add "out_dir=" and "out_file=".
 	ana.define_branches(variables_out)
 #	branches = create_tuples(ana)

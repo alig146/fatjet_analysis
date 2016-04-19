@@ -195,6 +195,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"tau2",       // Nsubjettiness 2
 		"tau3",       // Nsubjettiness 3
 		"tau4",       // Nsubjettiness 4
+		"tau5",       // Nsubjettiness 5
 		"ht",         // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
 	};
 	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
@@ -393,6 +394,7 @@ void JetAnalyzer::analyze(
 						double tau2 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau2"));
 						double tau3 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau3"));
 						double tau4 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau4"));
+						double tau5 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau5"));
 						double px = jet->px();
 						double py = jet->py();
 						double pz = jet->pz();
@@ -431,6 +433,7 @@ void JetAnalyzer::analyze(
 							branches[name_type]["tau2"].push_back(tau2);
 							branches[name_type]["tau3"].push_back(tau3);
 							branches[name_type]["tau4"].push_back(tau4);
+							branches[name_type]["tau5"].push_back(tau5);
 						}
 					}		// :End collection loop
 					
@@ -458,6 +461,7 @@ void JetAnalyzer::analyze(
 						double tau2 = -1;         // There is no nsubjettiness for GN jets.
 						double tau3 = -1;         // There is no nsubjettiness for GN jets.
 						double tau4 = -1;         // There is no nsubjettiness for GN jets.
+						double tau5 = -1;         // There is no nsubjettiness for GN jets.
 						double px = jet->px();
 						double py = jet->py();
 						double pz = jet->pz();
@@ -496,6 +500,7 @@ void JetAnalyzer::analyze(
 							branches[name_type]["tau2"].push_back(tau2);
 							branches[name_type]["tau3"].push_back(tau3);
 							branches[name_type]["tau4"].push_back(tau4);
+							branches[name_type]["tau5"].push_back(tau5);
 						}
 					}
 				

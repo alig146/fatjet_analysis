@@ -196,7 +196,7 @@ jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
 	addFiltering=True,
 	addMassDrop=True,
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 jetToolbox(process, 'ca8', 'jetSequence', 'out',		# Required
 	# Optional:
@@ -209,7 +209,7 @@ jetToolbox(process, 'ca8', 'jetSequence', 'out',		# Required
 	addMassDrop=True,
 	JETCorrPayload='None',
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 jetToolbox(process, 'ak10', 'jetSequence', 'out',		# Required
 	# Optional:
@@ -222,7 +222,7 @@ jetToolbox(process, 'ak10', 'jetSequence', 'out',		# Required
 	addMassDrop=True,
 	JETCorrPayload='None',
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 jetToolbox(process, 'ca10', 'jetSequence', 'out',		# Required
 	# Optional:
@@ -235,7 +235,7 @@ jetToolbox(process, 'ca10', 'jetSequence', 'out',		# Required
 	addMassDrop=True,
 	JETCorrPayload='None',
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 jetToolbox(process, 'ak12', 'jetSequence', 'out',		# Required
 	# Optional:
@@ -248,7 +248,7 @@ jetToolbox(process, 'ak12', 'jetSequence', 'out',		# Required
 	addMassDrop=True,
 	JETCorrPayload='None',
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
 	# Optional:
@@ -261,7 +261,7 @@ jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
 	addMassDrop=True,
 	JETCorrPayload='None',
 	addNsub=True,
-		maxTau=4,
+		maxTau=5,
 )
 
 ## Geometry and detector configuration:
