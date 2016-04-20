@@ -1,0 +1,6 @@
+Min$(pt) > 400
+htak8 > 900
+masy_p < 0.1
+tau42s < 0.2
+tau21s > 0.2
+tau4[0]*tau4[1]/tau3[0]/tau3[1] < 0.45
