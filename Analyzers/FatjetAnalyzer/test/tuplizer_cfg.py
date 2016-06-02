@@ -62,19 +62,19 @@ options.register ('outFile',
 	VarParsing.varType.string,
 	"Output file"
 )
-options.register ('inDir',
-	'',
-	VarParsing.multiplicity.singleton,
-	VarParsing.varType.string,
-	"Input directory"
-)
+#options.register ('inDir',
+#	'',
+#	VarParsing.multiplicity.singleton,
+#	VarParsing.varType.string,
+#	"Input directory"
+#)
 options.register ('inFile',
 	'',
 	VarParsing.multiplicity.list,
 	VarParsing.varType.string,
 	"Input file(s)"
 )
-options.maxEvents = 2
+options.maxEvents = -1
 ### Filter options:
 options.register ('cutPtFilter',
 	175,
@@ -101,30 +101,32 @@ process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEven
 
 ### Input:
 if options.subprocess:
-	result = dataset.get_datasets(subprocess=options.subprocess, generation=options.generation, set_info=False)
-#	print result
-	ds = result.values()[0][0]
-#	print ds.miniaod_path
-	sigma = ds.sigma
+	miniaod = dataset.fetch_miniaod(options.subprocess, options.generation)
+	sample = miniaod.sample
+	sigma = sample.sigma
 	if options.weight < 0:
 		factor = 1
 		if not options.crab:
 			if options.maxEvents > 0:		# If maxEvents is -1, run over everything
-				factor = ds.miniaod_n/options.maxEvents
-		options.weight = ds.weight*factor
+				factor = miniaod.n/options.maxEvents
+		options.weight = miniaod.weight*factor
 else:
-	ds = False
+	miniaod = False
 	sigma = -1
 	if options.weight < 0:
 		options.weight = 1
 
-in_files = ["{0}/{1}".format(options.inDir, f) for f in options.inFile]
+#in_files = ["{0}/{1}".format(options.inDir, f) for f in options.inFile]
+in_files = options.inFile
+print in_files
 if (not in_files) and (not options.crab):
-	assert ds
-	if ds.miniaod_path:
-		in_files = ds.miniaod_path
+	assert miniaod
+	if miniaod.files:
+		in_files = miniaod.files
 	else:
-		in_files = dataset.get_paths(ds.miniaod_name)
+		print "ERROR (tuplizer): What files should be run over?"
+		sys.exit()
+#		in_files = dataset.get_paths(ds.miniaod_name)
 
 if (not in_files) and (not options.crab):
 	print "ERROR: You're not running over any files! Check your dataset."
@@ -160,19 +162,19 @@ else:
 	out_location = "{0}/{1}".format(options.outDir, options.outFile)
 	print out_location
 
-#process.out = cms.OutputModule("PoolOutputModule",
-#	fileName = cms.untracked.string(out_location),
-#	outputCommands = cms.untracked.vstring(
-#		'drop *',
+process.out = cms.OutputModule("PoolOutputModule",
+	fileName = cms.untracked.string(out_location),
+	outputCommands = cms.untracked.vstring(
+		'drop *',
 #		# Keep important stuff from the original MiniAOD:
-#		'keep *GenEventInfoProduct*_*_*_*',		# pT-hat information
-#		"keep *_packedGenParticles_*_*",		# GN particle collection
-#		"keep *_packedPFCandidates_*_*",		# PF particle collection
-#	),
-#	SelectEvents = cms.untracked.PSet(
-#		SelectEvents = cms.vstring("p")
-#	)
-#)
+		'keep *GenEventInfoProduct*_*_*_*',		# pT-hat information
+		"keep *_packedGenParticles_*_*",		# GN particle collection
+		"keep *_packedPFCandidates_*_*",		# PF particle collection
+	),
+	SelectEvents = cms.untracked.PSet(
+		SelectEvents = cms.vstring("p")
+	)
+)
 
 ## Add jet collections using the JetToolbox:
 from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
@@ -277,6 +279,7 @@ process.filter = cms.EDFilter("JetFilter",
 	cut_pt=cms.double(options.cutPtFilter)
 )
 
+#out_location = options.outDir + "/test.root"
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string(out_location)
 )

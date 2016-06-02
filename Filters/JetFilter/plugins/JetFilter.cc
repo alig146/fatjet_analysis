@@ -94,6 +94,7 @@ JetFilter::~JetFilter()
 bool
 JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+//	cout << "here 97" << endl;
 	nevents ++;
 	// Get CA12 jets:
 	Handle<vector<pat::Jet>> jets_edm;
@@ -135,11 +136,11 @@ JetFilter::beginJob() {
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 JetFilter::endJob() {
-//	cout << "=================================" << endl;
-//	cout << "FILTER END" << endl;
-//	cout << "=================================" << endl;
-	cout << nevents << endl;
-	cout << nevents_passed << endl;
+	cout << "=================================" << endl;
+	cout << "Jet filter results:" << endl;
+	cout << "total events: " << nevents << endl;
+	cout << "accepted events: " << nevents_passed << endl;
+	cout << "=================================" << endl;
 }
 
 // ------------ method called when starting to processes a run  ------------

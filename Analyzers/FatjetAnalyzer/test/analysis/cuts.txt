@@ -1,6 +1,8 @@
-Min$(pt) > 400
-htak8 > 900
-masy_p < 0.1
-tau42s < 0.2
-tau21s > 0.2
-tau4[0]*tau4[1]/tau3[0]/tau3[1] < 0.45
+1
+(Min$(pt) > 400)&&(htak8 > 900)&&(masy_p < 0.1)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.8)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.7)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.6)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.5)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.4)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)
+(tau3[0]*tau3[1]/tau2[0]/tau2[1] < 0.3)&&(tau3[0]*tau3[1]/tau2[0]/tau2[1] > 0.2)

@@ -9,6 +9,6 @@
 #cmsRun fatjetproducer_cfg.py dataset="sqtojjjj" m=200 maxEvents=100 inFile="sqtojjjj_200gev_7411_aodsim.root" inDir="file:." outDir="." cmssw=$CMSSW_RELEASE_BASE
 
 
-#cmsRun fatjetproducer_cfg.py inFile="02071298-1415-E511-A143-0025905B8572.root" inDir="root://xrootd.unl.edu//store/mc/RunIISpring15DR74/QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v2/00000" maxEvents=2 cmssw=$CMSSW_RELEASE_BASE outDir="." outFile="test.root"
+cmsRun fatjetproducer_cfg.py inFile="02071298-1415-E511-A143-0025905B8572.root" inDir="root://xrootd.unl.edu//store/mc/RunIISpring15DR74/QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v2/00000" maxEvents=2 cmssw=$CMSSW_RELEASE_BASE outDir="." outFile="test.root"
 #cmsRun fatjetproducer_cfg.py dataset="SqToJJJJ_250" maxEvents=2 cmssw=$CMSSW_RELEASE_BASE
-cmsRun fatjetproducer_cfg.py dataset="QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" maxEvents=2 cmssw=$CMSSW_RELEASE_BASE
+#cmsRun fatjetproducer_cfg.py dataset="QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" maxEvents=2 cmssw=$CMSSW_RELEASE_BASE

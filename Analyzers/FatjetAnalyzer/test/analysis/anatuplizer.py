@@ -34,6 +34,7 @@ variables = [
 	"ak4_pf_pt",
 	"ak8_pf_px", "ak8_pf_py", "ak8_pf_pz", "ak8_pf_e", "ak8_pf_pt", "ak8_pf_M", "ak8_pf_m_t", "ak8_pf_m_p", "ak8_pf_m_s", "ak8_pf_m_f", "ak8_pf_eta", "ak8_pf_phi","ak8_pf_tau1", "ak8_pf_tau2","ak8_pf_tau3", "ak8_pf_tau4", "ak8_pf_tau5", "ak8_pf_ht",
 	"ca12_pf_px", "ca12_pf_py", "ca12_pf_pz", "ca12_pf_e", "ca12_pf_pt", "ca12_pf_M", "ca12_pf_m_t", "ca12_pf_m_p", "ca12_pf_m_s", "ca12_pf_m_f", "ca12_pf_eta", "ca12_pf_phi","ca12_pf_tau1", "ca12_pf_tau2","ca12_pf_tau3", "ca12_pf_tau4", "ca12_pf_tau5", "ca12_pf_ht",
+	"ak4_maod_bd_csv", "ak4_maod_e", "ak4_maod_px", "ak4_maod_py", "ak4_maod_pz",
 ]
 variables_out = {
 	# Event variables:
@@ -51,26 +52,28 @@ variables_out = {
 	"m_p": 2,          # Pruned Mass
 	"m_s": 2,          # SoftDrop Mass
 	"m_f": 2,          # Filtered Mass
-	"M4": 4,           # Pruned masses of first four jets
+	"M4": 4,           # Ungroomed masses of first four jets
 	"m4_p": 4,         # Pruned masses of first four jets
-	"m4_t": 4,         # Pruned masses of first four jets
+	"m4_t": 4,         # Trimmed masses of first four jets
 	"dM": 1,           # Delta M of the fatjet pair
 	"dm_t": 1,         # Delta m of the fatjet pair
 	"dm_p": 1,         # Delta m of the fatjet pair
 	"dm_s": 1,         # Delta m of the fatjet pair
 	"dm_f": 1,         # Delta m of the fatjet pair
-	"Mavg": 1,         # Delta trimmed mass of the fatjet pair
+	"Mavg": 1,         # Delta ungroomed mass of the fatjet pair
 	"mavg_t": 1,       # Delta trimmed mass of the fatjet pair
-	"mavg_p": 1,       # Delta trimmed mass of the fatjet pair
-	"mavg_s": 1,       # Delta trimmed mass of the fatjet pair
-	"mavg_f": 1,       # Delta trimmed mass of the fatjet pair
+	"mavg_p": 1,       # Delta pruned mass of the fatjet pair
+	"mavg_s": 1,       # Delta softdropped mass of the fatjet pair
+	"mavg_f": 1,       # Delta filtered mass of the fatjet pair
 	"Masy": 1,         # Mass asymmetry: dM/(M0 + M1)
 	"masy_t": 1,       # Mass asymmetry: dm/(m0 + m1)
 	"masy_p": 1,       # Mass asymmetry: dm/(m0 + m1)
 	"masy_s": 1,       # Mass asymmetry: dm/(m0 + m1)
 	"masy_f": 1,       # Mass asymmetry: dm/(m0 + m1)
+	"mdi_p": 1,
 	"pt": 2,           # pT of each fatjet in the pair
 	"e": 2,            # E of each fatjet in the pair
+	"e_p": 2,          # E of each fatjet in the pair corrected for pruned mass
 	"eta": 2,          # eta of each fatjet in the pair
 	"phi": 2,          # phi of each fatjet in the pair
 	"deta": 1,         # Delta eta between the fatjets of the pair
@@ -89,6 +92,7 @@ variables_out = {
 	"precut_pt": 2,    # Cut on the pT of pair-candidate fatjets
 	"precut_m": 2,     # Cut on the mass of pair-candidate fatjets
 	"precut_eta": 2,   # Cut on the eta of pair-candidate fatjets
+	"bd": 2,
 }
 ## /VARIABLES
 
@@ -101,9 +105,24 @@ def arguments():
 	parser = argparse.ArgumentParser()
 	
 	parser.add_argument(
-		"-d", "--dataset", dest="processes",
-		default=None,
+		"-p", "--process", dest="process",
+		type=str,
+		default="",
 		help="The processes of the datasets you want to anatuplize (e.g. \"sq200to4j\")",
+		metavar="STR"
+	)
+	parser.add_argument(
+		"-g", "--generation", dest="generation",
+		type=str,
+		default="spring15",
+		help="The generation of the datasets you want to anatuplize (e.g. \"spring15\")",
+		metavar="STR"
+	)
+	parser.add_argument(
+		"-s", "--suffix", dest="suffix",
+		type=str,
+		default='1',
+		help="The words after 'tuple_' if there are any in the dataset you want.",
 		metavar="STR"
 	)
 	parser.add_argument(
@@ -113,22 +132,17 @@ def arguments():
 		help="The number of events you want to process for each dataset",
 		metavar="INT"
 	)
-	parser.add_argument(
-		"-s", "--suffix", dest="s",
-		type=str,
-		default='',
-		help="The words after 'tuple_' if there are any in the dataset you want.",
-		metavar="STR"
-	)
 	
 	args = parser.parse_args()
 	
 	# Interpretation:
-	processes = args.processes
-	if processes:
-		processes = processes.split(",")
+#	processes = args.process		# I can only run over one subprocess at once, for now.
+#	if processes:
+#		processes = processes.split(",")
 	results["args"] = args
-	results["datasets"] = dataset.get_datasets(process=processes, set_info=True, suffix=args.s)
+	results["samples"] = dataset.fetch_samples(process=args.process)
+#	results["tuples"] = [sample.tuples[args.generation, args.suffix] for sample in results["samples"] if sample.analyze]
+	results["tuples"] = [sample.tuples[args.generation, args.suffix] for sample in results["samples"] if sample.tuples]
 	
 	return results
 
@@ -162,6 +176,8 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 	# Selection:
 	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=True, r=12, leading=True)
 	if pair:
+		# Jet variables:
+		e_p = [(p.m_p**2 + p.px**2 + p.py**2 + p.pz**2)**0.5 for p in pair]
 		# Pair variables:
 		Mavg = numpy.mean([p.M for p in pair])
 		mavg_t = numpy.mean([p.m_t for p in pair])
@@ -179,6 +195,8 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		masy_p = dm_p/mavg_p/2
 		masy_s = dm_s/mavg_s/2
 		masy_f = dm_f/mavg_f/2
+		pdi_p = (e_p[0] + e_p[1], pair[0].px + pair[1].px, pair[0].py + pair[1].py, pair[0].pz + pair[1].pz)
+		mdi_p = (pdi_p[0]**2 - pdi_p[1]**2 - pdi_p[2]**2 - pdi_p[3]**2)**0.5
 		tau = {}
 #		for i in xrange(1, 6):
 		for i in xrange(1, 5):
@@ -200,6 +218,33 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		except:
 			tau[21] = (100, 100)
 		deta = abs(pair[0].eta - pair[1].eta)
+		
+		
+		# B-jet matching:
+		bd = [-13, -13]
+		b_info = [
+			{
+				"fj": pair[0],
+				"matches": [],
+			},
+			{
+				"fj": pair[1],
+				"matches": [],
+			},
+		]
+#		if min([fj.pt for fj in pair]) > 200:
+#			print fjs[0].pt, fjs[1].pt
+		for i, pt in enumerate(event.ak4_maod_pt):
+			if pt > 50:
+				j = physics.jet(event.ak4_maod_px[i], event.ak4_maod_py[i], event.ak4_maod_pz[i], event.ak4_maod_e[i], bd=event.ak4_maod_bd_csv[i])
+				for k, fj in enumerate(pair):
+					if physics.delta_r(fj, j) <= 0.6:
+						b_info[k]["matches"].append(j)
+#			print b_info
+		for i, fjd in enumerate(b_info):
+			if fjd["matches"]:
+				bd[i] = max([j.bd for j in fjd["matches"]])
+		
 		
 		# Fill non-pair branches:
 		branches["n1"][0] = n_events_tc
@@ -247,6 +292,8 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		branches["pt"][1] = pair[1].pt
 		branches["e"][0] = pair[0].e
 		branches["e"][1] = pair[1].e
+		branches["e_p"][0] = e_p[0]
+		branches["e_p"][1] = e_p[1]
 		branches["eta"][0] = pair[0].eta
 		branches["eta"][1] = pair[1].eta
 		branches["deta"][0] = deta
@@ -267,6 +314,7 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		branches["masy_p"][0] = masy_p
 		branches["masy_s"][0] = masy_s
 		branches["masy_f"][0] = masy_f
+		branches["mdi_p"][0] = mdi_p
 		for ntau in [1, 2, 3, 4, 42, 43, 21]:
 #		for ntau in [1, 2, 3, 4, 5, 42, 43, 21]:
 			word = "tau{}".format(ntau)
@@ -279,6 +327,8 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		branches["precut_pt"][0] = 1
 		branches["precut_m"][0] = 1
 		branches["precut_eta"][0] = 1
+		branches["bd"][0] = bd[0]
+		branches["bd"][1] = bd[1]
 		
 #		print "filling tree"
 		loop.tt_out.Fill()
@@ -292,19 +342,22 @@ def main():
 	## Arguments:
 	arg_result = arguments()
 	args = arg_result["args"]
-	dsd = arg_result["datasets"]
+	tups = arg_result["tuples"]
 #	print dsd
 	
 	## Analyzer object:
 	tuples = {}
-	for process, dss in dsd.iteritems():
-		tuples[process] = []
-		for ds in dss:
-			if ds.analyze:
-				for path in ds.tuple_path:
-					path_full = "root://cmsxrootd.fnal.gov/" + path
-					tuples[process].append(path_full)
-	ana = analyzer.analyzer(tuples, save=True, v=True)		# Add "out_dir=" and "out_file=".
+	for tup in tups:
+		process = tup.process
+		if process not in tuples:
+			tuples[process] = []
+		tuples[process].extend(["root://cmsxrootd.fnal.gov/" + f for f in tup.files])
+#		for ds in dss:
+#			if ds.analyze:
+#				for path in ds.tuple_path:
+#					path_full = "root://cmsxrootd.fnal.gov/" + path
+#					tuples[process].append(path_full)
+	ana = analyzer.analyzer(tuples, save=True, v=True, count=False)		# Add "out_dir=" and "out_file=".
 	ana.define_branches(variables_out)
 #	branches = create_tuples(ana)
 #	colors = color.pick(len(tuples.keys()))
@@ -314,6 +367,7 @@ def main():
 #		print key
 		loop.treatment = treat_event
 #		print "here"
+#		loop.progress = False
 		loop.run(n=args.n)
 #	event_loop(ana.tt[key]["analyzer/events"], branches[key], ana.tuples[key], n_events=n_events_sq)
 

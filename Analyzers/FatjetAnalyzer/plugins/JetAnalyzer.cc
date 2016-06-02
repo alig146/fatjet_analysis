@@ -34,6 +34,10 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
+#include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
@@ -96,28 +100,15 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	/// Parameters
 	double L;
 	// Basic fatjet variables
-//	vector<string> jet_strings;
-	vector<string> fat_vars;
-//	map<string, vector<double>> fat_gen;		// This is a container for the branches I eventually save as gen output.
-//	map<string, vector<double>> fat_pf;
-	int n_selected_pf, n_selected_pf_untouched, n_selected_gn;
-//	double b_pt_hat;
-//	vector<double> b_phi_gn, b_eta_gn, b_y_gn, b_pt_gn, b_m_gn;
-//	vector<double> b_phi_pf, b_eta_pf, b_y_pf, b_pt_pf, b_m_pf;
-//	vector<double> b_phi_pf_untouched, b_eta_pf_untouched, b_y_pf_untouched, b_pt_pf_untouched, b_m_pf_untouched;
-//	vector<int> b_n_gn, b_n_pf, b_n_pf_untouched;
 	// Algorithm variables
-	vector<string> kinds;
-	int sq_close, first_squark;
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
-//	map<string, JetDefinition> jet_defs;
-	vector<int> outliers;
 	
 	// Input collections:
 	vector<string> jet_names, jet_types;
+	vector<string> lep_names, lep_types;
 	
 	// Ntuple information:
-	vector<string> variables, variables_all, variables_total;
+	vector<string> jet_variables, lep_variables, event_variables;
 	map<string, map<string, vector<double>>> branches;
 	map<string, TTree*> ttrees;
 	map<string, map<string, TBranch*>> tbranches;
@@ -154,37 +145,11 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	// Parameters:
 	L = 10000;                // Luminosity (in inverse pb)
 	
-	// Collections variables setup:
+	// Collections setup:
+	/// "jet"
 	jet_names = {"ak4", "ak8", "ca8", "ak10", "ca10", "ak12", "ca12"};
-	jet_types = {"pf", "gn"};
-	
-//	collections["ak4_pf"] = {"pf", "selectedPatJetsAK4PFCHS", "", "ak4PFJetsCHSTrimmedMass", ""};
-//	collections["ak8_pf"] = {"pf", "selectedPatJetsAK8PFCHS", "", "ak8PFJetsCHSTrimmedMass", "NjettinessAK8CHS"};
-//	collections["ca8_pf"] = {"pf", "selectedPatJetsCA8PFCHS", "", "ca8PFJetsCHSTrimmedMass", "NjettinessCA8CHS"};
-//	collections["ak10_pf"] = {"pf", "selectedPatJetsAK10PFCHS", "", "ak10PFJetsCHSTrimmedMass", "NjettinessAK10CHS"};
-//	collections["ca10_pf"] = {"pf", "selectedPatJetsCA10PFCHS", "", "ca10PFJetsCHSTrimmedMass", "NjettinessCA10CHS"};
-//	collections["ak12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK12CHS"};
-//	collections["ca12_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA12CHS"};
-//	collections["ak14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessAK14CHS"};
-//	collections["ca14_pf"] = {"pf", "selectedPatJetsCA12PFCHS", "", "ca12PFJetsCHSTrimmedMass", "NjettinessCA14CHS"};
-//	collections["ak4_gn"] = {"gn", "selectedPatJetsAK4PFCHS", "genJets" ""};
-//	collections["ak8_gn"] = {"gn", "selectedPatJetsAK8PFCHS", "genJets", ""};
-//	collections["ca8_gn"] = {"gn", "selectedPatJetsCA8PFCHS", "genJets", ""};
-//	collections["ak10_gn"] = {"gn", "selectedPatJetsAK10PFCHS", "genJets", ""};
-//	collections["ca10_gn"] = {"gn", "selectedPatJetsCA10PFCHS", "genJets", ""};
-//	collections["ak12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-//	collections["ca12_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-//	collections["ak14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-//	collections["ca14_gn"] = {"gn", "selectedPatJetsCA12PFCHS", "genJets", ""};
-	
-	// Ntuple setup:
-	edm::Service<TFileService> fs;		// Open output services
-	
-	/// Event-by-event variables:
-	ttrees["events"] = fs->make<TTree>();
-	ttrees["events"]->SetName("events");
-	//// Per collection:
-	variables = {		// List of event branch variables for each collection.
+	jet_types = {"pf", "gn", "maod"};
+	jet_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
 		"M",          // Ungroomed mass
 		"m_t",        // Trimmed mass
@@ -197,31 +162,65 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"tau4",       // Nsubjettiness 4
 		"tau5",       // Nsubjettiness 5
 		"ht",         // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
+		"bd_te",
+		"bd_tp",
+		"bd_csv",
+		"bd_cisv",
 	};
+	
+	/// "lep"
+	lep_names = {"le", "lm", "lt", "lp"};
+	lep_types = {"pf"};
+	lep_variables = {		// List of event branch variables for each collection.
+		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m",
+	};
+	
+	/// "event"
+	event_variables = {
+		"pt_hat",
+		"sigma",      // Cross section of the event
+		"nevent",     // The unique event number
+//		"nevents",    // The total number of events that were run over
+		"w",          // Event weight
+	};
+	
+	// Ntuple setup:
+	edm::Service<TFileService> fs;		// Open output services
+	
+	/// Event-by-event variables:
+	ttrees["events"] = fs->make<TTree>();
+	ttrees["events"]->SetName("events");
+	
+	//// "jet":
 	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
 		string name = *i;
 		for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
 			string type = *j;
 			string name_type = name + "_" + type;
-			for (vector<string>::const_iterator k = variables.begin(); k != variables.end(); k++) {
+			for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
 				string variable = *k;
 				string branch_name = name + "_" + type + "_" + variable;
 				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
 			}
 		}
 	}
-	//// Per event:
-	variables_all = {
-		"pt_hat",
-		"sigma",      // Cross section of the event
-		"nevent",     // The unique event number
-//		"nevents",    // The total number of events that were run over
-		"w"           // Event weight
-		
-	};
-	for (vector<string>::iterator i = variables_all.begin(); i != variables_all.end(); i++) {
+	//// "lep":
+	for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
+		string name = *i;
+		for (vector<string>::const_iterator j = lep_types.begin(); j != lep_types.end(); j++) {
+			string type = *j;
+			string name_type = name + "_" + type;
+			for (vector<string>::const_iterator k = lep_variables.begin(); k != lep_variables.end(); k++) {
+				string variable = *k;
+				string branch_name = name + "_" + type + "_" + variable;
+				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+			}
+		}
+	}
+	//// "event":
+	for (vector<string>::iterator i = event_variables.begin(); i != event_variables.end(); i++) {
 		string branch_name = *i;
-		tbranches["all"][*i] = ttrees["events"]->Branch(branch_name.c_str(), &(branches["all"][*i]), 64000, 0);
+		tbranches["event"][*i] = ttrees["events"]->Branch(branch_name.c_str(), &(branches["event"][*i]), 64000, 0);
 	}
 	
 	// Debug:
@@ -329,18 +328,31 @@ void JetAnalyzer::analyze(
 		if (v_) {cout << "Running over JetToolbox collections ..." << endl;}
 		
 		// Clear branches:
+		/// "jet":
 		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
 			string name = *i;
 			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
 				string type = *j;
 				string name_type = name + "_" + type;
-				for (vector<string>::iterator k = variables.begin(); k != variables.end(); k++) {
+				for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
 					branches[name_type][*k].clear();
 				}
 			}
 		}
-		for (vector<string>::iterator i = variables_all.begin(); i != variables_all.end(); i++) {
-			branches["all"][*i].clear();
+		/// "lep":
+		for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
+			string name = *i;
+			for (vector<string>::const_iterator j = lep_types.begin(); j != lep_types.end(); j++) {
+				string type = *j;
+				string name_type = name + "_" + type;
+				for (vector<string>::iterator k = lep_variables.begin(); k != lep_variables.end(); k++) {
+					branches[name_type][*k].clear();
+				}
+			}
+		}
+		/// "event":
+		for (vector<string>::iterator i = event_variables.begin(); i != event_variables.end(); i++) {
+			branches["event"][*i].clear();
 		}
 		
 		// Get event-wide variables:
@@ -351,12 +363,12 @@ void JetAnalyzer::analyze(
 			pt_hat = gn_event_info->binningValues()[0];
 		}
 		/// Save event-wide variables:
-		branches["all"]["sigma"].push_back(sigma_);             // Provided in the configuration file
+		branches["event"]["sigma"].push_back(sigma_);             // Provided in the configuration file
 //		cout << n_event << endl;
-		branches["all"]["nevent"].push_back(n_event);           // Event counter
-//		branches["all"]["nevents"].push_back(nevents_);         // Provided in the configuration file
-		branches["all"]["w"].push_back(weight_);                // The event weight
-		branches["all"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
+		branches["event"]["nevent"].push_back(n_event);           // Event counter
+//		branches["event"]["nevents"].push_back(nevents_);         // Provided in the configuration file
+		branches["event"]["w"].push_back(weight_);                // The event weight
+		branches["event"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
 		
 		// Get jet-specific variables:
 		/// Save variables for each jet collection in the input sample:
@@ -506,14 +518,247 @@ void JetAnalyzer::analyze(
 				
 					branches[name_type]["ht"].push_back(ht);
 				}         // :End type == "GN"
-			}             // :End jet name_type
-		}                 // :End in_type == 1
-		// END collection loop
+				else if (type == "maod") {
+					if (name =="ak4" || name == "ak8") {
+						Handle<vector<pat::Jet>> jets_edm;
+						string module = "slimmedJets";
+						if (name == "ak8") {
+							module += "AK8";
+						}
+						string label = "";
+						iEvent.getByLabel(module, label, jets_edm);
+						
+						// Print some info:
+						if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
+						
+						// Loop over the collection:
+						double ht = 0;
+						for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
+							// Define some useful event variables:
+							double M = jet->mass();
+							double m_t = -1;          // There is no groomed mass for maod jets.
+							double m_p = -1;          // There is no groomed mass for maod jets.
+							double m_s = -1;          // There is no groomed mass for maod jets.
+							double m_f = -1;          // There is no groomed mass for maod jets.
+							double tau1 = -1;         // There is no nsubjettiness for maod jets.
+							double tau2 = -1;         // There is no nsubjettiness for maod jets.
+							double tau3 = -1;         // There is no nsubjettiness for maod jets.
+							double tau4 = -1;         // There is no nsubjettiness for maod jets.
+							double tau5 = -1;         // There is no nsubjettiness for maod jets.
+							double px = jet->px();
+							double py = jet->py();
+							double pz = jet->pz();
+							double e = jet->energy();
+							double pt = jet->pt();
+							double phi = jet->phi();
+							double eta = jet->eta();
+							double y = jet->y();
+							if (name_type == "ak8_maod") {
+								if (pt > 150) {
+									ht += pt;
+								}
+							}
+							else {
+								ht += pt;
+							}
+							
+							if (pt > cut_pt_) {
+								n_saved_jets ++;
+								
+								// Fill branches:
+								branches[name_type]["phi"].push_back(phi);
+								branches[name_type]["eta"].push_back(eta);
+								branches[name_type]["y"].push_back(y);
+								branches[name_type]["px"].push_back(px);
+								branches[name_type]["py"].push_back(py);
+								branches[name_type]["pz"].push_back(pz);
+								branches[name_type]["e"].push_back(e);
+								branches[name_type]["pt"].push_back(pt);
+								branches[name_type]["M"].push_back(M);
+								branches[name_type]["m_t"].push_back(m_t);
+								branches[name_type]["m_p"].push_back(m_p);
+								branches[name_type]["m_s"].push_back(m_s);
+								branches[name_type]["m_f"].push_back(m_f);
+								branches[name_type]["tau1"].push_back(tau1);
+								branches[name_type]["tau2"].push_back(tau2);
+								branches[name_type]["tau3"].push_back(tau3);
+								branches[name_type]["tau4"].push_back(tau4);
+								branches[name_type]["tau5"].push_back(tau5);
+								branches[name_type]["bd_te"].push_back(jet->bDiscriminator("pfTrackCountingHighEffBJetTags"));
+								branches[name_type]["bd_tp"].push_back(jet->bDiscriminator("pfTtrackCountingHighPurBJetTags"));
+								branches[name_type]["bd_csv"].push_back(jet->bDiscriminator("pfCombinedSecondaryVertexV2BJetTags"));
+								branches[name_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
+							}
+						}
+						branches[name_type]["ht"].push_back(ht);
+					}
+				}         // :End type == "maod"
+			}             // :End jet_type loop
+		}                 // :End jet_name loop
+		// :End "jet" loop
 		
-//		branches["all"]["pt_hat"].push_back(pt_hat);
+		// "lep" loop:
+		for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
+			string name = *i;
+			for (vector<string>::const_iterator j = lep_types.begin(); j != lep_types.end(); j++) {
+				string type = *j;
+				string name_type = name + "_" + type;
+				
+				// Print some info:
+				if (v_) {cout << ">> Reading collection " << name_type << " ..." << endl;}
+				
+				// Grab the collection:
+				if (name == "le" && type == "pf") {
+					Handle<vector<pat::Electron>> leps_edm;
+					string module = string("slimmedElectrons");
+					string label = "";
+					iEvent.getByLabel(module, label, leps_edm);
+				
+					// Print some info:
+					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
+				
+					// Loop over the collection:
+					for (vector<pat::Electron>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
+						// Define some useful event variables:
+						double m = lep->mass();
+						double px = lep->px();
+						double py = lep->py();
+						double pz = lep->pz();
+						double e = lep->energy();
+						double pt = lep->pt();
+						double phi = lep->phi();
+						double eta = lep->eta();
+						double y = lep->y();
+						
+						if (pt > 5) {
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["m"].push_back(m);
+						}
+					}
+				}         // :End "le_pf" (in "lep" loop)
+				if (name == "lm" && type == "pf") {
+					Handle<vector<pat::Muon>> leps_edm;
+					string module = string("slimmedMuons");
+					string label = "";
+					iEvent.getByLabel(module, label, leps_edm);
+				
+					// Print some info:
+					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
+				
+					// Loop over the collection:
+					for (vector<pat::Muon>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
+						// Define some useful event variables:
+						double m = lep->mass();
+						double px = lep->px();
+						double py = lep->py();
+						double pz = lep->pz();
+						double e = lep->energy();
+						double pt = lep->pt();
+						double phi = lep->phi();
+						double eta = lep->eta();
+						double y = lep->y();
+						
+						if (pt > 50) {
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["m"].push_back(m);
+						}
+					}
+				}         // :End "lm_pf" (in "lep" loop)
+				if (name == "lt" && type == "pf") {
+					Handle<vector<pat::Tau>> leps_edm;
+					string module = string("slimmedTaus");
+					string label = "";
+					iEvent.getByLabel(module, label, leps_edm);
+				
+					// Print some info:
+					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
+				
+					// Loop over the collection:
+					for (vector<pat::Tau>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
+						// Define some useful event variables:
+						double m = lep->mass();
+						double px = lep->px();
+						double py = lep->py();
+						double pz = lep->pz();
+						double e = lep->energy();
+						double pt = lep->pt();
+						double phi = lep->phi();
+						double eta = lep->eta();
+						double y = lep->y();
+						
+						if (pt > 50) {
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["m"].push_back(m);
+						}
+					}
+				}         // :End "lt_pf" (in "lep" loop)
+				if (name == "lp" && type == "pf") {
+					Handle<vector<pat::Photon>> leps_edm;
+					string module = string("slimmedPhotons");
+					string label = "";
+					iEvent.getByLabel(module, label, leps_edm);
+				
+					// Print some info:
+					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
+				
+					// Loop over the collection:
+					for (vector<pat::Photon>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
+						// Define some useful event variables:
+						double m = lep->mass();
+						double px = lep->px();
+						double py = lep->py();
+						double pz = lep->pz();
+						double e = lep->energy();
+						double pt = lep->pt();
+						double phi = lep->phi();
+						double eta = lep->eta();
+						double y = lep->y();
+						
+						if (pt > 50) {
+							// Fill branches:
+							branches[name_type]["phi"].push_back(phi);
+							branches[name_type]["eta"].push_back(eta);
+							branches[name_type]["y"].push_back(y);
+							branches[name_type]["px"].push_back(px);
+							branches[name_type]["py"].push_back(py);
+							branches[name_type]["pz"].push_back(pz);
+							branches[name_type]["e"].push_back(e);
+							branches[name_type]["pt"].push_back(pt);
+							branches[name_type]["m"].push_back(m);
+						}
+					}
+				}         // :End "lp_pf" (in "lep" loop)
+			}             // :End lep_type loop
+		}                 // :End lep_name loop
+		// :End "lep" loop
+		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.
-	}
+	}                 // :End in_type == 1
 	else {
 		cout << "You input an unknown \"in type\": " << in_type_ << endl;
 	}
