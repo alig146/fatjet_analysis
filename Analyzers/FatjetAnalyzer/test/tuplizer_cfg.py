@@ -297,6 +297,12 @@ process.TFileService = cms.Service("TFileService",
 	fileName = cms.string(out_location)
 )
 # Analyzer:
+## JEC data path:
+jec_path = "jec_data/Spring16_25nsV2"
+if not os.path.exists(jec_path):
+	print "ERROR: Can't find the JEC data that's supposed to be located in {}".format(jec_data)
+	sys.exit()
+## Initialize the EDAnalyzer:
 process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	v=cms.bool(False),
 	is_data=cms.bool(False),
@@ -304,7 +310,7 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	sigma=cms.double(sigma),                 # The dataset's cross section
 	weight=cms.double(options.weight),       # The event weight
 	cut_pt=cms.double(options.cutPtAnalyzer),
-	jec_version=cms.string("jec_data/Spring16_25nsV2"),
+	jec_version=cms.string(jec_path),
 )
 
 # PATH:
