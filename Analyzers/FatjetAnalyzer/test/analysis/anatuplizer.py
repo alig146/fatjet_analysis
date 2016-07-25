@@ -12,7 +12,7 @@ import random
 import numpy
 from time import time
 from truculence import *
-from decortication import dataset, analyzer, fat
+from decortication import dataset, analyzer, fat, variables
 from array import array
 print "\tImporting ROOT ..."
 from ROOT import *
@@ -29,14 +29,14 @@ precut_pt = 0           # pT cut applied to all jets in the pair selection
 precut_m = 0             # m cut applied to all jets in the pair selection
 precut_eta = 10          # eta cut applied to all jets in the pair selection
 L = 10000                 # Luminosity (in inverse pb)
-variables = [
-	 "sigma", "w", "pt_hat", "ak4_pf_ht",
-	"ak4_pf_pt",
-	"ak8_pf_px", "ak8_pf_py", "ak8_pf_pz", "ak8_pf_e", "ak8_pf_pt", "ak8_pf_M", "ak8_pf_m_t", "ak8_pf_m_p", "ak8_pf_m_s", "ak8_pf_m_f", "ak8_pf_eta", "ak8_pf_phi","ak8_pf_tau1", "ak8_pf_tau2","ak8_pf_tau3", "ak8_pf_tau4", "ak8_pf_tau5", "ak8_pf_ht",
-	"ca12_pf_px", "ca12_pf_py", "ca12_pf_pz", "ca12_pf_e", "ca12_pf_pt", "ca12_pf_M", "ca12_pf_m_t", "ca12_pf_m_p", "ca12_pf_m_s", "ca12_pf_m_f", "ca12_pf_eta", "ca12_pf_phi","ca12_pf_tau1", "ca12_pf_tau2","ca12_pf_tau3", "ca12_pf_tau4", "ca12_pf_tau5", "ca12_pf_ht",
-	"ak4_maod_bd_csv", "ak4_maod_e", "ak4_maod_px", "ak4_maod_py", "ak4_maod_pz",
-]
-variables_out = {
+#vs = [
+#	 "sigma", "w", "pt_hat", "ak4_pf_ht",
+#	"ak4_pf_pt",
+#	"ak8_pf_px", "ak8_pf_py", "ak8_pf_pz", "ak8_pf_e", "ak8_pf_pt", "ak8_pf_M", "ak8_pf_m_t", "ak8_pf_m_p", "ak8_pf_m_s", "ak8_pf_m_f", "ak8_pf_eta", "ak8_pf_phi","ak8_pf_tau1", "ak8_pf_tau2","ak8_pf_tau3", "ak8_pf_tau4", "ak8_pf_tau5", "ak8_pf_ht",
+#	"ca12_pf_px", "ca12_pf_py", "ca12_pf_pz", "ca12_pf_e", "ca12_pf_pt", "ca12_pf_M", "ca12_pf_m_t", "ca12_pf_m_p", "ca12_pf_m_s", "ca12_pf_m_f", "ca12_pf_eta", "ca12_pf_phi","ca12_pf_tau1", "ca12_pf_tau2","ca12_pf_tau3", "ca12_pf_tau4", "ca12_pf_tau5", "ca12_pf_ht", "ca12_pf_jec", "ca12_pf_jmc",
+#	"ak4_maod_bd_csv", "ak4_maod_e", "ak4_maod_px", "ak4_maod_py", "ak4_maod_pz",
+#]
+vs_out = {
 	# Event variables:
 	"w": 1,            # The event weight
 	"sigma": 1,        # The process cross section
@@ -93,60 +93,19 @@ variables_out = {
 	"precut_m": 2,     # Cut on the mass of pair-candidate fatjets
 	"precut_eta": 2,   # Cut on the eta of pair-candidate fatjets
 	"bd": 2,
+	"jec": 2,
+#	"jmc": 2,
 }
 ## /VARIABLES
 
 # FUNCTIONS:
-
-def arguments():
-	results = {}
+def treat_event(loop, event, args):		# Where "loop" refers to an event_loop object
+	# Parse arguments:
+	alg = "ca12"
+	if args:
+		if "alg" in args:
+			alg = args["alg"]
 	
-	# Argument parser:
-	parser = argparse.ArgumentParser()
-	
-	parser.add_argument(
-		"-p", "--process", dest="process",
-		type=str,
-		default="",
-		help="The processes of the datasets you want to anatuplize (e.g. \"sq200to4j\")",
-		metavar="STR"
-	)
-	parser.add_argument(
-		"-g", "--generation", dest="generation",
-		type=str,
-		default="spring15",
-		help="The generation of the datasets you want to anatuplize (e.g. \"spring15\")",
-		metavar="STR"
-	)
-	parser.add_argument(
-		"-s", "--suffix", dest="suffix",
-		type=str,
-		default='1',
-		help="The words after 'tuple_' if there are any in the dataset you want.",
-		metavar="STR"
-	)
-	parser.add_argument(
-		"-n", "--nevents", dest="n",
-		type=int,
-		default=-1,
-		help="The number of events you want to process for each dataset",
-		metavar="INT"
-	)
-	
-	args = parser.parse_args()
-	
-	# Interpretation:
-#	processes = args.process		# I can only run over one subprocess at once, for now.
-#	if processes:
-#		processes = processes.split(",")
-	results["args"] = args
-	results["samples"] = dataset.fetch_samples(process=args.process)
-#	results["tuples"] = [sample.tuples[args.generation, args.suffix] for sample in results["samples"] if sample.analyze]
-	results["tuples"] = [sample.tuples[args.generation, args.suffix] for sample in results["samples"] if sample.tuples]
-	
-	return results
-
-def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 #	print "in treat"
 	branches = loop.branches
 	
@@ -174,7 +133,7 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 	n_jets = len(event.ak4_pf_pt)         # This is the number of AK4 jets in the event with pT > 10 GeV.
 	
 	# Selection:
-	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, ca=True, r=12, leading=True)
+	pair = fat.get_pair(event, cut_pt=precut_pt, cut_m=precut_m, cut_eta=precut_eta, alg=alg, leading=True)
 	if pair:
 		# Jet variables:
 		e_p = [(p.m_p**2 + p.px**2 + p.py**2 + p.pz**2)**0.5 for p in pair]
@@ -329,6 +288,10 @@ def treat_event(loop, event):		# Where "loop" refers to an event_loop object
 		branches["precut_eta"][0] = 1
 		branches["bd"][0] = bd[0]
 		branches["bd"][1] = bd[1]
+		branches["jec"][0] = pair[0].jec
+		branches["jec"][1] = pair[1].jec
+#		branches["jmc"][0] = pair[0].jmc
+#		branches["jmc"][1] = pair[1].jmc
 		
 #		print "filling tree"
 		loop.tt_out.Fill()
@@ -340,25 +303,56 @@ def main():
 	gROOT.SetBatch()
 	
 	## Arguments:
-	arg_result = arguments()
-	args = arg_result["args"]
-	tups = arg_result["tuples"]
-#	print dsd
+	a = variables.arguments()
+	args = a.args
+#	if not a.generation:
+#		a.generation = "spring15"
+#		a.generations = ["spring15"]
+#	if not a.suffix:
+#		a.suffix = "pt400"
+#		a.suffixes = ["pt400"]
+#	samples = dataset.fetch_samples(		# KLUDGE UNTIL BELOW WORKS (need to put process, category into tuples, miniaods ... )
+#		category=a.categories,
+#		process=a.processes,
+#		subprocess=a.subprocesses,
+#	)
+#	tups = []
+#	for sample in samples:
+#		tups.extend([tup for tup in sample.tuples if tup.generation in a.generations and tup.suffix in a.suffixes])
+	tups = dataset.fetch_tuples(
+		category=a.categories,
+		process=a.processes,
+		subprocess=a.subprocesses,
+		generation=a.generations,
+		suffix=a.suffixes,
+	)
+	
+	## Print an introduction:
+	print "The analyzer will run over the following tuples:"
+	for tup in tups:
+		print "\t* {}".format(tup)
 	
 	## Analyzer object:
 	tuples = {}
-	for tup in tups:
-		process = tup.process
-		if process not in tuples:
-			tuples[process] = []
-		tuples[process].extend(["root://cmsxrootd.fnal.gov/" + f for f in tup.files])
-#		for ds in dss:
-#			if ds.analyze:
-#				for path in ds.tuple_path:
-#					path_full = "root://cmsxrootd.fnal.gov/" + path
-#					tuples[process].append(path_full)
+	
+#	### food = 1:
+#	for tup in tups:
+#		tup.set_connections(down=False, up=True)
+#		process = tup.sample.process
+#		if process not in tuples:
+#			tuples[process] = []
+#		tuples[process].extend(["root://cmsxrootd.fnal.gov/" + f for f in tup.files])
+##		for ds in dss:
+##			if ds.analyze:
+##				for path in ds.tuple_path:
+##					path_full = "root://cmsxrootd.fnal.gov/" + path
+##					tuples[process].append(path_full)
+#	print tuples
+	
+	### food = 2:
+	tuples = {(tup.Name_safe if [t.process for t in tups].count(tup.process) > 1 else tup.process): tup for tup in tups}
 	ana = analyzer.analyzer(tuples, save=True, v=True, count=False)		# Add "out_dir=" and "out_file=".
-	ana.define_branches(variables_out)
+	ana.define_branches(vs_out)
 #	branches = create_tuples(ana)
 #	colors = color.pick(len(tuples.keys()))
 	
@@ -368,7 +362,7 @@ def main():
 		loop.treatment = treat_event
 #		print "here"
 #		loop.progress = False
-		loop.run(n=args.n)
+		loop.run(n=args.n, arguments={"alg": args.algorithm})
 #	event_loop(ana.tt[key]["analyzer/events"], branches[key], ana.tuples[key], n_events=n_events_sq)
 
 	# Output:

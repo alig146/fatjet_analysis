@@ -1,0 +1,14 @@
+#1
+#Max$(m_t)>50
+#Max$(m_t)>50&&htak8>900
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.15
+Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.15&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15&&masy_p>0.10&&masy_p<0.3&&deta>0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35&&masy_p>0.10&&masy_p<0.3&&deta>0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.40&&tau42s<0.13

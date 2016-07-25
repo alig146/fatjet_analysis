@@ -50,6 +50,12 @@ options.register("generation",
 	VarParsing.varType.string,
 	"Dataset generation."
 )
+options.register("suffix",
+	"1",
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.string,
+	"Dataset generation."
+)
 options.register ('outDir',
 	out_dir_default,
 	VarParsing.multiplicity.singleton,
@@ -99,17 +105,22 @@ options.register ('weight',
 options.parseArguments()
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))		# Set up the number of events to run over.
 
+if options.suffix == "1":
+	options.suffix = options.cutPtFilter
+
 ### Input:
 if options.subprocess:
 	miniaod = dataset.fetch_miniaod(options.subprocess, options.generation)
+	miniaod.set_connections(down=False, up=True)
 	sample = miniaod.sample
 	sigma = sample.sigma
+	weight = miniaod.weight if miniaod.weight else sample.weight
 	if options.weight < 0:
 		factor = 1
 		if not options.crab:
 			if options.maxEvents > 0:		# If maxEvents is -1, run over everything
 				factor = miniaod.n/options.maxEvents
-		options.weight = miniaod.weight*factor
+		options.weight = weight*factor
 else:
 	miniaod = False
 	sigma = -1
@@ -118,7 +129,7 @@ else:
 
 #in_files = ["{0}/{1}".format(options.inDir, f) for f in options.inFile]
 in_files = options.inFile
-print in_files
+print "User defined input files: {}".format(in_files)
 if (not in_files) and (not options.crab):
 	assert miniaod
 	if miniaod.files:
@@ -134,12 +145,14 @@ if (not in_files) and (not options.crab):
 
 ### Output:
 if not options.outFile:
-	options.outFile = "{0}_{1}_tuple.root".format(options.subprocess, cmssw)
+	options.outFile = "tuple_{0}_{1}_{2}_{3}.root".format(options.subprocess, options.generation, options.suffix, cmssw)
 # /SET UP
 
 # CONFIGURATION:
 ## Process options:
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
+if options.maxEvents > 1000 or options.maxEvents < 0:
+	process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet(
 	wantSummary=cms.untracked.bool(False),		# Turn off long summary after job.
 	allowUnscheduled=cms.untracked.bool(True),
@@ -285,10 +298,13 @@ process.TFileService = cms.Service("TFileService",
 )
 # Analyzer:
 process.analyzer = cms.EDAnalyzer("JetAnalyzer",
+	v=cms.bool(False),
+	is_data=cms.bool(False),
 	in_type=cms.int32(1),                    # Input type (0: B2G, 1: fatjets)
 	sigma=cms.double(sigma),                 # The dataset's cross section
 	weight=cms.double(options.weight),       # The event weight
-	cut_pt=cms.double(options.cutPtAnalyzer)
+	cut_pt=cms.double(options.cutPtAnalyzer),
+	jec_version=cms.string("jec_data/Spring16_25nsV2"),
 )
 
 # PATH:

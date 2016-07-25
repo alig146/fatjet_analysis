@@ -10,5 +10,6 @@
 <use name = "SimDataFormats/GeneratorProducts"/>
 <use name = "FWCore/ServiceRegistry"/>
 <use name = "fastjet"/>
+<use name = "CondFormats/JetMETObjects"/>
 <flags EDM_PLUGIN = "1"/>
 

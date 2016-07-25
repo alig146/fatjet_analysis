@@ -1,0 +1,63 @@
+th1:
+    htak8:
+        var: htak8
+        label: "H_{T}^{AK8}"
+        unit: GeV
+        binning: [50, 0, 2500]
+        legend: 2
+    
+    maxmt:
+        var: "Max$(m_t)"
+        label: "max#left(m_{trimmed}#right)"
+        unit: GeV
+        binning: [11, 25, 575]
+        legend: 2
+    
+    mavgp:
+        var: mavg_p
+        label: "#bar{m}_{pruned})"
+        unit: GeV
+        binning: [11, 25, 575]
+        legend: 2
+    
+    masyp:
+        var: masy_p
+        label: "asy#left(m_{pruned}#right)"
+        unit: False
+        binning: [25, 0, 1]
+        legend: 4
+    
+    deta:
+        var: deta
+        label: "#Delta#eta"
+        unit: False
+        binning: [25, 0, 1]
+        legend: 3
+    
+    mintau21:
+        var: "Min$(tau21)"
+        label: "min#left(#tau_{21}#right)"
+        unit: False
+        binning: [25, 0, 1]
+        legend: 2
+    
+    tau43s:
+        var: tau43s
+        label: "#tau_{43}^{0}#tau_{43}^{1}"
+        unit: False
+        binning: [25, 0, 1]
+        legend: 1
+    
+    tau42s:
+        var: tau42s
+        label: "#tau_{42}^{0}#tau_{42}^{1}"
+        unit: False
+        binning: [25, 0, 1]
+        legend: 2
+    
+    bd:
+        var: bd
+        label: "b-tag discriminator"
+        unit: CSV
+        binning: [25, 0, 1]
+        legend: 1

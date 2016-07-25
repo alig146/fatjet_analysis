@@ -40,6 +40,9 @@
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+///// JEC:
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 
 //// Meta includes:
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -93,10 +96,12 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 	// Member data
 	/// Configuration variables (filled by setting the python configuration file)
-	int in_type_;               // Input type (0: B2G, 1: fatjets)
 	bool v_;                    // Verbose control
+	bool is_data_;
+	int in_type_;               // Input type (0: B2G, 1: fatjets)
 	double sigma_, weight_, cut_pt_;
 	bool make_gen_, make_pf_;		// Controls to make gen fatjets or pf fatjets
+	string jec_version_;
 	/// Parameters
 	double L;
 	// Basic fatjet variables
@@ -106,6 +111,11 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	// Input collections:
 	vector<string> jet_names, jet_types;
 	vector<string> lep_names, lep_types;
+	
+	// JEC info;
+	string jec_prefix;
+	vector<string> jec_ak4_files, jmc_ak4_files, jec_ak8_files, jmc_ak8_files;
+	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
 	
 	// Ntuple information:
 	vector<string> jet_variables, lep_variables, event_variables;
@@ -130,18 +140,15 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 // constructors and destructors
 JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
+	v_(iConfig.getParameter<bool>("v")),
+	is_data_(iConfig.getParameter<bool>("is_data")),
 	in_type_(iConfig.getParameter<int>("in_type")),
-//	v_(iConfig.getParameter<bool>("v")),
 	sigma_(iConfig.getParameter<double>("sigma")),
 	weight_(iConfig.getParameter<double>("weight")),
-	cut_pt_(iConfig.getParameter<double>("cut_pt"))
-//	make_gen_(iConfig.getParameter<bool>("make_gen")),
-//	make_pf_(iConfig.getParameter<bool>("make_pf")),
+	cut_pt_(iConfig.getParameter<double>("cut_pt")),
+	jec_version_(iConfig.getParameter<string>("jec_version"))
 {
 //do what ever initialization is needed
-	// Variables:
-	v_ = false;               // Verbose mode.
-	
 	// Parameters:
 	L = 10000;                // Luminosity (in inverse pb)
 	
@@ -166,6 +173,8 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"bd_tp",
 		"bd_csv",
 		"bd_cisv",
+		"jec",
+		"jmc",
 	};
 	
 	/// "lep"
@@ -223,11 +232,63 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		tbranches["event"][*i] = ttrees["events"]->Branch(branch_name.c_str(), &(branches["event"][*i]), 64000, 0);
 	}
 	
+	// JEC setup:
+	if (is_data_) jec_prefix = jec_version_ + "_DATA";
+	else jec_prefix = jec_version_ + "_MC";
+	
+	/// AK4 JEC setup:
+	jec_ak4_files.push_back(jec_prefix + "_L1FastJet_AK4PFchs.txt");
+	jec_ak4_files.push_back(jec_prefix + "_L2Relative_AK4PFchs.txt");
+	jec_ak4_files.push_back(jec_prefix + "_L3Absolute_AK4PFchs.txt");
+	if (is_data_) jec_ak4_files.push_back(jec_prefix + "_L2L3Residual_AK4PFchs.txt");
+	vector<JetCorrectorParameters> jec_parameters_ak4;
+	for (vector<string>::const_iterator jec_file = jec_ak4_files.begin(); jec_file != jec_ak4_files.end(); ++jec_file) {
+//		cout << *jec_file << endl;
+		jec_parameters_ak4.push_back(*(new JetCorrectorParameters(*jec_file)));
+	}
+	jec_corrector_ak4 = new FactorizedJetCorrector(jec_parameters_ak4);
+	
+	/// AK4 JMC setup:
+	jmc_ak4_files.push_back(jec_prefix + "_L2Relative_AK4PFchs.txt");
+	jmc_ak4_files.push_back(jec_prefix + "_L3Absolute_AK4PFchs.txt");
+	if (is_data_) jmc_ak4_files.push_back(jec_prefix + "_L2L3Residual_AK4PFchs.txt");
+	vector<JetCorrectorParameters> jmc_parameters_ak4;
+	for (vector<string>::const_iterator jmc_file = jmc_ak4_files.begin(); jmc_file != jmc_ak4_files.end(); ++jmc_file) {
+//		cout << *jmc_file << endl;
+		jmc_parameters_ak4.push_back(*(new JetCorrectorParameters(*jmc_file)));
+	}
+	jmc_corrector_ak4 = new FactorizedJetCorrector(jmc_parameters_ak4);
+//	
+	/// AK8 JEC setup:
+	jec_ak8_files.push_back(jec_prefix + "_L1FastJet_AK8PFchs.txt");
+	jec_ak8_files.push_back(jec_prefix + "_L2Relative_AK8PFchs.txt");
+	jec_ak8_files.push_back(jec_prefix + "_L3Absolute_AK8PFchs.txt");
+	if (is_data_) jec_ak8_files.push_back(jec_prefix + "_L2L3Residual_AK8PFchs.txt");
+	vector<JetCorrectorParameters> jec_parameters_ak8;
+	for (vector<string>::const_iterator jec_file = jec_ak8_files.begin(); jec_file != jec_ak8_files.end(); ++jec_file) {
+//		cout << *jec_file << endl;
+		jec_parameters_ak8.push_back(*(new JetCorrectorParameters(*jec_file)));
+	}
+	jec_corrector_ak8 = new FactorizedJetCorrector(jec_parameters_ak8);
+	
+	/// AK8 JMC setup:
+	jmc_ak8_files.push_back(jec_prefix + "_L2Relative_AK8PFchs.txt");
+	jmc_ak8_files.push_back(jec_prefix + "_L3Absolute_AK8PFchs.txt");
+	if (is_data_) jmc_ak8_files.push_back(jec_prefix + "_L2L3Residual_AK8PFchs.txt");
+	vector<JetCorrectorParameters> jmc_parameters_ak8;
+	for (vector<string>::const_iterator jmc_file = jmc_ak8_files.begin(); jmc_file != jmc_ak8_files.end(); ++jmc_file) {
+//		cout << *jmc_file << endl;
+		jmc_parameters_ak8.push_back(*(new JetCorrectorParameters(*jmc_file)));
+	}
+	jmc_corrector_ak8 = new FactorizedJetCorrector(jmc_parameters_ak8);
+	
+	
 	// Debug:
 	cout << endl;
 	cout << "Starting the Jet Analyzer..." << endl;
 	cout << "in_type = " << in_type_ << endl;
 	cout << "v = " << v_ << "." << endl;
+	cout << "jec_prefix = " << jec_prefix << endl;
 }
 
 // DEFINE THE DESTRUCTOR
@@ -260,7 +321,7 @@ void JetAnalyzer::analyze(
 	const edm::Event& iEvent,
 	const edm::EventSetup& iSetup
 ){
-//	cout << "HERE 274" << endl;
+//	cout << "HERE 324" << endl;
 	n_event ++;		// Increment the event counter by one. For the first event, n_event = 1.
 	
 	// Get objects from event:
@@ -356,12 +417,28 @@ void JetAnalyzer::analyze(
 		}
 		
 		// Get event-wide variables:
+		/// pT-hat:
 		double pt_hat = -1;
 		edm::Handle<GenEventInfoProduct> gn_event_info;
 		iEvent.getByLabel("generator", gn_event_info);
 		if (gn_event_info->hasBinningValues()) {
 			pt_hat = gn_event_info->binningValues()[0];
 		}
+		/// Rho:
+		double rho = -1;
+		edm::Handle<double> rho_;
+		iEvent.getByLabel("fixedGridRhoFastjetAll", rho_);
+		rho = *rho_;
+		/// Number of primary vertices (NPV):
+		int npv = 0;
+		edm::Handle<reco::VertexCollection> pvs;
+		iEvent.getByLabel("offlineSlimmedPrimaryVertices", pvs);
+		for (vector<reco::Vertex>::const_iterator ipv = pvs->begin(); ipv != pvs->end(); ipv++) {
+			if (ipv->ndof() > 4 && ipv->isFake() == false) {
+				npv += 1;
+			}
+		}
+		
 		/// Save event-wide variables:
 		branches["event"]["sigma"].push_back(sigma_);             // Provided in the configuration file
 //		cout << n_event << endl;
@@ -415,6 +492,7 @@ void JetAnalyzer::analyze(
 						double phi = jet->phi();
 						double eta = jet->eta();
 						double y = jet->y();
+						double A = jet->jetArea();
 						if (name_type == "ak8_pf") {
 							if (pt > 150) {
 								ht += pt;
@@ -423,6 +501,49 @@ void JetAnalyzer::analyze(
 						else {
 							ht += pt;
 						}
+						
+						// JECs:
+						double jec = -1;
+						double jmc = -1;
+						if (name_type == "ak4_pf") {
+							jec_corrector_ak4->setJetPt(pt);
+							jec_corrector_ak4->setJetEta(eta);
+							jec_corrector_ak4->setJetPhi(phi);
+							jec_corrector_ak4->setJetE(e);
+							jec_corrector_ak4->setJetA(A);
+							jec_corrector_ak4->setRho(rho);
+							jec_corrector_ak4->setNPV(npv);
+							jec = jec_corrector_ak4->getCorrection();
+							
+							jmc_corrector_ak4->setJetPt(pt);
+							jmc_corrector_ak4->setJetEta(eta);
+							jmc_corrector_ak4->setJetPhi(phi);
+							jmc_corrector_ak4->setJetE(e);
+							jmc_corrector_ak4->setJetA(A);
+							jmc_corrector_ak4->setRho(rho);
+							jmc_corrector_ak4->setNPV(npv);
+							jmc = jmc_corrector_ak4->getCorrection();
+						}
+						else {
+							jec_corrector_ak8->setJetPt(pt);
+							jec_corrector_ak8->setJetEta(eta);
+							jec_corrector_ak8->setJetPhi(phi);
+							jec_corrector_ak8->setJetE(e);
+							jec_corrector_ak8->setJetA(A);
+							jec_corrector_ak8->setRho(rho);
+							jec_corrector_ak8->setNPV(npv);
+							jec = jec_corrector_ak8->getCorrection();
+							
+							jmc_corrector_ak8->setJetPt(pt);
+							jmc_corrector_ak8->setJetEta(eta);
+							jmc_corrector_ak8->setJetPhi(phi);
+							jmc_corrector_ak8->setJetE(e);
+							jmc_corrector_ak8->setJetA(A);
+							jmc_corrector_ak8->setRho(rho);
+							jmc_corrector_ak8->setNPV(npv);
+							jmc = jmc_corrector_ak8->getCorrection();
+						}
+						
 						
 						if (pt > cut_pt_) {
 							n_saved_jets ++;
@@ -446,6 +567,8 @@ void JetAnalyzer::analyze(
 							branches[name_type]["tau3"].push_back(tau3);
 							branches[name_type]["tau4"].push_back(tau4);
 							branches[name_type]["tau5"].push_back(tau5);
+							branches[name_type]["jec"].push_back(jec);
+							branches[name_type]["jmc"].push_back(jmc);
 						}
 					}		// :End collection loop
 					
@@ -588,6 +711,8 @@ void JetAnalyzer::analyze(
 								branches[name_type]["bd_tp"].push_back(jet->bDiscriminator("pfTtrackCountingHighPurBJetTags"));
 								branches[name_type]["bd_csv"].push_back(jet->bDiscriminator("pfCombinedSecondaryVertexV2BJetTags"));
 								branches[name_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
+								branches[name_type]["jec"].push_back(-1);
+								branches[name_type]["jmc"].push_back(-1);
 							}
 						}
 						branches[name_type]["ht"].push_back(ht);

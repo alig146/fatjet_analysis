@@ -111,6 +111,12 @@ options.register ('nevents',
 	VarParsing.varType.int,
 	"The number of events in the input dataset. (Not needed when using \"dataset\".)"
 )
+options.register ('data',
+	False,
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.bool,
+	"Set to true if running over data."
+)
 
 options.parseArguments()
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))		# Set up the number of events to run over.
