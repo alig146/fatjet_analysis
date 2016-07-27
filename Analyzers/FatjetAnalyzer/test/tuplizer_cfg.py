@@ -11,7 +11,7 @@
 # IMPORTS:
 ## Generic:
 import re         # For regular expressions
-import sys        # For "sys.exit()"
+import os, sys
 ## CMSSW:
 import FWCore.ParameterSet.Config as cms                  # Standard config file information.
 from FWCore.ParameterSet.VarParsing import VarParsing     # Module used to pass arguments from the command line.
@@ -20,6 +20,21 @@ from Configuration.AlCa.autoCond import autoCond          # For automatically de
 from decortication import dataset
 from truculence import analysis           # For "get_cmssw()"
 # /IMPORTS
+
+# FUNCTIONS:
+def check_jec(jec_path, data=False, algorithm="ak8"):
+	flavors = ["L1FastJet", "L2Relative", "L2L3Residual", "L3Absolute", "Uncertainty"]
+	d = "/".join(jec_path.split("/")[:-1])
+	prefix = jec_path.split("/")[-1]
+	if not os.path.exists(d):
+		return False
+	txts = [f for f in os.listdir(d) if ".txt" in f]
+	for flavor in flavors:
+		if not "{}_{}_{}_{}PFchs.txt".format(prefix, ("MC", "data")[data == True], flavor, algorithm.upper()) in txts:
+			return False
+	return True
+# /FUNCTIONS:
+
 
 # SET UP:
 ## Very basic variables:
@@ -156,10 +171,12 @@ if options.maxEvents > 1000 or options.maxEvents < 0:
 process.options = cms.untracked.PSet(
 	wantSummary=cms.untracked.bool(False),		# Turn off long summary after job.
 	allowUnscheduled=cms.untracked.bool(True),
+	IgnoreCompletely=cms.untracked.vstring('InvalidReference')		# Dangerous.
 #	SkipEvent=cms.untracked.vstring('ProductNotFound')		# Dangerous.
 )
 
 ## Input:
+in_files = ["file:fall15.root"]
 if options.crab:
 	process.source = cms.Source("PoolSource")
 else:
@@ -213,58 +230,58 @@ jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
 	addNsub=True,
 		maxTau=5,
 )
-jetToolbox(process, 'ca8', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	JETCorrPayload='None',
-	addNsub=True,
-		maxTau=5,
-)
-jetToolbox(process, 'ak10', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	JETCorrPayload='None',
-	addNsub=True,
-		maxTau=5,
-)
-jetToolbox(process, 'ca10', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	JETCorrPayload='None',
-	addNsub=True,
-		maxTau=5,
-)
-jetToolbox(process, 'ak12', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	JETCorrPayload='None',
-	addNsub=True,
-		maxTau=5,
-)
+#jetToolbox(process, 'ca8', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#	JETCorrPayload='None',
+#	addNsub=True,
+#		maxTau=5,
+#)
+#jetToolbox(process, 'ak10', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#	JETCorrPayload='None',
+#	addNsub=True,
+#		maxTau=5,
+#)
+#jetToolbox(process, 'ca10', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#	JETCorrPayload='None',
+#	addNsub=True,
+#		maxTau=5,
+#)
+#jetToolbox(process, 'ak12', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#	JETCorrPayload='None',
+#	addNsub=True,
+#		maxTau=5,
+#)
 jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
 	# Optional:
 	PUMethod='CHS',
@@ -289,7 +306,8 @@ process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 
 # Filter:
 process.filter = cms.EDFilter("JetFilter",
-	cut_pt=cms.double(options.cutPtFilter)
+	cut_pt=cms.double(options.cutPtFilter),
+	jetCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
 )
 
 #out_location = options.outDir + "/test.root"
@@ -299,9 +317,10 @@ process.TFileService = cms.Service("TFileService",
 # Analyzer:
 ## JEC data path:
 jec_path = "jec_data/Spring16_25nsV2"
-if not os.path.exists(jec_path):
-	print "ERROR: Can't find the JEC data that's supposed to be located in {}".format(jec_data)
+if not check_jec(jec_path):
+	print "ERROR: Can't find the JEC data that's supposed to be located in {}.".format(jec_path)
 	sys.exit()
+	
 ## Initialize the EDAnalyzer:
 process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	v=cms.bool(False),
@@ -311,7 +330,23 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	weight=cms.double(options.weight),       # The event weight
 	cut_pt=cms.double(options.cutPtAnalyzer),
 	jec_version=cms.string(jec_path),
+	genInfo=cms.InputTag("generator"),
+	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
+	vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
+	ak4PFCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	ak8PFCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+	ca12PFCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+	ak4GNCollection=cms.InputTag("selectedPatJetsAK4PFCHS", "genJets"),
+	ak8GNCollection=cms.InputTag("selectedPatJetsAK8PFCHS", "genJets"),
+	ca12GNCollection=cms.InputTag("selectedPatJetsCA12PFCHS", "genJets"),
+	ak4MAODCollection=cms.InputTag("slimmedJets"),
+	ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
+	electronCollection=cms.InputTag("slimmedElectrons"),
+	muonCollection=cms.InputTag("slimmedMuons"),
+	tauCollection=cms.InputTag("slimmedTaus"),
+	photonCollection=cms.InputTag("slimmedPhotons"),
 )
+#process.analyzer.testtt = "test"		# This works.
 
 # PATH:
 process.p = cms.Path(

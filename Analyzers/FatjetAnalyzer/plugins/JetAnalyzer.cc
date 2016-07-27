@@ -86,6 +86,13 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 	private:
 		virtual void beginJob();
+		virtual void process_jets_pf(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
+		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
+		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
+		virtual void process_electrons_pf(const edm::Event&, EDGetTokenT<vector<pat::Electron>>);
+		virtual void process_muons_pf(const edm::Event&, EDGetTokenT<vector<pat::Muon>>);
+		virtual void process_tauons_pf(const edm::Event&, EDGetTokenT<vector<pat::Tau>>);
+		virtual void process_photons_pf(const edm::Event&, EDGetTokenT<vector<pat::Photon>>);
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void endJob();
 		virtual void beginRun(const edm::Run&, const edm::EventSetup&);
@@ -112,7 +119,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	vector<string> jet_names, jet_types;
 	vector<string> lep_names, lep_types;
 	
-	// JEC info;
+	// JEC info:
 	string jec_prefix;
 	vector<string> jec_ak4_files, jmc_ak4_files, jec_ak8_files, jmc_ak8_files;
 	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
@@ -123,6 +130,28 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	map<string, TTree*> ttrees;
 	map<string, map<string, TBranch*>> tbranches;
 	TTree* tt;
+	
+	// Event variables:
+	double pt_hat;
+	double rho;
+	double npv;
+	
+	// Tokens:
+	EDGetTokenT<GenEventInfoProduct> genInfo_;
+	EDGetTokenT<double> rhoInfo_;
+	EDGetTokenT<reco::VertexCollection> vertexCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4PFCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8PFCollection_;
+	EDGetTokenT<vector<pat::Jet>> ca12PFCollection_;
+	EDGetTokenT<vector<reco::GenJet>> ak4GNCollection_;
+	EDGetTokenT<vector<reco::GenJet>> ak8GNCollection_;
+	EDGetTokenT<vector<reco::GenJet>> ca12GNCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4MAODCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8MAODCollection_;
+	EDGetTokenT<vector<pat::Electron>> electronCollection_;
+	EDGetTokenT<vector<pat::Muon>> muonCollection_;
+	EDGetTokenT<vector<pat::Tau>> tauCollection_;
+	EDGetTokenT<vector<pat::Photon>> photonCollection_;
 };
 // \CLASS DEFINITIONS
 
@@ -146,7 +175,23 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	sigma_(iConfig.getParameter<double>("sigma")),
 	weight_(iConfig.getParameter<double>("weight")),
 	cut_pt_(iConfig.getParameter<double>("cut_pt")),
-	jec_version_(iConfig.getParameter<string>("jec_version"))
+	jec_version_(iConfig.getParameter<string>("jec_version")),
+	// Consume statements:
+	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
+	rhoInfo_(consumes<double>(iConfig.getParameter<InputTag>("rhoInfo"))),
+	vertexCollection_(consumes<reco::VertexCollection>(iConfig.getParameter<InputTag>("vertexCollection"))),
+	ak4PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFCollection"))),
+	ak8PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFCollection"))),
+	ca12PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFCollection"))),
+	ak4GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ak4GNCollection"))),
+	ak8GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ak8GNCollection"))),
+	ca12GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ca12GNCollection"))),
+	ak4MAODCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4MAODCollection"))),
+	ak8MAODCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8MAODCollection"))),
+	electronCollection_(consumes<vector<pat::Electron>>(iConfig.getParameter<InputTag>("electronCollection"))),
+	muonCollection_(consumes<vector<pat::Muon>>(iConfig.getParameter<InputTag>("muonCollection"))),
+	tauCollection_(consumes<vector<pat::Tau>>(iConfig.getParameter<InputTag>("tauCollection"))),
+	photonCollection_(consumes<vector<pat::Photon>>(iConfig.getParameter<InputTag>("photonCollection")))
 {
 //do what ever initialization is needed
 	// Parameters:
@@ -154,7 +199,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	
 	// Collections setup:
 	/// "jet"
-	jet_names = {"ak4", "ak8", "ca8", "ak10", "ca10", "ak12", "ca12"};
+	jet_names = {"ak4", "ak8", "ca12"};
 	jet_types = {"pf", "gn", "maod"};
 	jet_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
@@ -191,6 +236,8 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"nevent",     // The unique event number
 //		"nevents",    // The total number of events that were run over
 		"w",          // Event weight
+		"rho",
+		"npv",        // Number of primary vertices
 	};
 	
 	// Ntuple setup:
@@ -316,6 +363,424 @@ void JetAnalyzer::beginJob()
 
 // CLASS METHODS ("method" = "member function")
 
+/// PF jets method:
+void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
+	// Arguments:
+	string type = "pf";
+	string algo_type = algo + "_" + type;
+	
+	Handle<vector<pat::Jet>> jets;
+	iEvent.getByToken(token, jets);
+
+	// Print some info:
+//	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
+	
+	// Loop over the collection:
+	double ht = 0;
+	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		// Define some useful event variables:
+		double M = jet->mass();
+		double m_t = jet->userFloat(algo + string("PFJetsCHSTrimmedMass"));
+		double m_p = jet->userFloat(algo + string("PFJetsCHSPrunedMass"));
+		double m_s = jet->userFloat(algo + string("PFJetsCHSSoftDropMass"));
+		double m_f = jet->userFloat(algo + string("PFJetsCHSFilteredMass"));
+		double tau1 = -1;
+		double tau2 = -1;
+		double tau3 = -1;
+		double tau4 = -1;
+		double tau5 = -1;
+		if (algo != "ak4"){
+			tau1 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau1"));
+			tau2 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau2"));
+			tau3 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau3"));
+			tau4 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau4"));
+			tau5 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau5"));
+		}
+		double px = jet->px();
+		double py = jet->py();
+		double pz = jet->pz();
+		double e = jet->energy();
+		double pt = jet->pt();
+		double phi = jet->phi();
+		double eta = jet->eta();
+		double y = jet->y();
+		double A = jet->jetArea();
+		if (algo == "ak8") {
+			if (pt > 150) {
+				ht += pt;
+			}
+		}
+		else {
+			ht += pt;
+		}
+		
+		// Get JECs:
+		double jec = -1;
+		double jmc = -1;
+		if (algo == "ak4") {
+			jec_corrector_ak4->setJetPt(pt);
+			jec_corrector_ak4->setJetEta(eta);
+			jec_corrector_ak4->setJetPhi(phi);
+			jec_corrector_ak4->setJetE(e);
+			jec_corrector_ak4->setJetA(A);
+			jec_corrector_ak4->setRho(rho);
+			jec_corrector_ak4->setNPV(npv);
+			jec = jec_corrector_ak4->getCorrection();
+			
+			jmc_corrector_ak4->setJetPt(pt);
+			jmc_corrector_ak4->setJetEta(eta);
+			jmc_corrector_ak4->setJetPhi(phi);
+			jmc_corrector_ak4->setJetE(e);
+			jmc_corrector_ak4->setJetA(A);
+			jmc_corrector_ak4->setRho(rho);
+			jmc_corrector_ak4->setNPV(npv);
+			jmc = jmc_corrector_ak4->getCorrection();
+		}
+		else {
+			jec_corrector_ak8->setJetPt(pt);
+			jec_corrector_ak8->setJetEta(eta);
+			jec_corrector_ak8->setJetPhi(phi);
+			jec_corrector_ak8->setJetE(e);
+			jec_corrector_ak8->setJetA(A);
+			jec_corrector_ak8->setRho(rho);
+			jec_corrector_ak8->setNPV(npv);
+			jec = jec_corrector_ak8->getCorrection();
+			
+			jmc_corrector_ak8->setJetPt(pt);
+			jmc_corrector_ak8->setJetEta(eta);
+			jmc_corrector_ak8->setJetPhi(phi);
+			jmc_corrector_ak8->setJetE(e);
+			jmc_corrector_ak8->setJetA(A);
+			jmc_corrector_ak8->setRho(rho);
+			jmc_corrector_ak8->setNPV(npv);
+			jmc = jmc_corrector_ak8->getCorrection();
+		}
+		
+		// Fill branches:
+		if (pt > cut_pt_) {
+			branches[algo_type]["phi"].push_back(phi);
+			branches[algo_type]["eta"].push_back(eta);
+			branches[algo_type]["y"].push_back(y);
+			branches[algo_type]["px"].push_back(px);
+			branches[algo_type]["py"].push_back(py);
+			branches[algo_type]["pz"].push_back(pz);
+			branches[algo_type]["e"].push_back(e);
+			branches[algo_type]["pt"].push_back(pt);
+			branches[algo_type]["M"].push_back(M);
+			branches[algo_type]["m_t"].push_back(m_t);
+			branches[algo_type]["m_p"].push_back(m_p);
+			branches[algo_type]["m_s"].push_back(m_s);
+			branches[algo_type]["m_f"].push_back(m_f);
+			branches[algo_type]["tau1"].push_back(tau1);
+			branches[algo_type]["tau2"].push_back(tau2);
+			branches[algo_type]["tau3"].push_back(tau3);
+			branches[algo_type]["tau4"].push_back(tau4);
+			branches[algo_type]["tau5"].push_back(tau5);
+			branches[algo_type]["jec"].push_back(jec);
+			branches[algo_type]["jmc"].push_back(jmc);
+		}
+	}		// :End collection loop
+	
+	branches[algo_type]["ht"].push_back(ht);
+}
+
+/// GN jets method:
+void JetAnalyzer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTokenT<vector<reco::GenJet>> token) {
+	// Arguments:
+	string type = "gn";
+	string algo_type = algo + "_" + type;
+	
+	Handle<vector<reco::GenJet>> jets;
+	iEvent.getByToken(token, jets);
+
+	// Print some info:
+//	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
+	
+	// Loop over the collection:
+	double ht = 0;
+	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		// Define some useful event variables:
+		double M = jet->mass();
+		double m_t = -1;
+		double m_p = -1;
+		double m_s = -1;
+		double m_f = -1;
+		double tau1 = -1;
+		double tau2 = -1;
+		double tau3 = -1;
+		double tau4 = -1;
+		double tau5 = -1;
+		double px = jet->px();
+		double py = jet->py();
+		double pz = jet->pz();
+		double e = jet->energy();
+		double pt = jet->pt();
+		double phi = jet->phi();
+		double eta = jet->eta();
+		double y = jet->y();
+		if (algo == "ak8") {
+			if (pt > 150) {
+				ht += pt;
+			}
+		}
+		else {
+			ht += pt;
+		}
+		
+		// Fill branches:
+		if (pt > cut_pt_) {
+			branches[algo_type]["phi"].push_back(phi);
+			branches[algo_type]["eta"].push_back(eta);
+			branches[algo_type]["y"].push_back(y);
+			branches[algo_type]["px"].push_back(px);
+			branches[algo_type]["py"].push_back(py);
+			branches[algo_type]["pz"].push_back(pz);
+			branches[algo_type]["e"].push_back(e);
+			branches[algo_type]["pt"].push_back(pt);
+			branches[algo_type]["M"].push_back(M);
+			branches[algo_type]["m_t"].push_back(m_t);
+			branches[algo_type]["m_p"].push_back(m_p);
+			branches[algo_type]["m_s"].push_back(m_s);
+			branches[algo_type]["m_f"].push_back(m_f);
+			branches[algo_type]["tau1"].push_back(tau1);
+			branches[algo_type]["tau2"].push_back(tau2);
+			branches[algo_type]["tau3"].push_back(tau3);
+			branches[algo_type]["tau4"].push_back(tau4);
+			branches[algo_type]["tau5"].push_back(tau5);
+//			branches[algo_type]["jec"].push_back(-1);
+//			branches[algo_type]["jmc"].push_back(-1);
+		}
+	}		// :End collection loop
+	
+	branches[algo_type]["ht"].push_back(ht);
+}
+
+/// MAOD jets method:
+void JetAnalyzer::process_jets_maod(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
+	// Arguments:
+	string type = "maod";
+	string algo_type = algo + "_" + type;
+	
+	Handle<vector<pat::Jet>> jets;
+	iEvent.getByToken(token, jets);
+
+	// Print some info:
+//	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
+	
+	// Loop over the collection:
+	double ht = 0;
+	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		// Define some useful event variables:
+		double M = jet->mass();
+		double m_t = -1;
+		double m_p = -1;
+		double m_s = -1;
+		double m_f = -1;
+		double tau1 = -1;
+		double tau2 = -1;
+		double tau3 = -1;
+		double tau4 = -1;
+		double tau5 = -1;
+		double px = jet->px();
+		double py = jet->py();
+		double pz = jet->pz();
+		double e = jet->energy();
+		double pt = jet->pt();
+		double phi = jet->phi();
+		double eta = jet->eta();
+		double y = jet->y();
+		if (algo == "ak8") {
+			if (pt > 150) {
+				ht += pt;
+			}
+		}
+		else {
+			ht += pt;
+		}
+		
+		// Fill branches:
+		if (pt > cut_pt_) {
+			branches[algo_type]["phi"].push_back(phi);
+			branches[algo_type]["eta"].push_back(eta);
+			branches[algo_type]["y"].push_back(y);
+			branches[algo_type]["px"].push_back(px);
+			branches[algo_type]["py"].push_back(py);
+			branches[algo_type]["pz"].push_back(pz);
+			branches[algo_type]["e"].push_back(e);
+			branches[algo_type]["pt"].push_back(pt);
+			branches[algo_type]["M"].push_back(M);
+			branches[algo_type]["m_t"].push_back(m_t);
+			branches[algo_type]["m_p"].push_back(m_p);
+			branches[algo_type]["m_s"].push_back(m_s);
+			branches[algo_type]["m_f"].push_back(m_f);
+			branches[algo_type]["tau1"].push_back(tau1);
+			branches[algo_type]["tau2"].push_back(tau2);
+			branches[algo_type]["tau3"].push_back(tau3);
+			branches[algo_type]["tau4"].push_back(tau4);
+			branches[algo_type]["tau5"].push_back(tau5);
+			branches[algo_type]["bd_te"].push_back(jet->bDiscriminator("pfTrackCountingHighEffBJetTags"));
+			branches[algo_type]["bd_tp"].push_back(jet->bDiscriminator("pfTtrackCountingHighPurBJetTags"));
+			branches[algo_type]["bd_csv"].push_back(jet->bDiscriminator("pfCombinedSecondaryVertexV2BJetTags"));
+			branches[algo_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
+//			branches[algo_type]["jec"].push_back(-1);
+//			branches[algo_type]["jmc"].push_back(-1);
+		}
+	}		// :End collection loop
+	
+	branches[algo_type]["ht"].push_back(ht);
+}
+
+/// Electrons method:
+void JetAnalyzer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Electron>> token) {
+	// Arguments:
+	string name = "le";
+	string type = "pf";
+	string name_type = name + "_" + type;
+	
+	Handle<vector<pat::Electron>> leps;
+	iEvent.getByToken(token, leps);
+	
+	// Loop over the collection:
+	for (vector<pat::Electron>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
+		// Define some useful event variables:
+		double m = lep->mass();
+		double px = lep->px();
+		double py = lep->py();
+		double pz = lep->pz();
+		double e = lep->energy();
+		double pt = lep->pt();
+		double phi = lep->phi();
+		double eta = lep->eta();
+		double y = lep->y();
+		
+		// Fill branches:
+		if (pt > 5) {
+			branches[name_type]["phi"].push_back(phi);
+			branches[name_type]["eta"].push_back(eta);
+			branches[name_type]["y"].push_back(y);
+			branches[name_type]["px"].push_back(px);
+			branches[name_type]["py"].push_back(py);
+			branches[name_type]["pz"].push_back(pz);
+			branches[name_type]["e"].push_back(e);
+			branches[name_type]["pt"].push_back(pt);
+			branches[name_type]["m"].push_back(m);
+		}
+	}		// :End collection loop
+}
+
+/// Muons method:
+void JetAnalyzer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Muon>> token) {
+	// Arguments:
+	string name = "lm";
+	string type = "pf";
+	string name_type = name + "_" + type;
+	
+	Handle<vector<pat::Muon>> leps;
+	iEvent.getByToken(token, leps);
+	
+	// Loop over the collection:
+	for (vector<pat::Muon>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
+		// Define some useful event variables:
+		double m = lep->mass();
+		double px = lep->px();
+		double py = lep->py();
+		double pz = lep->pz();
+		double e = lep->energy();
+		double pt = lep->pt();
+		double phi = lep->phi();
+		double eta = lep->eta();
+		double y = lep->y();
+		
+		// Fill branches:
+		if (pt > 5) {
+			branches[name_type]["phi"].push_back(phi);
+			branches[name_type]["eta"].push_back(eta);
+			branches[name_type]["y"].push_back(y);
+			branches[name_type]["px"].push_back(px);
+			branches[name_type]["py"].push_back(py);
+			branches[name_type]["pz"].push_back(pz);
+			branches[name_type]["e"].push_back(e);
+			branches[name_type]["pt"].push_back(pt);
+			branches[name_type]["m"].push_back(m);
+		}
+	}		// :End collection loop
+}
+
+/// Tauons method:
+void JetAnalyzer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Tau>> token) {
+	// Arguments:
+	string name = "lt";
+	string type = "pf";
+	string name_type = name + "_" + type;
+	
+	Handle<vector<pat::Tau>> leps;
+	iEvent.getByToken(token, leps);
+	
+	// Loop over the collection:
+	for (vector<pat::Tau>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
+		// Define some useful event variables:
+		double m = lep->mass();
+		double px = lep->px();
+		double py = lep->py();
+		double pz = lep->pz();
+		double e = lep->energy();
+		double pt = lep->pt();
+		double phi = lep->phi();
+		double eta = lep->eta();
+		double y = lep->y();
+		
+		// Fill branches:
+		if (pt > 5) {
+			branches[name_type]["phi"].push_back(phi);
+			branches[name_type]["eta"].push_back(eta);
+			branches[name_type]["y"].push_back(y);
+			branches[name_type]["px"].push_back(px);
+			branches[name_type]["py"].push_back(py);
+			branches[name_type]["pz"].push_back(pz);
+			branches[name_type]["e"].push_back(e);
+			branches[name_type]["pt"].push_back(pt);
+			branches[name_type]["m"].push_back(m);
+		}
+	}		// :End collection loop
+}
+
+/// Photons method:
+void JetAnalyzer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Photon>> token) {
+	// Arguments:
+	string name = "lp";
+	string type = "pf";
+	string name_type = name + "_" + type;
+	
+	Handle<vector<pat::Photon>> leps;
+	iEvent.getByToken(token, leps);
+	
+	// Loop over the collection:
+	for (vector<pat::Photon>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
+		// Define some useful event variables:
+		double m = lep->mass();
+		double px = lep->px();
+		double py = lep->py();
+		double pz = lep->pz();
+		double e = lep->energy();
+		double pt = lep->pt();
+		double phi = lep->phi();
+		double eta = lep->eta();
+		double y = lep->y();
+		
+		// Fill branches:
+		if (pt > 5) {
+			branches[name_type]["phi"].push_back(phi);
+			branches[name_type]["eta"].push_back(eta);
+			branches[name_type]["y"].push_back(y);
+			branches[name_type]["px"].push_back(px);
+			branches[name_type]["py"].push_back(py);
+			branches[name_type]["pz"].push_back(pz);
+			branches[name_type]["e"].push_back(e);
+			branches[name_type]["pt"].push_back(pt);
+			branches[name_type]["m"].push_back(m);
+		}
+	}		// :End collection loop
+}
 // ------------ called for each event  ------------
 void JetAnalyzer::analyze(
 	const edm::Event& iEvent,
@@ -329,61 +794,6 @@ void JetAnalyzer::analyze(
 		if (n_event == 1) {
 			cout << "You wanted to run over a B2G ntuple. This isn't implemented, yet ..." << endl;
 		}
-//		if (v_) {cout << "Running over a B2G ntuple ..." << endl;}
-//		Handle<vector<float>> pf_ak8_e;
-//		Handle<vector<float>> pf_ak8_m;
-//		Handle<vector<float>> pf_ak8_pt;
-////		Handle<vector<float>> pf_ak8_px;
-////		Handle<vector<float>> pf_ak8_py;
-////		Handle<vector<float>> pf_ak8_pz;
-//		Handle<vector<float>> pf_ak8_phi;
-//		Handle<vector<float>> pf_ak8_eta;
-//		Handle<vector<float>> pf_ak8_y;
-//		Handle<vector<float>> gn_ak8_e;
-//		Handle<vector<float>> gn_ak8_m;
-//		Handle<vector<float>> gn_ak8_pt;
-////		Handle<vector<float>> gn_ak8_px;
-////		Handle<vector<float>> gn_ak8_py;
-////		Handle<vector<float>> gn_ak8_pz;
-//		Handle<vector<float>> gn_ak8_phi;
-//		Handle<vector<float>> gn_ak8_eta;
-//		Handle<vector<float>> gn_ak8_y;
-//		iEvent.getByLabel("jetsAK8", "jetAK8E", pf_ak8_e);
-//		iEvent.getByLabel("jetsAK8", "jetAK8Mass", pf_ak8_m);
-//		iEvent.getByLabel("jetsAK4", "jetAK4Pt", pf_ak8_pt);
-////		iEvent.getByLabel("jetsAK8", "jetAK8Px", pf_ak8_px);		// Doesn't exist?
-////		iEvent.getByLabel("jetsAK8", "jetAK8Py", pf_ak8_py);		// Doesn't exist?
-////		iEvent.getByLabel("jetsAK8", "jetAK8Pz", pf_ak8_pz);		// Doesn't exist?
-//		iEvent.getByLabel("jetsAK8", "jetAK8Phi", pf_ak8_phi);
-//		iEvent.getByLabel("jetsAK8", "jetAK8Eta", pf_ak8_eta);
-//		iEvent.getByLabel("jetsAK8", "jetAK8Y", pf_ak8_y);
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8E", gn_ak8_e);
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8Mass", gn_ak8_m);
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8Pt", gn_ak8_pt);
-////		iEvent.getByLabel("genJetsAK8", "genJetsAK8Px", gn_ak8_px);		// Doesn't exist?
-////		iEvent.getByLabel("genJetsAK8", "genJetsAK8Py", gn_ak8_py);		// Doesn't exist?
-////		iEvent.getByLabel("genJetsAK8", "genJetsAK8Pz", gn_ak8_pz);		// Doesn't exist?
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8Phi", gn_ak8_phi);
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8Eta", gn_ak8_eta);
-//		iEvent.getByLabel("genJetsAK8", "genJetsAK8Y", gn_ak8_y);
-//		int gn_ak8_n = (*gn_ak8_pt).size();
-//		int pf_ak8_n = (*pf_ak8_pt).size();
-//		if (v_) {cout << gn_ak8_n << "    " << pf_ak8_n << endl;}
-//		if (pf_ak8_n >= 2) {
-//	//		double pf_ak8_m0 = (*pf_ak8_m)[0];
-//	//		double pf_ak8_m1 = (*pf_ak8_m)[1];
-//			double pf_ak8_pt0 = (*pf_ak8_pt)[0];
-//	//		double pf_ak8_pt1 = (*pf_ak8_pt)[1];
-//			cout << "There are " << (*pf_ak8_pt).size() << " PFAK8 jets." << endl;
-//		
-//			// Event selection:
-//			if (pf_ak8_pt0 > 150) {
-//				cout << "Event selected!" << endl;
-//			}
-//			else {
-//				cout << "Event not selected." << endl;
-//			}
-//		}
 	}
 	else if (in_type_ == 1) {
 		if (v_) {cout << "Running over JetToolbox collections ..." << endl;}
@@ -418,21 +828,21 @@ void JetAnalyzer::analyze(
 		
 		// Get event-wide variables:
 		/// pT-hat:
-		double pt_hat = -1;
+		pt_hat = -1;
 		edm::Handle<GenEventInfoProduct> gn_event_info;
-		iEvent.getByLabel("generator", gn_event_info);
+		iEvent.getByToken(genInfo_, gn_event_info);
 		if (gn_event_info->hasBinningValues()) {
 			pt_hat = gn_event_info->binningValues()[0];
 		}
 		/// Rho:
-		double rho = -1;
+		rho = -1;
 		edm::Handle<double> rho_;
-		iEvent.getByLabel("fixedGridRhoFastjetAll", rho_);
+		iEvent.getByToken(rhoInfo_, rho_);
 		rho = *rho_;
 		/// Number of primary vertices (NPV):
-		int npv = 0;
+		npv = 0;
 		edm::Handle<reco::VertexCollection> pvs;
-		iEvent.getByLabel("offlineSlimmedPrimaryVertices", pvs);
+		iEvent.getByToken(vertexCollection_, pvs);
 		for (vector<reco::Vertex>::const_iterator ipv = pvs->begin(); ipv != pvs->end(); ipv++) {
 			if (ipv->ndof() > 4 && ipv->isFake() == false) {
 				npv += 1;
@@ -447,439 +857,19 @@ void JetAnalyzer::analyze(
 		branches["event"]["w"].push_back(weight_);                // The event weight
 		branches["event"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
 		
-		// Get jet-specific variables:
-		/// Save variables for each jet collection in the input sample:
-		
-		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
-			string name = *i;
-			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
-				string type = *j;
-				string name_type = name + "_" + type;
-				int n_saved_jets = 0;
-				
-				// Print some info:
-				if (v_) {cout << ">> Reading collection " << name_type << " ..." << endl;}
-				
-				// Grab the collection:
-				if (type == "pf") {
-					Handle<vector<pat::Jet>> jets_edm;
-					string module = string("selectedPatJets") + boost::to_upper_copy<string>(name) + string("PFCHS");
-					string label = "";
-					iEvent.getByLabel(module, label, jets_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					double ht = 0;
-					for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
-						// Define some useful event variables:
-						double M = jet->mass();
-						double m_t = jet->userFloat(name + string("PFJetsCHSTrimmedMass"));
-						double m_p = jet->userFloat(name + string("PFJetsCHSPrunedMass"));
-						double m_s = jet->userFloat(name + string("PFJetsCHSSoftDropMass"));
-						double m_f = jet->userFloat(name + string("PFJetsCHSFilteredMass"));
-						double tau1 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau1"));
-						double tau2 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau2"));
-						double tau3 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau3"));
-						double tau4 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau4"));
-						double tau5 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(name) + string("CHS:tau5"));
-						double px = jet->px();
-						double py = jet->py();
-						double pz = jet->pz();
-						double e = jet->energy();
-						double pt = jet->pt();
-						double phi = jet->phi();
-						double eta = jet->eta();
-						double y = jet->y();
-						double A = jet->jetArea();
-						if (name_type == "ak8_pf") {
-							if (pt > 150) {
-								ht += pt;
-							}
-						}
-						else {
-							ht += pt;
-						}
-						
-						// JECs:
-						double jec = -1;
-						double jmc = -1;
-						if (name_type == "ak4_pf") {
-							jec_corrector_ak4->setJetPt(pt);
-							jec_corrector_ak4->setJetEta(eta);
-							jec_corrector_ak4->setJetPhi(phi);
-							jec_corrector_ak4->setJetE(e);
-							jec_corrector_ak4->setJetA(A);
-							jec_corrector_ak4->setRho(rho);
-							jec_corrector_ak4->setNPV(npv);
-							jec = jec_corrector_ak4->getCorrection();
-							
-							jmc_corrector_ak4->setJetPt(pt);
-							jmc_corrector_ak4->setJetEta(eta);
-							jmc_corrector_ak4->setJetPhi(phi);
-							jmc_corrector_ak4->setJetE(e);
-							jmc_corrector_ak4->setJetA(A);
-							jmc_corrector_ak4->setRho(rho);
-							jmc_corrector_ak4->setNPV(npv);
-							jmc = jmc_corrector_ak4->getCorrection();
-						}
-						else {
-							jec_corrector_ak8->setJetPt(pt);
-							jec_corrector_ak8->setJetEta(eta);
-							jec_corrector_ak8->setJetPhi(phi);
-							jec_corrector_ak8->setJetE(e);
-							jec_corrector_ak8->setJetA(A);
-							jec_corrector_ak8->setRho(rho);
-							jec_corrector_ak8->setNPV(npv);
-							jec = jec_corrector_ak8->getCorrection();
-							
-							jmc_corrector_ak8->setJetPt(pt);
-							jmc_corrector_ak8->setJetEta(eta);
-							jmc_corrector_ak8->setJetPhi(phi);
-							jmc_corrector_ak8->setJetE(e);
-							jmc_corrector_ak8->setJetA(A);
-							jmc_corrector_ak8->setRho(rho);
-							jmc_corrector_ak8->setNPV(npv);
-							jmc = jmc_corrector_ak8->getCorrection();
-						}
-						
-						
-						if (pt > cut_pt_) {
-							n_saved_jets ++;
-						
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["M"].push_back(M);
-							branches[name_type]["m_t"].push_back(m_t);
-							branches[name_type]["m_p"].push_back(m_p);
-							branches[name_type]["m_s"].push_back(m_s);
-							branches[name_type]["m_f"].push_back(m_f);
-							branches[name_type]["tau1"].push_back(tau1);
-							branches[name_type]["tau2"].push_back(tau2);
-							branches[name_type]["tau3"].push_back(tau3);
-							branches[name_type]["tau4"].push_back(tau4);
-							branches[name_type]["tau5"].push_back(tau5);
-							branches[name_type]["jec"].push_back(jec);
-							branches[name_type]["jmc"].push_back(jmc);
-						}
-					}		// :End collection loop
-					
-					branches[name_type]["ht"].push_back(ht);
-				}		// :End type == "PF"
-				else if (type == "gn") {
-					Handle<vector<reco::GenJet>> jets_edm;
-					string module = "selectedPatJets" + boost::to_upper_copy<string>(name) + "PFCHS";
-					string label = "genJets";
-					iEvent.getByLabel(module, label, jets_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					double ht = 0;
-					for (vector<reco::GenJet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
-						// Define some useful event variables:
-						double M = jet->mass();
-						double m_t = -1;          // There is no groomed mass for GN jets.
-						double m_p = -1;          // There is no groomed mass for GN jets.
-						double m_s = -1;          // There is no groomed mass for GN jets.
-						double m_f = -1;          // There is no groomed mass for GN jets.
-						double tau1 = -1;         // There is no nsubjettiness for GN jets.
-						double tau2 = -1;         // There is no nsubjettiness for GN jets.
-						double tau3 = -1;         // There is no nsubjettiness for GN jets.
-						double tau4 = -1;         // There is no nsubjettiness for GN jets.
-						double tau5 = -1;         // There is no nsubjettiness for GN jets.
-						double px = jet->px();
-						double py = jet->py();
-						double pz = jet->pz();
-						double e = jet->energy();
-						double pt = jet->pt();
-						double phi = jet->phi();
-						double eta = jet->eta();
-						double y = jet->y();
-						if (name_type == "ak8_gn") {
-							if (pt > 150) {
-								ht += pt;
-							}
-						}
-						else {
-							ht += pt;
-						}
-					
-						if (pt > cut_pt_) {
-							n_saved_jets ++;
-						
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["M"].push_back(M);
-							branches[name_type]["m_t"].push_back(m_t);
-							branches[name_type]["m_p"].push_back(m_p);
-							branches[name_type]["m_s"].push_back(m_s);
-							branches[name_type]["m_f"].push_back(m_f);
-							branches[name_type]["tau1"].push_back(tau1);
-							branches[name_type]["tau2"].push_back(tau2);
-							branches[name_type]["tau3"].push_back(tau3);
-							branches[name_type]["tau4"].push_back(tau4);
-							branches[name_type]["tau5"].push_back(tau5);
-						}
-					}
-				
-					branches[name_type]["ht"].push_back(ht);
-				}         // :End type == "GN"
-				else if (type == "maod") {
-					if (name =="ak4" || name == "ak8") {
-						Handle<vector<pat::Jet>> jets_edm;
-						string module = "slimmedJets";
-						if (name == "ak8") {
-							module += "AK8";
-						}
-						string label = "";
-						iEvent.getByLabel(module, label, jets_edm);
-						
-						// Print some info:
-						if (v_) {cout << ">> There are " << jets_edm->size() << " jets in the " << name_type << " collection." << endl;}
-						
-						// Loop over the collection:
-						double ht = 0;
-						for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
-							// Define some useful event variables:
-							double M = jet->mass();
-							double m_t = -1;          // There is no groomed mass for maod jets.
-							double m_p = -1;          // There is no groomed mass for maod jets.
-							double m_s = -1;          // There is no groomed mass for maod jets.
-							double m_f = -1;          // There is no groomed mass for maod jets.
-							double tau1 = -1;         // There is no nsubjettiness for maod jets.
-							double tau2 = -1;         // There is no nsubjettiness for maod jets.
-							double tau3 = -1;         // There is no nsubjettiness for maod jets.
-							double tau4 = -1;         // There is no nsubjettiness for maod jets.
-							double tau5 = -1;         // There is no nsubjettiness for maod jets.
-							double px = jet->px();
-							double py = jet->py();
-							double pz = jet->pz();
-							double e = jet->energy();
-							double pt = jet->pt();
-							double phi = jet->phi();
-							double eta = jet->eta();
-							double y = jet->y();
-							if (name_type == "ak8_maod") {
-								if (pt > 150) {
-									ht += pt;
-								}
-							}
-							else {
-								ht += pt;
-							}
-							
-							if (pt > cut_pt_) {
-								n_saved_jets ++;
-								
-								// Fill branches:
-								branches[name_type]["phi"].push_back(phi);
-								branches[name_type]["eta"].push_back(eta);
-								branches[name_type]["y"].push_back(y);
-								branches[name_type]["px"].push_back(px);
-								branches[name_type]["py"].push_back(py);
-								branches[name_type]["pz"].push_back(pz);
-								branches[name_type]["e"].push_back(e);
-								branches[name_type]["pt"].push_back(pt);
-								branches[name_type]["M"].push_back(M);
-								branches[name_type]["m_t"].push_back(m_t);
-								branches[name_type]["m_p"].push_back(m_p);
-								branches[name_type]["m_s"].push_back(m_s);
-								branches[name_type]["m_f"].push_back(m_f);
-								branches[name_type]["tau1"].push_back(tau1);
-								branches[name_type]["tau2"].push_back(tau2);
-								branches[name_type]["tau3"].push_back(tau3);
-								branches[name_type]["tau4"].push_back(tau4);
-								branches[name_type]["tau5"].push_back(tau5);
-								branches[name_type]["bd_te"].push_back(jet->bDiscriminator("pfTrackCountingHighEffBJetTags"));
-								branches[name_type]["bd_tp"].push_back(jet->bDiscriminator("pfTtrackCountingHighPurBJetTags"));
-								branches[name_type]["bd_csv"].push_back(jet->bDiscriminator("pfCombinedSecondaryVertexV2BJetTags"));
-								branches[name_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
-								branches[name_type]["jec"].push_back(-1);
-								branches[name_type]["jmc"].push_back(-1);
-							}
-						}
-						branches[name_type]["ht"].push_back(ht);
-					}
-				}         // :End type == "maod"
-			}             // :End jet_type loop
-		}                 // :End jet_name loop
-		// :End "jet" loop
-		
-		// "lep" loop:
-		for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
-			string name = *i;
-			for (vector<string>::const_iterator j = lep_types.begin(); j != lep_types.end(); j++) {
-				string type = *j;
-				string name_type = name + "_" + type;
-				
-				// Print some info:
-				if (v_) {cout << ">> Reading collection " << name_type << " ..." << endl;}
-				
-				// Grab the collection:
-				if (name == "le" && type == "pf") {
-					Handle<vector<pat::Electron>> leps_edm;
-					string module = string("slimmedElectrons");
-					string label = "";
-					iEvent.getByLabel(module, label, leps_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					for (vector<pat::Electron>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
-						// Define some useful event variables:
-						double m = lep->mass();
-						double px = lep->px();
-						double py = lep->py();
-						double pz = lep->pz();
-						double e = lep->energy();
-						double pt = lep->pt();
-						double phi = lep->phi();
-						double eta = lep->eta();
-						double y = lep->y();
-						
-						if (pt > 5) {
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["m"].push_back(m);
-						}
-					}
-				}         // :End "le_pf" (in "lep" loop)
-				if (name == "lm" && type == "pf") {
-					Handle<vector<pat::Muon>> leps_edm;
-					string module = string("slimmedMuons");
-					string label = "";
-					iEvent.getByLabel(module, label, leps_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					for (vector<pat::Muon>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
-						// Define some useful event variables:
-						double m = lep->mass();
-						double px = lep->px();
-						double py = lep->py();
-						double pz = lep->pz();
-						double e = lep->energy();
-						double pt = lep->pt();
-						double phi = lep->phi();
-						double eta = lep->eta();
-						double y = lep->y();
-						
-						if (pt > 50) {
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["m"].push_back(m);
-						}
-					}
-				}         // :End "lm_pf" (in "lep" loop)
-				if (name == "lt" && type == "pf") {
-					Handle<vector<pat::Tau>> leps_edm;
-					string module = string("slimmedTaus");
-					string label = "";
-					iEvent.getByLabel(module, label, leps_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					for (vector<pat::Tau>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
-						// Define some useful event variables:
-						double m = lep->mass();
-						double px = lep->px();
-						double py = lep->py();
-						double pz = lep->pz();
-						double e = lep->energy();
-						double pt = lep->pt();
-						double phi = lep->phi();
-						double eta = lep->eta();
-						double y = lep->y();
-						
-						if (pt > 50) {
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["m"].push_back(m);
-						}
-					}
-				}         // :End "lt_pf" (in "lep" loop)
-				if (name == "lp" && type == "pf") {
-					Handle<vector<pat::Photon>> leps_edm;
-					string module = string("slimmedPhotons");
-					string label = "";
-					iEvent.getByLabel(module, label, leps_edm);
-				
-					// Print some info:
-					if (v_) {cout << ">> There are " << leps_edm->size() << " leptons in the " << name_type << " collection." << endl;}
-				
-					// Loop over the collection:
-					for (vector<pat::Photon>::const_iterator lep = leps_edm->begin(); lep != leps_edm->end(); ++ lep) {
-						// Define some useful event variables:
-						double m = lep->mass();
-						double px = lep->px();
-						double py = lep->py();
-						double pz = lep->pz();
-						double e = lep->energy();
-						double pt = lep->pt();
-						double phi = lep->phi();
-						double eta = lep->eta();
-						double y = lep->y();
-						
-						if (pt > 50) {
-							// Fill branches:
-							branches[name_type]["phi"].push_back(phi);
-							branches[name_type]["eta"].push_back(eta);
-							branches[name_type]["y"].push_back(y);
-							branches[name_type]["px"].push_back(px);
-							branches[name_type]["py"].push_back(py);
-							branches[name_type]["pz"].push_back(pz);
-							branches[name_type]["e"].push_back(e);
-							branches[name_type]["pt"].push_back(pt);
-							branches[name_type]["m"].push_back(m);
-						}
-					}
-				}         // :End "lp_pf" (in "lep" loop)
-			}             // :End lep_type loop
-		}                 // :End lep_name loop
-		// :End "lep" loop
+		// Process each object collection:
+		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
+		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
+		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
+		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
+		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
+		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
+		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
+		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
+		process_electrons_pf(iEvent, electronCollection_);
+		process_muons_pf(iEvent, muonCollection_);
+		process_tauons_pf(iEvent, tauCollection_);
+		process_photons_pf(iEvent, photonCollection_);
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

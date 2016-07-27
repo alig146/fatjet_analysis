@@ -53,6 +53,9 @@ class JetFilter : public edm::EDFilter {
       // ----------member data ---------------------------
       double cut_pt_;
       int nevents, nevents_passed;
+      
+      // ?
+      EDGetTokenT<vector<pat::Jet>> jetCollection_;
 };
 
 //
@@ -66,8 +69,11 @@ class JetFilter : public edm::EDFilter {
 //
 // constructors and destructor
 //
-JetFilter::JetFilter(const edm::ParameterSet& iConfig) :
-	cut_pt_(iConfig.getParameter<double>("cut_pt"))
+JetFilter::JetFilter(const edm::ParameterSet& iConfig):
+	cut_pt_(iConfig.getParameter<double>("cut_pt")),
+	
+	//?
+	jetCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("jetCollection")))
 {
 //	cout << "=================================" << endl;
 //	cout << "FILTER START" << endl;
@@ -98,7 +104,8 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	nevents ++;
 	// Get CA12 jets:
 	Handle<vector<pat::Jet>> jets_edm;
-	iEvent.getByLabel("selectedPatJetsCA12PFCHS","", jets_edm);
+	iEvent.getByToken(jetCollection_, jets_edm);
+//	iEvent.getByLabel("selectedPatJetsCA12PFCHS", "", jets_edm);
 	
 	// Ensure the top two jets have pT greater than cut_pt_:
 //	for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
