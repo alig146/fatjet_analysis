@@ -30,7 +30,7 @@ def check_jec(jec_path, data=False, algorithm="ak8"):
 		return False
 	txts = [f for f in os.listdir(d) if ".txt" in f]
 	for flavor in flavors:
-		if not "{}_{}_{}_{}PFchs.txt".format(prefix, ("MC", "data")[data == True], flavor, algorithm.upper()) in txts:
+		if not "{}_{}_{}_{}PFchs.txt".format(prefix, ("MC", "DATA")[data == True], flavor, algorithm.upper()) in txts:
 			return False
 	return True
 # /FUNCTIONS:
@@ -52,6 +52,12 @@ options.register ('crab',
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.bool,
 	"Turn this on from inside crab configuration files."
+)
+options.register ('data',
+	False,
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.bool,
+	"Turn this on when running on data (instead of MC)."
 )
 options.register ('subprocess',
 	'',
@@ -176,7 +182,7 @@ process.options = cms.untracked.PSet(
 )
 
 ## Input:
-in_files = ["file:fall15.root"]
+#in_files = ["file:fall15.root"]
 if options.crab:
 	process.source = cms.Source("PoolSource")
 else:
@@ -317,14 +323,14 @@ process.TFileService = cms.Service("TFileService",
 # Analyzer:
 ## JEC data path:
 jec_path = "jec_data/Spring16_25nsV2"
-if not check_jec(jec_path):
+if not check_jec(jec_path, data=options.data):
 	print "ERROR: Can't find the JEC data that's supposed to be located in {}.".format(jec_path)
 	sys.exit()
 	
 ## Initialize the EDAnalyzer:
 process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	v=cms.bool(False),
-	is_data=cms.bool(False),
+	is_data=cms.bool(options.data),
 	in_type=cms.int32(1),                    # Input type (0: B2G, 1: fatjets)
 	sigma=cms.double(sigma),                 # The dataset's cross section
 	weight=cms.double(options.weight),       # The event weight

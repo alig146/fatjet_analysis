@@ -116,8 +116,8 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 			branches[key][i] = -1
 
 	# Variables:
-	n_events_tc = loop.n_total            # The total number of events in the TChain
-	n_events = loop.n                     # The number of events to anatuplize
+	n_events_tc = loop.n                      # The total number of events in the TChain
+	n_events = loop.n_run                     # The number of events to anatuplize
 #	if n_events_tc != nevents:
 #		print "WARNING: Event numbers don't match:\n\tn_events_tc = {}\n\tnevents = {}".format(n_events_tc, nevents)
 #		sys.exit()
@@ -305,35 +305,23 @@ def main():
 	## Arguments:
 	a = variables.arguments()
 	args = a.args
-#	if not a.generation:
-#		a.generation = "spring15"
-#		a.generations = ["spring15"]
-#	if not a.suffix:
-#		a.suffix = "pt400"
-#		a.suffixes = ["pt400"]
-#	samples = dataset.fetch_samples(		# KLUDGE UNTIL BELOW WORKS (need to put process, category into tuples, miniaods ... )
-#		category=a.categories,
-#		process=a.processes,
-#		subprocess=a.subprocesses,
-#	)
-#	tups = []
-#	for sample in samples:
-#		tups.extend([tup for tup in sample.tuples if tup.generation in a.generations and tup.suffix in a.suffixes])
-	tups = dataset.fetch_tuples(
-		category=a.categories,
-		process=a.processes,
-		subprocess=a.subprocesses,
-		generation=a.generations,
-		suffix=a.suffixes,
-	)
+	tuples = dataset.fetch_entries("tuple", a.query)
+#	print tuples
+#	print
+	tuples = dataset.sort_datasets(tuples)
 	
 	## Print an introduction:
 	print "The analyzer will run over the following tuples:"
-	for tup in tups:
-		print "\t* {}".format(tup)
+	for key, tups in tuples.items():
+		print "\t* {}:".format(key)
+		for tup in tups:
+			print "\t\t* {}".format(tup)
+	
+#	print tuples
+#	sys.exit()
 	
 	## Analyzer object:
-	tuples = {}
+#	tuples = {}
 	
 #	### food = 1:
 #	for tup in tups:
@@ -350,21 +338,19 @@ def main():
 #	print tuples
 	
 	### food = 2:
-	tuples = {(tup.Name_safe if [t.process for t in tups].count(tup.process) > 1 else tup.process): tup for tup in tups}
-	ana = analyzer.analyzer(tuples, save=True, v=True, count=False)		# Add "out_dir=" and "out_file=".
+#	tuples = {(tup.Name_safe if [t.process for t in tups].count(tup.process) > 1 else tup.process): tup for tup in tups}
+	ana = analyzer.analyzer(tuples, save=True, v=args.verbose, count=False)		# Add "out_dir=" and "out_file=".
 	ana.define_branches(vs_out)
 #	branches = create_tuples(ana)
 #	colors = color.pick(len(tuples.keys()))
 	
 	# Event loop:
 	for key, loop in ana.loops.iteritems():
-#		print key
 		loop.treatment = treat_event
 #		print "here"
 #		loop.progress = False
 		loop.run(n=args.n, arguments={"alg": args.algorithm})
 #	event_loop(ana.tt[key]["analyzer/events"], branches[key], ana.tuples[key], n_events=n_events_sq)
-
 	# Output:
 	ana.write()
 	print ana.out_path

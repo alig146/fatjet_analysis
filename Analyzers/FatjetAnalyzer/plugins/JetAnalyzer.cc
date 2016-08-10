@@ -334,8 +334,9 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	cout << endl;
 	cout << "Starting the Jet Analyzer..." << endl;
 	cout << "in_type = " << in_type_ << endl;
-	cout << "v = " << v_ << "." << endl;
+	cout << "v = " << v_ << endl;
 	cout << "jec_prefix = " << jec_prefix << endl;
+	cout << "is_data = " << is_data_ << endl;
 }
 
 // DEFINE THE DESTRUCTOR
@@ -786,7 +787,6 @@ void JetAnalyzer::analyze(
 	const edm::Event& iEvent,
 	const edm::EventSetup& iSetup
 ){
-//	cout << "HERE 324" << endl;
 	n_event ++;		// Increment the event counter by one. For the first event, n_event = 1.
 	
 	// Get objects from event:
@@ -829,10 +829,12 @@ void JetAnalyzer::analyze(
 		// Get event-wide variables:
 		/// pT-hat:
 		pt_hat = -1;
-		edm::Handle<GenEventInfoProduct> gn_event_info;
-		iEvent.getByToken(genInfo_, gn_event_info);
-		if (gn_event_info->hasBinningValues()) {
-			pt_hat = gn_event_info->binningValues()[0];
+		if (!is_data_) {
+			edm::Handle<GenEventInfoProduct> gn_event_info;
+			iEvent.getByToken(genInfo_, gn_event_info);
+			if (gn_event_info->hasBinningValues()) {
+				pt_hat = gn_event_info->binningValues()[0];
+			}
 		}
 		/// Rho:
 		rho = -1;
