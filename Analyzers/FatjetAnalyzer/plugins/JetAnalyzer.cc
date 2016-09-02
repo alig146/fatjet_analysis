@@ -38,6 +38,7 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 ///// JEC:
@@ -93,6 +94,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 		virtual void process_muons_pf(const edm::Event&, EDGetTokenT<vector<pat::Muon>>);
 		virtual void process_tauons_pf(const edm::Event&, EDGetTokenT<vector<pat::Tau>>);
 		virtual void process_photons_pf(const edm::Event&, EDGetTokenT<vector<pat::Photon>>);
+		virtual void process_squarks_pf(const edm::Event&, EDGetTokenT<vector<pat::PackedGenParticle>>);
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void endJob();
 		virtual void beginRun(const edm::Run&, const edm::EventSetup&);
@@ -109,8 +111,6 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	double sigma_, weight_, cut_pt_;
 	bool make_gen_, make_pf_;		// Controls to make gen fatjets or pf fatjets
 	string jec_version_;
-	/// Parameters
-	double L;
 	// Basic fatjet variables
 	// Algorithm variables
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
@@ -118,6 +118,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	// Input collections:
 	vector<string> jet_names, jet_types;
 	vector<string> lep_names, lep_types;
+	vector<string> gen_names, gen_types;
 	
 	// JEC info:
 	string jec_prefix;
@@ -125,7 +126,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
 	
 	// Ntuple information:
-	vector<string> jet_variables, lep_variables, event_variables;
+	vector<string> jet_variables, lep_variables, gen_variables, event_variables;
 	map<string, map<string, vector<double>>> branches;
 	map<string, TTree*> ttrees;
 	map<string, map<string, TBranch*>> tbranches;
@@ -152,6 +153,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	EDGetTokenT<vector<pat::Muon>> muonCollection_;
 	EDGetTokenT<vector<pat::Tau>> tauCollection_;
 	EDGetTokenT<vector<pat::Photon>> photonCollection_;
+	EDGetTokenT<vector<pat::PackedGenParticle>> genCollection_;
 };
 // \CLASS DEFINITIONS
 
@@ -191,12 +193,10 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	electronCollection_(consumes<vector<pat::Electron>>(iConfig.getParameter<InputTag>("electronCollection"))),
 	muonCollection_(consumes<vector<pat::Muon>>(iConfig.getParameter<InputTag>("muonCollection"))),
 	tauCollection_(consumes<vector<pat::Tau>>(iConfig.getParameter<InputTag>("tauCollection"))),
-	photonCollection_(consumes<vector<pat::Photon>>(iConfig.getParameter<InputTag>("photonCollection")))
+	photonCollection_(consumes<vector<pat::Photon>>(iConfig.getParameter<InputTag>("photonCollection"))),
+	genCollection_(consumes<vector<pat::PackedGenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
 {
 //do what ever initialization is needed
-	// Parameters:
-	L = 10000;                // Luminosity (in inverse pb)
-	
 	// Collections setup:
 	/// "jet"
 	jet_names = {"ak4", "ak8", "ca12"};
@@ -227,6 +227,13 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	lep_types = {"pf"};
 	lep_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m",
+	};
+	
+	/// "gen"
+	gen_names = {"sq", "q"};
+	gen_types = {"pf"};
+	lep_variables = {		// List of event branch variables for each collection.
+		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m", "pid",
 	};
 	
 	/// "event"
@@ -267,6 +274,19 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 			string type = *j;
 			string name_type = name + "_" + type;
 			for (vector<string>::const_iterator k = lep_variables.begin(); k != lep_variables.end(); k++) {
+				string variable = *k;
+				string branch_name = name + "_" + type + "_" + variable;
+				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+			}
+		}
+	}
+	//// "gen":
+	for (vector<string>::const_iterator i = gen_names.begin(); i != gen_names.end(); i++) {
+		string name = *i;
+		for (vector<string>::const_iterator j = gen_types.begin(); j != gen_types.end(); j++) {
+			string type = *j;
+			string name_type = name + "_" + type;
+			for (vector<string>::const_iterator k = gen_variables.begin(); k != gen_variables.end(); k++) {
 				string variable = *k;
 				string branch_name = name + "_" + type + "_" + variable;
 				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
@@ -782,6 +802,48 @@ void JetAnalyzer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 		}
 	}		// :End collection loop
 }
+
+/// Squarks method:
+void JetAnalyzer::process_squarks_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::PackedGenParticle>> token) {
+	// Arguments:
+	string name = "sq";
+	string type = "pf";
+	string name_type = name + "_" + type;
+	
+	Handle<vector<pat::PackedGenParticle>> gens;
+	iEvent.getByToken(token, gens);
+	
+	// Loop over the collection:
+	for (vector<pat::PackedGenParticle>::const_iterator gen = gens->begin(); gen != gens->end(); ++ gen) {
+		// Define some useful event variables:
+//		double m = gen->mass();
+//		double px = gen->px();
+//		double py = gen->py();
+//		double pz = gen->pz();
+//		double e = gen->energy();
+//		double pt = gen->pt();
+//		double phi = gen->phi();
+//		double eta = gen->eta();
+//		double y = gen->y();
+		double status = gen->status();
+		double pdgid = gen->pdgId();
+		
+		cout << status << "  " << pdgid << endl;
+		
+//		// Fill branches:
+//		if (pt > 5) {
+//			branches[name_type]["phi"].push_back(phi);
+//			branches[name_type]["eta"].push_back(eta);
+//			branches[name_type]["y"].push_back(y);
+//			branches[name_type]["px"].push_back(px);
+//			branches[name_type]["py"].push_back(py);
+//			branches[name_type]["pz"].push_back(pz);
+//			branches[name_type]["e"].push_back(e);
+//			branches[name_type]["pt"].push_back(pt);
+//			branches[name_type]["m"].push_back(m);
+//		}
+	}		// :End collection loop
+}
 // ------------ called for each event  ------------
 void JetAnalyzer::analyze(
 	const edm::Event& iEvent,
@@ -860,18 +922,19 @@ void JetAnalyzer::analyze(
 		branches["event"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
 		
 		// Process each object collection:
-		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
-		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
-		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
-		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
-		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
-		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
-		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
-		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
-		process_electrons_pf(iEvent, electronCollection_);
-		process_muons_pf(iEvent, muonCollection_);
-		process_tauons_pf(iEvent, tauCollection_);
-		process_photons_pf(iEvent, photonCollection_);
+//		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
+//		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
+//		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
+//		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
+//		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
+//		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
+//		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
+//		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
+//		process_electrons_pf(iEvent, electronCollection_);
+//		process_muons_pf(iEvent, muonCollection_);
+//		process_tauons_pf(iEvent, tauCollection_);
+//		process_photons_pf(iEvent, photonCollection_);
+		process_squarks_pf(iEvent, genCollection_);
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

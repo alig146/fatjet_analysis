@@ -1,0 +1,6 @@
+- variable: mavgp
+  cut: 1
+  lines:
+      - process: qcdmg
+      - process: ttbar
+      - process: sq300to4j

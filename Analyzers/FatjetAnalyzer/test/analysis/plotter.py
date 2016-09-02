@@ -17,8 +17,8 @@ from truculence import analysis
 # :VARIABLES
 
 # FUNCTIONS:
-def get_cuts():
-	with open("plotter_cuts.txt") as f:
+def get_cuts(path="plotter_cuts.txt"):
+	with open(path) as f:
 		cuts_raw = f.readlines()
 		cuts = [cut.strip() for cut in cuts_raw if cut[0] != "#"]
 		return [TCut("cut{}".format(i), "w[0]*({})".format(cut)) for i, cut in enumerate(cuts)]
@@ -49,7 +49,8 @@ def main():
 	
 	gROOT.SetBatch()
 	tcuts = get_cuts()
-	tts = get_ttrees("/uscms_data/d3/tote/data/fat/anatuples/anatuple_ca12_spring15_cutpt400.root")
+#	tts = get_ttrees("/uscms_data/d3/tote/data/fat/anatuples/anatuple_ca12_spring15_cutpt400.root")
+	tts = get_ttrees("/uscms_data/d3/tote/data/fat/anatuples/anatuple_ca12_fall15_cutpt400.root")
 #	tts = get_ttrees("/uscms_data/d3/tote/data/fat/anatuples/anatuple_ak8_spring15_cutpt400.root")
 	
 	f_out = "plots.root"

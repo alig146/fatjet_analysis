@@ -351,6 +351,7 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	muonCollection=cms.InputTag("slimmedMuons"),
 	tauCollection=cms.InputTag("slimmedTaus"),
 	photonCollection=cms.InputTag("slimmedPhotons"),
+	genCollection=cms.InputTag("packedGenParticles"),
 )
 #process.analyzer.testtt = "test"		# This works.
 

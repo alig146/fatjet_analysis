@@ -15,7 +15,7 @@ th1:
     
     mavgp:
         var: mavg_p
-        label: "#bar{m}_{pruned})"
+        label: "#bar{m}_{pruned}"
         unit: GeV
         binning: [11, 25, 575]
         legend: 2
