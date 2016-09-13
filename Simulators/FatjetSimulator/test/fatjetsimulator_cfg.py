@@ -26,7 +26,7 @@ out_dir_default = "."      # This is where output goes when it's not put into EO
 cmssw_version = cmssw.get_version()                    # The CMSSW version that this configuration file is using.
 
 ## Construct process:
-process = cms.Process("SIM", eras.Run2_25ns)		# 160829: Changed "HLT" to "SIM"
+process = cms.Process("HLT", eras.Run2_25ns)		# 160905: Changed "SIM" back to "HLT" to avoid warnings.
 
 ## Set up variables and options:
 options = VarParsing('analysis')
@@ -141,7 +141,8 @@ process.source = cms.Source(
 )
 
 process.options = cms.untracked.PSet(
-	SkipEvent = cms.untracked.vstring('ProductNotFound')
+#	SkipEvent = cms.untracked.vstring('ProductNotFound'),
+#	allowUnscheduled=cms.untracked.bool(True),		# 160905: Uncommenting this breaks generation with "terminate called without an active exception" ...
 )
 
 # Production Info
@@ -151,7 +152,36 @@ process.configurationMetadata = cms.untracked.PSet(		# 160829: I don't how, if a
 	name = cms.untracked.string('Applications?')
 )
 
-# Output definition
+# Output definition:
+## Step 0 output:
+process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
+	SelectEvents = cms.untracked.PSet(
+		SelectEvents = cms.vstring('generation_step')
+	),
+	dataset = cms.untracked.PSet(
+		dataTier = cms.untracked.string('GEN-SIM'),
+		filterName = cms.untracked.string('')
+	),
+	eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
+	fileName = cms.untracked.string(out_location),
+	outputCommands = process.RAWSIMEventContent.outputCommands,
+	splitLevel = cms.untracked.int32(0)
+)
+
+## Step 2 output:
+process.AODSIMoutput = cms.OutputModule("PoolOutputModule",
+	compressionAlgorithm = cms.untracked.string('LZMA'),
+	compressionLevel = cms.untracked.int32(4),
+	dataset = cms.untracked.PSet(
+		dataTier = cms.untracked.string('AODSIM'),
+		filterName = cms.untracked.string('')
+	),
+	eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
+	fileName = cms.untracked.string(out_location),
+	outputCommands = process.AODSIMEventContent.outputCommands
+)
+
+## Step 3 output:
 process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
 	compressionAlgorithm = cms.untracked.string('LZMA'),
 	compressionLevel = cms.untracked.int32(4),
@@ -166,32 +196,20 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
 	outputCommands = process.MINIAODSIMEventContent.outputCommands,
 	overrideInputFileSplitLevels = cms.untracked.bool(True)
 )
-#process.Output = cms.OutputModule("PoolOutputModule",
-#    compressionLevel = cms.untracked.int32(4),
-#    compressionAlgorithm = cms.untracked.string('LZMA'),
-#    eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
-##    outputCommands = process.AODSIMEventContent.outputCommands,
-#	outputCommands = cms.untracked.vstring(
-#		'drop *',
-#		"keep *_genParticles_*_*",
-#		"keep *_particleFlow__*",
-#	),
-#	fileName = cms.untracked.string ("{0}/test.root".format(options.outDir)),
-#    dataset = cms.untracked.PSet(
-#        filterName = cms.untracked.string(''),
-#        dataTier = cms.untracked.string('GEN-SIM-RAW')
-#    )
-#)
-
-# Additional output definition
 
 # Other statements
 ## Global tag:
-from Configuration.AlCa.GlobalTag import GlobalTag
-#process.GlobalTag = GlobalTag(process.GlobalTag, 'MCRUN2_74_V9', '')		# 160829: commented line
-process.GlobalTag = GlobalTag(process.GlobalTag, '76X_mcRun2_asymptotic_v12', '')		# 160829: added line
 
-process.genstepfilter.triggerConditions=cms.vstring("generation_step")
+## 160907: Commented this section on in favor of auto:
+#from Configuration.AlCa.GlobalTag import GlobalTag
+##process.GlobalTag = GlobalTag(process.GlobalTag, 'MCRUN2_74_V9', '')		# 160829: commented line
+#process.GlobalTag = GlobalTag(process.GlobalTag, '76X_mcRun2_asymptotic_v12', '')		# 160829: added line
+
+from Configuration.AlCa.autoCond import autoCond
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = cms.string(autoCond['run2_mc'])
+
+process.genstepfilter.triggerConditions = cms.vstring("generation_step")
 
 #process.htFilter = cms.EDFilter("PythiaFilterHT",		# 160829: This sort of thing is really useful ... If I recomment this, I need to make sure to add it to the path below. Look at Ale's code for reference.
 #	MinHT = cms.untracked.double(500.0)
@@ -216,6 +234,7 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
         )
     )
 )
+
 
 ##process.generator = cms.EDFilter("Pythia8HadronizerFilter",
 ##	maxEventsToPrint = cms.untracked.int32(1),
@@ -253,48 +272,36 @@ process.generator = cms.EDFilter("Pythia8HadronizerFilter",
 minBiasFiles = __import__('MinBias_TuneCUETP8M1_13TeV-pythia8_cfi')
 process.mix.input.fileNames = cms.untracked.vstring(minBiasFiles.readFiles)
 
-#process.mix.input.fileNames = cms.untracked.vstring([
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/0028ABCB-74B0-E411-B596-0025904C4F50.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/007FD3D8-74B0-E411-AC02-782BCB67826E.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/00AAE11D-74B0-E411-BCF8-DF448471F33D.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/00BC66B7-6CAF-E411-86B6-20CF3056171F.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/00C59C87-75B0-E411-918F-63BFB108B170.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/02052468-72AF-E411-9F90-002590D9D990.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/022D9B0E-6EAF-E411-90AA-0022195E66A7.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/027B2D2C-74B0-E411-8DF1-001E682F8C7C.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/02B9B6A5-74B0-E411-A287-002590491B22.root',
-#	'/store/mc/RunIIWinter15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1-v1/00000/02C48802-6EAF-E411-96A0-001E67248688.root',
-#])
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.generator * process.pgen)
 process.simulation_step = cms.Path(process.generator * process.psim)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
+process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)		# (Step 0 output)
+
 process.digitisation_step = cms.Path(process.pdigi)		# (Step 1)
 process.L1simulation_step = cms.Path(process.SimL1Emulator)		# (Step 1)
 process.digi2raw_step = cms.Path(process.DigiToRaw)		# (Step 1)
-#process.endjob_step = cms.EndPath(process.endOfProcess)
-#process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)		# (Step 1)
+
 process.raw2digi_step = cms.Path(process.RawToDigi)		# (Step 2)
 process.L1Reco_step = cms.Path(process.L1Reco)		# (Step 2)
 process.reconstruction_step = cms.Path(process.reconstruction)		# (Step 2)
 #process.eventinterpretaion_step = cms.Path(process.EIsequence)		# (Step 2) 160829: Added commented line.
-#process.endjob_step = cms.EndPath(process.endOfProcess)
-#process.AODSIMoutput_step = cms.EndPath(process.AODSIMoutput)		# (Step 2)
-process.MINIAODSIMoutput_step = cms.EndPath(process.MINIAODSIMoutput)		# (Step 3)
-#process.Output_step = cms.EndPath(process.Output)		# Step 2
+process.AODSIMoutput_step = cms.EndPath(process.AODSIMoutput)		# (Step 2 output)
 
+process.MINIAODSIMoutput_step = cms.EndPath(process.MINIAODSIMoutput)		# (Step 3 output)
+#process.Output_step = cms.EndPath(process.Output)		# Step 2
 process.endjob_step = cms.EndPath(process.endOfProcess)
 
 # Schedule definition
 process.schedule = cms.Schedule(
 	process.generation_step,
 	process.genfiltersummary_step,
-	process.simulation_step
+	process.simulation_step,
 #	process.endjob_step,
-#	process.Output_step
+#	process.RAWSIMoutput_step
 )
-# Step 1 paths:
+## Step 1 paths:
 process.schedule.extend([
 	process.digitisation_step,
 	process.L1simulation_step,
@@ -302,7 +309,7 @@ process.schedule.extend([
 ])
 process.schedule.extend(process.HLTSchedule)
 
-# Step 2 paths:
+## Step 2 paths:
 process.schedule.extend([
 	process.raw2digi_step,
 	process.L1Reco_step,
@@ -320,17 +327,18 @@ process = addMonitoring(process)
 
 ## Step 1:
 # Automatic addition of the customisation function from HLTrigger.Configuration.customizeHLTforMC
-from HLTrigger.Configuration.customizeHLTforMC import customizeHLTforMC		# 160826: I think Ale uses "FullSim" instead of "MC".
-process = customizeHLTforMC(process)
+#from HLTrigger.Configuration.customizeHLTforMC import customizeHLTforMC		# 160826: I think Ale uses "FullSim" instead of "MC".
+#process = customizeHLTforMC(process)
+from HLTrigger.Configuration.customizeHLTforMC import customizeHLTforFullSim		# 160907: Added this.
+process = customizeHLTforFullSim(process)
 
-## Other:
+## Step 3:
 from FWCore.ParameterSet.Utilities import convertToUnscheduled
 process = convertToUnscheduled(process)
-process.load('Configuration.StandardSequences.PATMC_cff')
+process.load('Configuration.StandardSequences.PATMC_cff')		# 160907: The position of this is important.
 from FWCore.ParameterSet.Utilities import cleanUnscheduled
 process = cleanUnscheduled(process)
 
-## Step 3:
 from PhysicsTools.PatAlgos.slimming.miniAOD_tools import miniAOD_customizeAllMC
 process = miniAOD_customizeAllMC(process)
 
