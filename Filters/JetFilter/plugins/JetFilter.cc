@@ -11,6 +11,7 @@
 // system include files
 #include <memory>
 #include <typeinfo>
+#include <algorithm>    // std::min
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -51,7 +52,7 @@ class JetFilter : public edm::EDFilter {
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
       // ----------member data ---------------------------
-      double cut_pt_;
+      double cut_pt_, cut_eta_;
       int nevents, nevents_passed;
       
       // ?
@@ -71,6 +72,7 @@ class JetFilter : public edm::EDFilter {
 //
 JetFilter::JetFilter(const edm::ParameterSet& iConfig):
 	cut_pt_(iConfig.getParameter<double>("cut_pt")),
+	cut_eta_(iConfig.getParameter<double>("cut_eta")),
 	
 	//?
 	jetCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("jetCollection")))
@@ -113,9 +115,10 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //	}
 	if (jets_edm.isValid()) {
 //		cout << jets_edm->size() << endl;
-		if (jets_edm->size() > 1) {
+		if (jets_edm->size() >= 2) {
+			pat::Jet jet0 = jets_edm->at(0);
 			pat::Jet jet1 = jets_edm->at(1);
-			if (jet1.pt() > cut_pt_) {
+			if (min(jet0.pt(), jet1.pt()) > cut_pt_ && max(abs(jet0.eta()), abs(jet1.eta())) < cut_eta_) {
 				nevents_passed ++;
 				return true;
 			}

@@ -218,8 +218,16 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"bd_tp",
 		"bd_csv",
 		"bd_cisv",
-		"jec",
-		"jmc",
+		"jec",        // Jet energy correction
+		"jmc",        // Jet mass correction
+		"neef",       // Neutral EM energy fraction
+		"ceef",       // Charged EM energy fraction
+		"nhef",       // Neutral hadron energy fraction
+		"chef",       // Charged hadron energy fraction
+		"mef",        // Muon energy fraction
+		"nm",         // Neutral multiplicity
+		"cm",         // Charged multiplicity
+		"n"           // Number of constituents
 	};
 	
 	/// "lep"
@@ -245,6 +253,9 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 		"w",          // Event weight
 		"rho",
 		"npv",        // Number of primary vertices
+		"event",
+		"lumi",
+		"run"
 	};
 	
 	// Ntuple setup:
@@ -426,6 +437,14 @@ void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTo
 		double eta = jet->eta();
 		double y = jet->y();
 		double A = jet->jetArea();
+		double neef = jet->neutralEmEnergyFraction();
+		double ceef = jet->chargedEmEnergyFraction();
+		double nhef = jet->neutralHadronEnergyFraction();
+		double chef = jet->chargedHadronEnergyFraction();
+		double mef = jet->muonEnergyFraction();
+		double nm = jet->neutralMultiplicity();
+		double cm = jet->chargedMultiplicity();
+		double n = nm + cm;
 		if (algo == "ak8") {
 			if (pt > 150) {
 				ht += pt;
@@ -499,6 +518,14 @@ void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTo
 			branches[algo_type]["tau5"].push_back(tau5);
 			branches[algo_type]["jec"].push_back(jec);
 			branches[algo_type]["jmc"].push_back(jmc);
+			branches[algo_type]["neef"].push_back(neef);
+			branches[algo_type]["ceef"].push_back(ceef);
+			branches[algo_type]["nhef"].push_back(nhef);
+			branches[algo_type]["chef"].push_back(chef);
+			branches[algo_type]["mef"].push_back(mef);
+			branches[algo_type]["nm"].push_back(nm);
+			branches[algo_type]["cm"].push_back(cm);
+			branches[algo_type]["n"].push_back(n);
 		}
 	}		// :End collection loop
 	
@@ -920,21 +947,24 @@ void JetAnalyzer::analyze(
 //		branches["event"]["nevents"].push_back(nevents_);         // Provided in the configuration file
 		branches["event"]["w"].push_back(weight_);                // The event weight
 		branches["event"]["pt_hat"].push_back(pt_hat);            // Maybe I should take this out of "PF"
+		branches["event"]["event"].push_back(iEvent.id().event());
+		branches["event"]["lumi"].push_back(iEvent.id().luminosityBlock());
+		branches["event"]["run"].push_back(iEvent.id().run());
 		
 		// Process each object collection:
-//		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
-//		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
-//		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
-//		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
-//		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
-//		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
-//		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
-//		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
-//		process_electrons_pf(iEvent, electronCollection_);
-//		process_muons_pf(iEvent, muonCollection_);
-//		process_tauons_pf(iEvent, tauCollection_);
-//		process_photons_pf(iEvent, photonCollection_);
-		process_squarks_pf(iEvent, genCollection_);
+		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
+		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
+		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
+		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
+		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
+		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
+		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
+		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
+		process_electrons_pf(iEvent, electronCollection_);
+		process_muons_pf(iEvent, muonCollection_);
+		process_tauons_pf(iEvent, tauCollection_);
+		process_photons_pf(iEvent, photonCollection_);
+//		process_squarks_pf(iEvent, genCollection_);
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

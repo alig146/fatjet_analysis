@@ -1,0 +1,40 @@
+#- variables: [deta, dphi]
+#  cut: 0
+#  copies:
+#      - process: qcdmg
+#      - process: sq300to4j
+#  rule: ["", 0.6]
+
+#- variables: [deta, dphi]
+#  cut: 1
+#  copies:
+#      - process: qcdmg
+#      - process: sq300to4j
+
+- variables: [htak8, mavgp]
+  cut: 0
+  copies:
+      - process: qcdmg
+      - process: sq300to4j
+  rule: ["", 900]
+
+- variables: [htak8, maxmt]
+  cut: 0
+  copies:
+      - process: qcdmg
+      - process: sq300to4j
+  rule: ["", 900]
+
+- variables: [pt, maxmt]
+  cut: 0
+  copies:
+      - process: qcdmg
+      - process: sq300to4j
+  rule: ["", 400]
+
+- variables: [pt, mavgp]
+  cut: 0
+  copies:
+      - process: qcdmg
+      - process: sq300to4j
+  rule: ["", 400]

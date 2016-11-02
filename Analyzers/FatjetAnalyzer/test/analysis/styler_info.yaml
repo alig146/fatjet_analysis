@@ -1,6 +1,70 @@
-- variable: mavgp
-  cut: 1
+#- variable: mavgp
+#  cut: 1
+#  lines:
+#      - process: qcdmg
+#      - process: ttbar
+#      - process: sq300to4j
+
+- variable: deta
+  cut: 2
+  fname: nminus1_deta
   lines:
       - process: qcdmg
       - process: ttbar
       - process: sq300to4j
+  rule: [0.6, ""]
+  legend: 2
+
+- variable: masyp
+  cut: 3
+  fname: nminus1_masyp
+  lines:
+      - process: qcdmg
+      - process: ttbar
+      - process: sq300to4j
+  rule: [0.1, ""]
+  legend: 2
+
+- variable: tau43s
+  cut: 4
+  fname: nminus1_tau43s
+  lines:
+      - process: qcdmg
+      - process: ttbar
+      - process: sq300to4j
+  rule: [0.45, ""]
+
+- variable: tau42s
+  cut: 5
+  fname: nminus1_tau42s
+  lines:
+      - process: qcdmg
+      - process: ttbar
+      - process: sq300to4j
+  rule: [0.15, ""]
+
+#- variable: mavgp
+#  fname: loose43s
+#  normalized: 1
+#  cut: 4
+#  lines:
+#      - process: qcdmg+ttbar
+#        label: "QCD + t#bar{t}"
+#      - process: qcdmg+ttbar
+#        label: "QCD + t#bar{t}, sideband"
+#        cut: 5
+#        style: 2
+#  residual: [0, 1]
+
+#- variable: mavgp
+#  fname: loose42s
+#  normalized: 1
+#  cut: 6
+#  lines:
+#      - process: qcdmg+ttbar
+#        label: "QCD + t#bar{t}"
+#      - process: qcdmg+ttbar
+#        label: "QCD + t#bar{t}, sideband"
+#        cut: 7
+#        style: 2
+#  residual: [0, 1]

@@ -2,7 +2,7 @@ import os
 from decortication import dataset, production
 
 # VARIABLES:
-cut_pt_filter = 400
+cut_pt_filter = 400		# The eta 2.5 cut is the default.
 # /VARIABLES
 
 if __name__ == "__main__":

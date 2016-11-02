@@ -24,11 +24,9 @@ from ROOT import *
 ## VARIABLES:
 #precut_pt = 400           # pT cut applied to all jets in the pair selection
 #precut_m = 50             # m cut applied to all jets in the pair selection
-#precut_eta = 2.5          # eta cut applied to all jets in the pair selection
+precut_eta = 2.5          # eta cut applied to all jets in the pair selection
 precut_pt = 0           # pT cut applied to all jets in the pair selection
 precut_m = 0             # m cut applied to all jets in the pair selection
-precut_eta = 10          # eta cut applied to all jets in the pair selection
-L = 10000                 # Luminosity (in inverse pb)
 #vs = [
 #	 "sigma", "w", "pt_hat", "ak4_pf_ht",
 #	"ak4_pf_pt",
@@ -38,10 +36,11 @@ L = 10000                 # Luminosity (in inverse pb)
 #]
 vs_out = {
 	# Event variables:
+	"run": 1,
+	"lumi": 1,
+	"event": 1,
 	"w": 1,            # The event weight
 	"sigma": 1,        # The process cross section
-	"n1": 1,
-	"n2": 1,
 	"njets": 1,        # Njettiness of the event (the pt_cut is a parameter)
 	"pt_hat": 1,       #
 	"htak4": 1,        # HT of the event calculated from all AK4 PF jets
@@ -71,6 +70,10 @@ vs_out = {
 	"masy_s": 1,       # Mass asymmetry: dm/(m0 + m1)
 	"masy_f": 1,       # Mass asymmetry: dm/(m0 + m1)
 	"mdi_p": 1,
+	"px": 2,           # px of each fatjet in the pair
+	"py": 2,           # py of each fatjet in the pair
+	"pz": 2,           # pz of each fatjet in the pair
+	"pt": 2,           # pT of each fatjet in the pair
 	"pt": 2,           # pT of each fatjet in the pair
 	"e": 2,            # E of each fatjet in the pair
 	"e_p": 2,          # E of each fatjet in the pair corrected for pruned mass
@@ -82,19 +85,36 @@ vs_out = {
 	"tau3": 2,         # Nsubjettiness of the fatjets in the pair
 	"tau4": 2,         # Nsubjettiness of the fatjets in the pair
 #	"tau5": 2,         # Nsubjettiness of the fatjets in the pair
-	"tau42": 2,        # Nsubjettiness of the fatjets in the pair
-	"tau42s": 1,       # Product of tau42 of each fatjet in the pair
-	"tau43": 2,        # Nsubjettiness of the fatjets in the pair
+	"tau43": 2,        # tau4/tau3 of each fatjet in the pair
 	"tau43s": 1,       # Product of tau43 of each fatjet in the pair
-	"tau21": 2,        # Nsubjettiness of the fatjets in the pair
+	"tau42": 2,        # tau4/tau2 of each fatjet in the pair
+	"tau42s": 1,       # Product of tau42 of each fatjet in the pair
+	"tau41": 2,        # tau4/tau1 of each fatjet in the pair
+	"tau41s": 1,       # Product of tau41 of each fatjet in the pair
+	"tau32": 2,        # tau3/tau2 of each fatjet in the pair
+	"tau32s": 1,       # Product of tau32 of each fatjet in the pair
+	"tau31": 2,        # tau3/tau1 of each fatjet in the pair
+	"tau31s": 1,       # Product of tau31 of each fatjet in the pair
+	"tau21": 2,        # tau2/tau1 of each fatjet in the pair
 	"tau21s": 1,       # Product of tau21 of each fatjet in the pair
+	# More jet variables:
+	"neef": 2,            # Neutral EM energy fraction
+	"ceef": 2,            # Charged EM energy fraction
+	"nhef": 2,            # Neutral hadron energy fraction
+	"chef": 2,            # Charged hadron energy fraction
+	"mef": 2,             # Muon energy fraction
+	"nm": 2,              # Neutral multiplicity
+	"cm": 2,              # Charged multiplicity
+	"n": 2,               # Number of constituents
 	# Preselection:
 	"precut_pt": 2,    # Cut on the pT of pair-candidate fatjets
 	"precut_m": 2,     # Cut on the mass of pair-candidate fatjets
 	"precut_eta": 2,   # Cut on the eta of pair-candidate fatjets
-	"bd": 2,
-	"jec": 2,
-#	"jmc": 2,
+	# B-info:
+	"bd": 2,           # B-tag discriminator
+	# Corrections:
+	"jec": 2,          # Jet energy correction
+	"jmc": 2,          # Jet mass correction
 }
 ## /VARIABLES
 
@@ -156,25 +176,34 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		masy_f = dm_f/mavg_f/2
 		pdi_p = (e_p[0] + e_p[1], pair[0].px + pair[1].px, pair[0].py + pair[1].py, pair[0].pz + pair[1].pz)
 		mdi_p = (pdi_p[0]**2 - pdi_p[1]**2 - pdi_p[2]**2 - pdi_p[3]**2)**0.5
+		# Nsubjettiness:
 		tau = {}
 #		for i in xrange(1, 6):
 		for i in xrange(1, 5):
 			tau[i] = (getattr(pair[0], "tau{}".format(i)), getattr(pair[1], "tau{}".format(i)))
 		try:
-			tau[42] = (pair[0].tau4/pair[0].tau2, pair[1].tau4/pair[1].tau2)
-		except:		# Division by zero!
-			tau[42] = (100, 100)
-		try:
 			tau[43] = (pair[0].tau4/pair[0].tau3, pair[1].tau4/pair[1].tau3)
 		except:		# Division by zero!
 			tau[43] = (100, 100)
 		try:
-			tau[24] = (1/tau[42][0], 1/tau[42][1])
-		except:
-			tau[24] = (0, 0)
+			tau[42] = (pair[0].tau4/pair[0].tau2, pair[1].tau4/pair[1].tau2)
+		except:		# Division by zero!
+			tau[42] = (100, 100)
+		try:
+			tau[41] = (pair[0].tau4/pair[0].tau1, pair[1].tau4/pair[1].tau1)
+		except:		# Division by zero!
+			tau[41] = (100, 100)
+		try:
+			tau[32] = (pair[0].tau3/pair[0].tau2, pair[1].tau3/pair[1].tau2)
+		except:		# Division by zero!
+			tau[32] = (100, 100)
+		try:
+			tau[31] = (pair[0].tau3/pair[0].tau1, pair[1].tau3/pair[1].tau1)
+		except:		# Division by zero!
+			tau[31] = (100, 100)
 		try:
 			tau[21] = (pair[0].tau2/pair[0].tau1, pair[1].tau2/pair[1].tau1)
-		except:
+		except:		# Division by zero!
 			tau[21] = (100, 100)
 		deta = abs(pair[0].eta - pair[1].eta)
 		
@@ -206,8 +235,9 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		
 		
 		# Fill non-pair branches:
-		branches["n1"][0] = n_events_tc
-		branches["n2"][0] = n_events
+		branches["run"][0] = event.run[0]
+		branches["lumi"][0] = event.lumi[0]
+		branches["event"][0] = event.event[0]
 		branches["sigma"][0] = sigma
 		branches["w"][0] = w
 		branches["njets"][0] = n_jets
@@ -247,6 +277,12 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		else:
 			for i in range(4):
 				branches["m4_p"][i] = -1
+		branches["px"][0] = pair[0].px
+		branches["px"][1] = pair[1].px
+		branches["py"][0] = pair[0].py
+		branches["py"][1] = pair[1].py
+		branches["pz"][0] = pair[0].pz
+		branches["pz"][1] = pair[1].pz
 		branches["pt"][0] = pair[0].pt
 		branches["pt"][1] = pair[1].pt
 		branches["e"][0] = pair[0].e
@@ -274,24 +310,42 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		branches["masy_s"][0] = masy_s
 		branches["masy_f"][0] = masy_f
 		branches["mdi_p"][0] = mdi_p
-		for ntau in [1, 2, 3, 4, 42, 43, 21]:
-#		for ntau in [1, 2, 3, 4, 5, 42, 43, 21]:
+		for ntau in [1, 2, 3, 4, 43, 42, 41, 32, 31, 21]:
 			word = "tau{}".format(ntau)
 			branches[word][0] = tau[ntau][0]
 			branches[word][1] = tau[ntau][1]
-		branches["tau42s"][0] = tau[42][0]*tau[42][1]
-		branches["tau43s"][0] = tau[43][0]*tau[43][1]
-		branches["tau21s"][0] = tau[21][0]*tau[21][1]
+		branches["tau42s"][0] = tau[42][0]*tau[42][1]		# Probably don't need anymore.
+		branches["tau43s"][0] = tau[43][0]*tau[43][1]		# Probably don't need anymore.
+		branches["tau21s"][0] = tau[21][0]*tau[21][1]		# Probably don't need anymore.
+#		# Other jet variables:
+		branches["neef"][0] = event.ca12_pf_neef[pair[0].i]
+		branches["neef"][1] = event.ca12_pf_neef[pair[1].i]
+		branches["ceef"][0] = event.ca12_pf_ceef[pair[0].i]
+		branches["ceef"][1] = event.ca12_pf_ceef[pair[1].i]
+		branches["nhef"][0] = event.ca12_pf_nhef[pair[0].i]
+		branches["nhef"][1] = event.ca12_pf_nhef[pair[1].i]
+		branches["chef"][0] = event.ca12_pf_chef[pair[0].i]
+		branches["chef"][1] = event.ca12_pf_chef[pair[1].i]
+		branches["mef"][0] = event.ca12_pf_mef[pair[0].i]
+		branches["mef"][1] = event.ca12_pf_mef[pair[1].i]
+		branches["nm"][0] = event.ca12_pf_nm[pair[0].i]
+		branches["nm"][1] = event.ca12_pf_nm[pair[1].i]
+		branches["cm"][0] = event.ca12_pf_cm[pair[0].i]
+		branches["cm"][1] = event.ca12_pf_cm[pair[1].i]
+		branches["n"][0] = event.ca12_pf_n[pair[0].i]
+		branches["n"][1] = event.ca12_pf_n[pair[1].i]
 		# Preselection:
 		branches["precut_pt"][0] = 1
 		branches["precut_m"][0] = 1
 		branches["precut_eta"][0] = 1
+		# B-tag:
 		branches["bd"][0] = bd[0]
 		branches["bd"][1] = bd[1]
+		# Corrections:
 		branches["jec"][0] = pair[0].jec
 		branches["jec"][1] = pair[1].jec
-#		branches["jmc"][0] = pair[0].jmc
-#		branches["jmc"][1] = pair[1].jmc
+		branches["jmc"][0] = event.ca12_pf_jmc[pair[0].i]
+		branches["jmc"][1] = event.ca12_pf_jmc[pair[1].i]
 		
 #		print "filling tree"
 		loop.tt_out.Fill()
@@ -348,8 +402,8 @@ def main():
 	for key, loop in ana.loops.iteritems():
 		loop.treatment = treat_event
 #		print "here"
-#		loop.progress = False
-		loop.run(n=args.n, arguments={"alg": args.algorithm})
+		loop.progress = False
+		loop.run(n=args.n, rand=False, arguments={"alg": args.algorithm})
 #	event_loop(ana.tt[key]["analyzer/events"], branches[key], ana.tuples[key], n_events=n_events_sq)
 	# Output:
 	ana.write()

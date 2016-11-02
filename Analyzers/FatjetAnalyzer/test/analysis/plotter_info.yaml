@@ -1,4 +1,25 @@
 th1:
+    pt:
+        var: pt
+        label: "p_{T}"
+        unit: GeV
+        binning: [50, 0, 1000]
+        legend: 2
+    
+    mp:
+        var: m_p
+        label: "mass_{pruned}"
+        unit: GeV
+        binning: [50, 0, 700]
+        legend: 2
+    
+    mt:
+        var: m_t
+        label: "p_{trimmed}"
+        unit: GeV
+        binning: [50, 0, 700]
+        legend: 2
+    
     htak8:
         var: htak8
         label: "H_{T}^{AK8}"
@@ -22,17 +43,31 @@ th1:
     
     masyp:
         var: masy_p
-        label: "asy#left(m_{pruned}#right)"
+        label: "A_{m}"
         unit: False
         binning: [25, 0, 1]
         legend: 4
     
     deta:
         var: deta
-        label: "#Delta#eta"
+        label: "#left|#Delta#eta#right|"
         unit: False
         binning: [25, 0, 1]
         legend: 3
+    
+    dphi:
+        var: "TMath::Pi()-abs(TMath::Pi()-abs(phi[0]-phi[1]))"
+        label: "#left|#Delta#phi#right|"
+        unit: False
+        binning: [25, 0, 3.5]
+        legend: 1
+    
+    dr:
+        var: "sqrt(pow(deta,2)+pow(TMath::Pi()-abs(TMath::Pi()-abs(phi[0]-phi[1])),2))"
+        label: "#Delta R"
+        unit: False
+        binning: [25, 0, 3.5]
+        legend: 1
     
     mintau21:
         var: "Min$(tau21)"
@@ -43,14 +78,14 @@ th1:
     
     tau43s:
         var: tau43s
-        label: "#tau_{43}^{0}#tau_{43}^{1}"
+        label: "#tau_{43}^{2}"
         unit: False
         binning: [25, 0, 1]
         legend: 1
     
     tau42s:
         var: tau42s
-        label: "#tau_{42}^{0}#tau_{42}^{1}"
+        label: "#tau_{42}^{2}"
         unit: False
         binning: [25, 0, 1]
         legend: 2
@@ -61,3 +96,38 @@ th1:
         unit: CSV
         binning: [25, 0, 1]
         legend: 1
+th2:
+    deta_dphi:
+        var: ["deta", "TMath::Pi()-abs(TMath::Pi()-abs(phi[0]-phi[1]))"]
+        label: ["#left|#Delta#eta#right|", "#left|#Delta#phi#right|"]
+        unit: False
+        binning: [50, 0, 3.5, 50, 0, 3.5]
+        legend: 3
+    
+    htak8_mavgp:
+        var: ["htak8", "mavg_p"]
+        label: ["H_{T}^{AK8}", "#bar{m}_{pruned}"]
+        unit: ["GeV", "GeV"]
+        binning: [50, 0, 700, 50, 0, 2500]
+        legend: 3
+    
+    htak8_maxmt:
+        var: ["htak8", "Max$(m_t)"]
+        label: ["H_{T}^{AK8}", "max#left(m_{trimmed}#right)"]
+        unit: ["GeV", "GeV"]
+        binning: [50, 0, 700, 50, 0, 2500]
+        legend: 3
+    
+    pt_mp:
+        var: ["pt", "m_p"]
+        label: ["p_{T}", "m_{pruned}"]
+        unit: ["GeV", "GeV"]
+        binning: [50, 0, 700, 50, 0, 1000]
+        legend: 3
+    
+    pt_mt:
+        var: ["pt", "m_t"]
+        label: ["p_{T}", "m_{trimmed}"]
+        unit: ["GeV", "GeV"]
+        binning: [50, 0, 700, 50, 0, 1000]
+        legend: 3

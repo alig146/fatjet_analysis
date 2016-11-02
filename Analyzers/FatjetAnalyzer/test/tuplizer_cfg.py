@@ -107,7 +107,13 @@ options.register ('cutPtFilter',
 	175,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"Cut on the second leading jet pT. The default is 175 GeV."
+	"Cut on the pT of the leading jets. The default is 175 GeV."
+)
+options.register ('cutEtaFilter',
+	2.5,
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.float,
+	"Cut on the eta of the leading jets. The default is 2.5 GeV."
 )
 ### Analyzer options:
 options.register ('cutPtAnalyzer',
@@ -135,7 +141,9 @@ if options.subprocess:
 	miniaod.set_connections(down=False, up=True)
 	sample = miniaod.sample
 	sigma = sample.sigma
-	weight = miniaod.weight if miniaod.weight else sample.weight
+	if sigma == None:		# 161013: Added after removing sigma from jetht datasets.
+		sigma = -1
+	weight = miniaod.weight
 	if options.weight < 0:
 		factor = 1
 		if not options.crab:
@@ -148,6 +156,9 @@ else:
 	if options.weight < 0:
 		options.weight = 1
 
+if options.data:
+	options.weight = 1
+#print "Weight:", options.weight
 #in_files = ["{0}/{1}".format(options.inDir, f) for f in options.inFile]
 in_files = options.inFile
 print "User defined input files: {}".format(in_files)
@@ -310,9 +321,11 @@ process.GlobalTag.globaltag = cms.string(autoCond['run2_mc'])		# Set global tags
 process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 
+#print options.cutPtFilter, options.cutEtaFilter
 # Filter:
 process.filter = cms.EDFilter("JetFilter",
 	cut_pt=cms.double(options.cutPtFilter),
+	cut_eta=cms.double(options.cutEtaFilter),
 	jetCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
 )
 
@@ -326,7 +339,7 @@ jec_path = "jec_data/Spring16_25nsV2"
 if not check_jec(jec_path, data=options.data):
 	print "ERROR: Can't find the JEC data that's supposed to be located in {}.".format(jec_path)
 	sys.exit()
-	
+
 ## Initialize the EDAnalyzer:
 process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	v=cms.bool(False),

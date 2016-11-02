@@ -65,6 +65,7 @@ def main():
 	
 	# Write histograms:
 	for icut, tcut in enumerate(tcuts):
+		# TH1s:
 		for var_name, info in plot_info["th1"].items():
 			print "Plotting {} with {} ...".format(info["var"], tcut.GetTitle())
 			for tt in tts:
@@ -72,6 +73,18 @@ def main():
 				th_name = "{}_{}_cut{}".format(tt_name, var_name, icut)
 #				print tt_name, var
 				tt.Draw("{}>>{}({}, {}, {})".format(info["var"], th_name, info["binning"][0], info["binning"][1], info["binning"][2]), tcut)
+				th = gDirectory.Get(th_name)
+				if tt.GetName() == "sq150to4j_spring15cutht700_pt400":
+					th.Scale(1/24.2)		# KLUDGE!
+				th.Write()
+		# TH2s:
+		for var_name, info in plot_info["th2"].items():
+			print "Plotting {} with {} ...".format(info["var"], tcut.GetTitle())
+			for tt in tts:
+				tt_name = tt.GetName()
+				th_name = "{}_{}_cut{}".format(tt_name, var_name, icut)
+#				print tt_name, var
+				tt.Draw("{}:{}>>{}({}, {}, {}, {}, {}, {})".format(info["var"][0], info["var"][1], th_name, info["binning"][0], info["binning"][1], info["binning"][2], info["binning"][3], info["binning"][4], info["binning"][5]), tcut)
 				th = gDirectory.Get(th_name)
 				if tt.GetName() == "sq150to4j_spring15cutht700_pt400":
 					th.Scale(1/24.2)
