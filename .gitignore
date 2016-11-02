@@ -1,2 +1,3 @@
 # python:
 *.pyc
+Analyzers/FatjetAnalyzer/test/jec_data/*.txt

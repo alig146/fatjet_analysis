@@ -87,7 +87,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 	private:
 		virtual void beginJob();
-		virtual void process_jets_pf(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
+		virtual void process_jets_pf(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
 		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_electrons_pf(const edm::Event&, EDGetTokenT<vector<pat::Electron>>);
@@ -142,8 +142,20 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	EDGetTokenT<double> rhoInfo_;
 	EDGetTokenT<reco::VertexCollection> vertexCollection_;
 	EDGetTokenT<vector<pat::Jet>> ak4PFCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4PFFilteredCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4PFPrunedCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4PFSoftDropCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak4PFTrimmedCollection_;
 	EDGetTokenT<vector<pat::Jet>> ak8PFCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8PFFilteredCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8PFPrunedCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8PFSoftDropCollection_;
+	EDGetTokenT<vector<pat::Jet>> ak8PFTrimmedCollection_;
 	EDGetTokenT<vector<pat::Jet>> ca12PFCollection_;
+	EDGetTokenT<vector<pat::Jet>> ca12PFFilteredCollection_;
+	EDGetTokenT<vector<pat::Jet>> ca12PFPrunedCollection_;
+	EDGetTokenT<vector<pat::Jet>> ca12PFSoftDropCollection_;
+	EDGetTokenT<vector<pat::Jet>> ca12PFTrimmedCollection_;
 	EDGetTokenT<vector<reco::GenJet>> ak4GNCollection_;
 	EDGetTokenT<vector<reco::GenJet>> ak8GNCollection_;
 	EDGetTokenT<vector<reco::GenJet>> ca12GNCollection_;
@@ -183,8 +195,20 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	rhoInfo_(consumes<double>(iConfig.getParameter<InputTag>("rhoInfo"))),
 	vertexCollection_(consumes<reco::VertexCollection>(iConfig.getParameter<InputTag>("vertexCollection"))),
 	ak4PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFCollection"))),
+	ak4PFFilteredCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFFilteredCollection"))),
+	ak4PFPrunedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFPrunedCollection"))),
+	ak4PFSoftDropCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFSoftDropCollection"))),
+	ak4PFTrimmedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFTrimmedCollection"))),
 	ak8PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFCollection"))),
+	ak8PFFilteredCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFFilteredCollection"))),
+	ak8PFPrunedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFPrunedCollection"))),
+	ak8PFSoftDropCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFSoftDropCollection"))),
+	ak8PFTrimmedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak8PFTrimmedCollection"))),
 	ca12PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFCollection"))),
+	ca12PFFilteredCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFFilteredCollection"))),
+	ca12PFPrunedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFPrunedCollection"))),
+	ca12PFSoftDropCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFSoftDropCollection"))),
+	ca12PFTrimmedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ca12PFTrimmedCollection"))),
 	ak4GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ak4GNCollection"))),
 	ak8GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ak8GNCollection"))),
 	ca12GNCollection_(consumes<vector<reco::GenJet>>(iConfig.getParameter<InputTag>("ca12GNCollection"))),
@@ -396,13 +420,17 @@ void JetAnalyzer::beginJob()
 // CLASS METHODS ("method" = "member function")
 
 /// PF jets method:
-void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
+void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token, EDGetTokenT<vector<pat::Jet>> token_f, EDGetTokenT<vector<pat::Jet>> token_p, EDGetTokenT<vector<pat::Jet>> token_s, EDGetTokenT<vector<pat::Jet>> token_t) {
 	// Arguments:
 	string type = "pf";
 	string algo_type = algo + "_" + type;
 	
-	Handle<vector<pat::Jet>> jets;
+	Handle<vector<pat::Jet>> jets, jets_f, jets_p, jets_s, jets_t;
 	iEvent.getByToken(token, jets);
+	iEvent.getByToken(token_f, jets_f);
+	iEvent.getByToken(token_p, jets_p);
+	iEvent.getByToken(token_s, jets_s);
+	iEvent.getByToken(token_t, jets_t);
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
@@ -412,22 +440,22 @@ void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTo
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
 		// Define some useful event variables:
 		double M = jet->mass();
-		double m_t = jet->userFloat(algo + string("PFJetsCHSTrimmedMass"));
-		double m_p = jet->userFloat(algo + string("PFJetsCHSPrunedMass"));
-		double m_s = jet->userFloat(algo + string("PFJetsCHSSoftDropMass"));
-		double m_f = jet->userFloat(algo + string("PFJetsCHSFilteredMass"));
-		double tau1 = -1;
-		double tau2 = -1;
-		double tau3 = -1;
-		double tau4 = -1;
-		double tau5 = -1;
-		if (algo != "ak4"){
-			tau1 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau1"));
-			tau2 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau2"));
-			tau3 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau3"));
-			tau4 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau4"));
-			tau5 = jet->userFloat(string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS:tau5"));
-		}
+		double m_f = jets_f->at(0).mass();
+		double m_p = jets_p->at(0).mass();
+		double m_s = jets_s->at(0).mass();
+		double m_t = jets_t->at(0).mass();
+//		double tau1 = -1;
+//		double tau2 = -1;
+//		double tau3 = -1;
+//		double tau4 = -1;
+//		double tau5 = -1;
+//		if (algo != "ak4"){
+		double tau1 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau1"));
+		double tau2 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau2"));
+		double tau3 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau3"));
+		double tau4 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau4"));
+		double tau5 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau5"));
+//		}
 		double px = jet->px();
 		double py = jet->py();
 		double pz = jet->pz();
@@ -952,9 +980,9 @@ void JetAnalyzer::analyze(
 		branches["event"]["run"].push_back(iEvent.id().run());
 		
 		// Process each object collection:
-		process_jets_pf(iEvent, "ak4", ak4PFCollection_);
-		process_jets_pf(iEvent, "ak8", ak8PFCollection_);
-		process_jets_pf(iEvent, "ca12", ca12PFCollection_);
+		process_jets_pf(iEvent, "ak4", ak4PFCollection_, ak4PFFilteredCollection_, ak4PFPrunedCollection_, ak4PFSoftDropCollection_, ak4PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ak8", ak8PFCollection_, ak8PFFilteredCollection_, ak8PFPrunedCollection_, ak8PFSoftDropCollection_, ak8PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ca12", ca12PFCollection_, ca12PFFilteredCollection_, ca12PFPrunedCollection_, ca12PFSoftDropCollection_, ca12PFTrimmedCollection_);
 		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
 		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
 		process_jets_gn(iEvent, "ca12", ca12GNCollection_);

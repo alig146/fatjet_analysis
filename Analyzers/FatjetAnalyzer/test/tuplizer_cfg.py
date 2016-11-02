@@ -223,31 +223,37 @@ process.out = cms.OutputModule("PoolOutputModule",
 	)
 )
 
-## Add jet collections using the JetToolbox:
-from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
-jetToolbox(process, 'ak4', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-)
-jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	addNsub=True,
-		maxTau=5,
-)
-#jetToolbox(process, 'ca8', 'jetSequence', 'out',		# Required
+### Add jet collections using the JetWorkshop:
+from Deracination.JetWorkshop.jetWorkshop_cff import add_jet_collection
+add_jet_collection(process, algo_name="ak4", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+add_jet_collection(process, algo_name="ak8", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+
+### Add jet collections using the JetToolbox:
+#from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
+#jetToolbox(process, 'ak4', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#)
+#jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
+#	# Optional:
+#	PUMethod='CHS',
+#	miniAOD=True,
+#	addTrimming=True,
+#	addPruning=True,
+#	addSoftDrop=True,
+#	addFiltering=True,
+#	addMassDrop=True,
+#	addNsub=True,
+#		maxTau=5,
+#)
+#jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
 #	# Optional:
 #	PUMethod='CHS',
 #	miniAOD=True,
@@ -260,58 +266,6 @@ jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
 #	addNsub=True,
 #		maxTau=5,
 #)
-#jetToolbox(process, 'ak10', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
-#	addMassDrop=True,
-#	JETCorrPayload='None',
-#	addNsub=True,
-#		maxTau=5,
-#)
-#jetToolbox(process, 'ca10', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
-#	addMassDrop=True,
-#	JETCorrPayload='None',
-#	addNsub=True,
-#		maxTau=5,
-#)
-#jetToolbox(process, 'ak12', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
-#	addMassDrop=True,
-#	JETCorrPayload='None',
-#	addNsub=True,
-#		maxTau=5,
-#)
-jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
-	# Optional:
-	PUMethod='CHS',
-	miniAOD=True,
-	addTrimming=True,
-	addPruning=True,
-	addSoftDrop=True,
-	addFiltering=True,
-	addMassDrop=True,
-	JETCorrPayload='None',
-	addNsub=True,
-		maxTau=5,
-)
 
 ## Geometry and detector configuration:
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
@@ -326,7 +280,7 @@ process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 process.filter = cms.EDFilter("JetFilter",
 	cut_pt=cms.double(options.cutPtFilter),
 	cut_eta=cms.double(options.cutEtaFilter),
-	jetCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+	jetCollection=cms.InputTag("selectedPatJetsCA12CHS"),
 )
 
 #out_location = options.outDir + "/test.root"
@@ -352,18 +306,35 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	genInfo=cms.InputTag("generator"),
 	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
 	vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
-	ak4PFCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
-	ak8PFCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
-	ca12PFCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
-	ak4GNCollection=cms.InputTag("selectedPatJetsAK4PFCHS", "genJets"),
-	ak8GNCollection=cms.InputTag("selectedPatJetsAK8PFCHS", "genJets"),
-	ca12GNCollection=cms.InputTag("selectedPatJetsCA12PFCHS", "genJets"),
+	## AK4 collections:
 	ak4MAODCollection=cms.InputTag("slimmedJets"),
+	ak4GNCollection=cms.InputTag("selectedPatJetsAK4CHS", "genJets"),
+	ak4PFCollection=cms.InputTag("selectedPatJetsAK4CHS"),
+	ak4PFPrunedCollection=cms.InputTag("selectedPatJetsAK4CHSPruned"),
+	ak4PFTrimmedCollection=cms.InputTag("selectedPatJetsAK4CHSTrimmed"),
+	ak4PFSoftDropCollection=cms.InputTag("selectedPatJetsAK4CHSSoftDrop"),
+	ak4PFFilteredCollection=cms.InputTag("selectedPatJetsAK4CHSFiltered"),
+	## AK8 collections:
 	ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
+	ak8GNCollection=cms.InputTag("selectedPatJetsAK8CHS", "genJets"),
+	ak8PFCollection=cms.InputTag("selectedPatJetsAK8CHS"),
+	ak8PFPrunedCollection=cms.InputTag("selectedPatJetsAK8CHSPruned"),
+	ak8PFTrimmedCollection=cms.InputTag("selectedPatJetsAK8CHSTrimmed"),
+	ak8PFSoftDropCollection=cms.InputTag("selectedPatJetsAK8CHSSoftDrop"),
+	ak8PFFilteredCollection=cms.InputTag("selectedPatJetsAK8CHSFiltered"),
+	## CA12 collections:
+	ca12GNCollection=cms.InputTag("selectedPatJetsCA12CHS", "genJets"),
+	ca12PFCollection=cms.InputTag("selectedPatJetsCA12CHS"),
+	ca12PFPrunedCollection=cms.InputTag("selectedPatJetsCA12CHSPruned"),
+	ca12PFTrimmedCollection=cms.InputTag("selectedPatJetsCA12CHSTrimmed"),
+	ca12PFSoftDropCollection=cms.InputTag("selectedPatJetsCA12CHSSoftDrop"),
+	ca12PFFilteredCollection=cms.InputTag("selectedPatJetsCA12CHSFiltered"),
+	## Lepton collections:
 	electronCollection=cms.InputTag("slimmedElectrons"),
 	muonCollection=cms.InputTag("slimmedMuons"),
 	tauCollection=cms.InputTag("slimmedTaus"),
 	photonCollection=cms.InputTag("slimmedPhotons"),
+	## Particles:
 	genCollection=cms.InputTag("packedGenParticles"),
 )
 #process.analyzer.testtt = "test"		# This works.
