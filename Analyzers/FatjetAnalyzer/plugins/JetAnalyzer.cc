@@ -10,6 +10,7 @@
 // INCLUDES:
 // System includes
 #include <iostream>
+#include <sstream>
 #include <typeinfo>
 #include <cmath>
 
@@ -87,7 +88,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 
 	private:
 		virtual void beginJob();
-		virtual void process_jets_pf(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>, EDGetTokenT<vector<pat::Jet>>);
+		virtual void process_jets_pf(const edm::Event&, string, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
 		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_electrons_pf(const edm::Event&, EDGetTokenT<vector<pat::Electron>>);
@@ -224,14 +225,10 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	// Collections setup:
 	/// "jet"
 	jet_names = {"ak4", "ak8", "ca12"};
-	jet_types = {"pf", "gn", "maod"};
+	jet_types = {"pf", "pff", "pfp", "pfs", "pft", "gn", "maod"};
 	jet_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
-		"M",          // Ungroomed mass
-		"m_t",        // Trimmed mass
-		"m_p",        // Pruned mass
-		"m_s",        // Soft Drop mass
-		"m_f",        // Filtered mass
+		"m",          // Ungroomed mass
 		"tau1",       // Nsubjettiness 1
 		"tau2",       // Nsubjettiness 2
 		"tau3",       // Nsubjettiness 3
@@ -420,42 +417,38 @@ void JetAnalyzer::beginJob()
 // CLASS METHODS ("method" = "member function")
 
 /// PF jets method:
-void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token, EDGetTokenT<vector<pat::Jet>> token_f, EDGetTokenT<vector<pat::Jet>> token_p, EDGetTokenT<vector<pat::Jet>> token_s, EDGetTokenT<vector<pat::Jet>> token_t) {
+void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
 	// Arguments:
 	string type = "pf";
+	if (!groom.empty()) {
+		stringstream ss;
+		string s;
+		ss << groom.at(0);
+		ss >> s;
+		type += boost::to_lower_copy<string>(s);
+	}
 	string algo_type = algo + "_" + type;
 	
-	Handle<vector<pat::Jet>> jets, jets_f, jets_p, jets_s, jets_t;
+	Handle<vector<pat::Jet>> jets;
 	iEvent.getByToken(token, jets);
-	iEvent.getByToken(token_f, jets_f);
-	iEvent.getByToken(token_p, jets_p);
-	iEvent.getByToken(token_s, jets_s);
-	iEvent.getByToken(token_t, jets_t);
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
 	
 	// Loop over the collection:
 	double ht = 0;
+	int njet = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		njet ++;
+		if (!groom.empty() && njet > 4) break;
 		// Define some useful event variables:
-		double M = jet->mass();
-		double m_f = jets_f->at(0).mass();
-		double m_p = jets_p->at(0).mass();
-		double m_s = jets_s->at(0).mass();
-		double m_t = jets_t->at(0).mass();
-//		double tau1 = -1;
-//		double tau2 = -1;
-//		double tau3 = -1;
-//		double tau4 = -1;
-//		double tau5 = -1;
-//		if (algo != "ak4"){
-		double tau1 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau1"));
-		double tau2 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau2"));
-		double tau3 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau3"));
-		double tau4 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau4"));
-		double tau5 = jet->userFloat(string("taus") + boost::to_upper_copy<string>(algo) + string("CHS:tau5"));
-//		}
+		double m = jet->mass();
+		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + groom + string(":tau");
+		double tau1 = jet->userFloat(tau_tag + string("1"));
+		double tau2 = jet->userFloat(tau_tag + string("2"));
+		double tau3 = jet->userFloat(tau_tag + string("3"));
+		double tau4 = jet->userFloat(tau_tag + string("4"));
+		double tau5 = jet->userFloat(tau_tag + string("5"));
 		double px = jet->px();
 		double py = jet->py();
 		double pz = jet->pz();
@@ -534,11 +527,7 @@ void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, EDGetTo
 			branches[algo_type]["pz"].push_back(pz);
 			branches[algo_type]["e"].push_back(e);
 			branches[algo_type]["pt"].push_back(pt);
-			branches[algo_type]["M"].push_back(M);
-			branches[algo_type]["m_t"].push_back(m_t);
-			branches[algo_type]["m_p"].push_back(m_p);
-			branches[algo_type]["m_s"].push_back(m_s);
-			branches[algo_type]["m_f"].push_back(m_f);
+			branches[algo_type]["m"].push_back(m);
 			branches[algo_type]["tau1"].push_back(tau1);
 			branches[algo_type]["tau2"].push_back(tau2);
 			branches[algo_type]["tau3"].push_back(tau3);
@@ -576,16 +565,7 @@ void JetAnalyzer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 	double ht = 0;
 	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
 		// Define some useful event variables:
-		double M = jet->mass();
-		double m_t = -1;
-		double m_p = -1;
-		double m_s = -1;
-		double m_f = -1;
-		double tau1 = -1;
-		double tau2 = -1;
-		double tau3 = -1;
-		double tau4 = -1;
-		double tau5 = -1;
+		double m = jet->mass();
 		double px = jet->px();
 		double py = jet->py();
 		double pz = jet->pz();
@@ -613,18 +593,7 @@ void JetAnalyzer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 			branches[algo_type]["pz"].push_back(pz);
 			branches[algo_type]["e"].push_back(e);
 			branches[algo_type]["pt"].push_back(pt);
-			branches[algo_type]["M"].push_back(M);
-			branches[algo_type]["m_t"].push_back(m_t);
-			branches[algo_type]["m_p"].push_back(m_p);
-			branches[algo_type]["m_s"].push_back(m_s);
-			branches[algo_type]["m_f"].push_back(m_f);
-			branches[algo_type]["tau1"].push_back(tau1);
-			branches[algo_type]["tau2"].push_back(tau2);
-			branches[algo_type]["tau3"].push_back(tau3);
-			branches[algo_type]["tau4"].push_back(tau4);
-			branches[algo_type]["tau5"].push_back(tau5);
-//			branches[algo_type]["jec"].push_back(-1);
-//			branches[algo_type]["jmc"].push_back(-1);
+			branches[algo_type]["m"].push_back(m);
 		}
 	}		// :End collection loop
 	
@@ -647,16 +616,7 @@ void JetAnalyzer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 	double ht = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
 		// Define some useful event variables:
-		double M = jet->mass();
-		double m_t = -1;
-		double m_p = -1;
-		double m_s = -1;
-		double m_f = -1;
-		double tau1 = -1;
-		double tau2 = -1;
-		double tau3 = -1;
-		double tau4 = -1;
-		double tau5 = -1;
+		double m = jet->mass();
 		double px = jet->px();
 		double py = jet->py();
 		double pz = jet->pz();
@@ -684,22 +644,11 @@ void JetAnalyzer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 			branches[algo_type]["pz"].push_back(pz);
 			branches[algo_type]["e"].push_back(e);
 			branches[algo_type]["pt"].push_back(pt);
-			branches[algo_type]["M"].push_back(M);
-			branches[algo_type]["m_t"].push_back(m_t);
-			branches[algo_type]["m_p"].push_back(m_p);
-			branches[algo_type]["m_s"].push_back(m_s);
-			branches[algo_type]["m_f"].push_back(m_f);
-			branches[algo_type]["tau1"].push_back(tau1);
-			branches[algo_type]["tau2"].push_back(tau2);
-			branches[algo_type]["tau3"].push_back(tau3);
-			branches[algo_type]["tau4"].push_back(tau4);
-			branches[algo_type]["tau5"].push_back(tau5);
+			branches[algo_type]["m"].push_back(m);
 			branches[algo_type]["bd_te"].push_back(jet->bDiscriminator("pfTrackCountingHighEffBJetTags"));
 			branches[algo_type]["bd_tp"].push_back(jet->bDiscriminator("pfTtrackCountingHighPurBJetTags"));
 			branches[algo_type]["bd_csv"].push_back(jet->bDiscriminator("pfCombinedSecondaryVertexV2BJetTags"));
 			branches[algo_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
-//			branches[algo_type]["jec"].push_back(-1);
-//			branches[algo_type]["jmc"].push_back(-1);
 		}
 	}		// :End collection loop
 	
@@ -899,6 +848,8 @@ void JetAnalyzer::process_squarks_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 //		}
 	}		// :End collection loop
 }
+
+
 // ------------ called for each event  ------------
 void JetAnalyzer::analyze(
 	const edm::Event& iEvent,
@@ -980,9 +931,21 @@ void JetAnalyzer::analyze(
 		branches["event"]["run"].push_back(iEvent.id().run());
 		
 		// Process each object collection:
-		process_jets_pf(iEvent, "ak4", ak4PFCollection_, ak4PFFilteredCollection_, ak4PFPrunedCollection_, ak4PFSoftDropCollection_, ak4PFTrimmedCollection_);
-		process_jets_pf(iEvent, "ak8", ak8PFCollection_, ak8PFFilteredCollection_, ak8PFPrunedCollection_, ak8PFSoftDropCollection_, ak8PFTrimmedCollection_);
-		process_jets_pf(iEvent, "ca12", ca12PFCollection_, ca12PFFilteredCollection_, ca12PFPrunedCollection_, ca12PFSoftDropCollection_, ca12PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ak4", "", ak4PFCollection_);
+		process_jets_pf(iEvent, "ak4", "Filtered", ak4PFFilteredCollection_);
+		process_jets_pf(iEvent, "ak4", "Pruned", ak4PFPrunedCollection_);
+		process_jets_pf(iEvent, "ak4", "SoftDrop", ak4PFSoftDropCollection_);
+		process_jets_pf(iEvent, "ak4", "Trimmed", ak4PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ak8", "", ak8PFCollection_);
+		process_jets_pf(iEvent, "ak8", "Filtered", ak8PFFilteredCollection_);
+		process_jets_pf(iEvent, "ak8", "Pruned", ak8PFPrunedCollection_);
+		process_jets_pf(iEvent, "ak8", "SoftDrop", ak8PFSoftDropCollection_);
+		process_jets_pf(iEvent, "ak8", "Trimmed", ak8PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ca12", "", ca12PFCollection_);
+		process_jets_pf(iEvent, "ca12", "Filtered", ca12PFFilteredCollection_);
+		process_jets_pf(iEvent, "ca12", "Pruned", ca12PFPrunedCollection_);
+		process_jets_pf(iEvent, "ca12", "SoftDrop", ca12PFSoftDropCollection_);
+		process_jets_pf(iEvent, "ca12", "Trimmed", ca12PFTrimmedCollection_);
 		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
 		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
 		process_jets_gn(iEvent, "ca12", ca12GNCollection_);

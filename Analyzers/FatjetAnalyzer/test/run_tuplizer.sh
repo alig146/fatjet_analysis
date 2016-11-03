@@ -2,7 +2,7 @@
 #cmsRun jetanalyzer_cfg.py maxEvents=2 dataset="QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="sq200to4j"
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="qcdmg1000"
-cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False
+#cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False
 #cmsRun tuplizer_cfg.py maxEvents=200 cutPtFilter=400 subprocess="jethtd" generation="0706" suffix="pt400" crab=False data=True
 #cmsRun tuplizer_cfg.py maxEvents=2 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False data=False
 #cmsRun tuplizer_cfg.py subprocess="sq200to4j" inFile="/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_56.root","/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_57.root"
@@ -33,14 +33,12 @@ cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="qcdmg1000" gener
 #cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp1400.log 2>&1 &
 
 ### MadGraph
-#cmsRun jetanalyzer_cfg.py maxEvents=2 dataset="QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg100.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg200.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg300.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg500.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg700.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg1000.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg1500.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" > logs/jetanalyzer_qcdmg2000.log 2>&1 &
+
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg500.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg700" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg700.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1000.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1500.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg2000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg2000.log 2>&1 &
 
 ## TTbar:
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8" nevents=200000 &

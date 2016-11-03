@@ -395,8 +395,8 @@ def add_jet_collection(
 	
 	# Define output:
 	products_keep = [
-		"*_jets*_*_*",
-		"*_patJets*_*_*",
+#		"*_jets*_*_*",
+#		"*_patJets*_*_*",
 		"*_selectedPatJets*_*_*",
 		"*_taus*_*_*",
 	]
