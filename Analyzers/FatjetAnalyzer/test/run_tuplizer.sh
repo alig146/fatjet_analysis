@@ -9,79 +9,31 @@
 
 # RUN OVER BACKGROUND
 ## QCD:
-### Pythia
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8" &
-
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp50.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp80.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp120.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp170.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp300.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp470.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp600.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp800.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp1000.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8" > logs/jetanalyzer_qcdp1400.log 2>&1 &
+### Pythia:
 
 ### MadGraph
 
-cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg500.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg700" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg700.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1000.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1500.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg2000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg2000.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg500.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg700" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg700.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1000.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg1500" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg1500.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="qcdmg2000" generation="fall15" suffix="pt400" crab=False > logs/tuplizer_qcdmg2000.log 2>&1 &
 
 ## TTbar:
 #cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8" nevents=200000 &
 
+### JetHT
+
+#cmsRun tuplizer_cfg.py maxEvents=50000 cutPtFilter=400 subprocess="jethtd" generation="0706" suffix="pt400" crab=False data=True> logs/tuplizer_jethtd.log 2>&1 &
+
 # RUN OVER SqTo4J:
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_150" > logs/jetanalyzer_sq150to4j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_200" > logs/jetanalyzer_sq200to4j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_250" > logs/jetanalyzer_sq250to4j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="SqToJJJJ_300" > logs/jetanalyzer_sq300to4j.log 2>&1 &
-
-# RUN OVER SqTO2J:
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="RPVStopStopToJets_UDD312_M-100-madgraph" > logs/jetanalyzer_sq100to2j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="RPVStopStopToJets_UDD312_M-200-madgraph" > logs/jetanalyzer_sq200to2j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="RPVStopStopToJets_UDD312_M-350-madgraph" > logs/jetanalyzer_sq350to2j.log 2>&1 &
-#cmsRun jetanalyzer_cfg.py maxEvents=-1 dataset="RPVStopStopToJets_UDD312_M-800-madgraph" > logs/jetanalyzer_sq800to2j.log 2>&1 &
-
-# RUN OVER LqToUE:
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-200_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-250_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-300_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-450_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQToUE_M-500_BetaOne_TuneCUETP8M1_13TeV-pythia8" &
-
-# RUN OVER LqToTTau:
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQLQToTopTau_M-200_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQLQToTopTau_M-300_TuneCUETP8M1_13TeV_pythia8" &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 dataset="LQLQToTopTau_M-500_TuneCUETP8M1_13TeV_pythia8" &
-
-# RUN OVER NON-EOS:
-#cmsRun fatjetanalyzer_cfg.py maxEvents=1 inDir="/uscms_data/d3/tote/CMSSW_7_4_1_patch3/src/Producers/FatjetProducer/test" inFile="sqtojjjj_200gev_7413_fatjets.root" verbose=True cutPt=50
-#cmsRun fatjetanalyzer_cfg.py maxEvents=1 inDir="/eos/uscms/store/user/tote/SqToJJJJ_200/sqtojjjj_200_fatjets/151021_155231/0000" inFile="sqtojjjj_200gev_7413_fatjets_1.root" verbose=True cutPt=50
-
-
-# RUN OVER OLD FATJETS:
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R8_ak_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ak8_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R8_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ca8_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R10_ak_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ak10_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R10_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ca10_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R12_ak_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ak12_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ca12_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R14_ak_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ak14_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_200gev_chs_30000_7322_R14_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_200_ca14_ntuple.root" sigma=647.123 &
-#cmsRun fatjetanalyzer_cfg.py maxEvents=-1 inType=2 inDir="/eos/uscms/store/user/tote/data/fat/old" inFile="sqtojjjj_300gev_chs_50000_7322_fatjets.root" outDir="/eos/uscms/store/user/tote/data/fat" outFile="old_300_ca12_ntuple.root" sigma=85.6773 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq100to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq100to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq150to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq200to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq200to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq250to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq250to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq300to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq300to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq400to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq400to4j.log 2>&1 &
+cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq500to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq500to4j.log 2>&1 &
 
 
 # JUNK:
