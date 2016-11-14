@@ -1,0 +1,9 @@
+crab status crab_projects/crab_tuple_qcdp300_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp470_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp600_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp800_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp1000_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp1400_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp1800_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp2400_fall15_pt400
+crab status crab_projects/crab_tuple_qcdp3200_fall15_pt400

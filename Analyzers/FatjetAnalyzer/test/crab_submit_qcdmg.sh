@@ -1,0 +1,5 @@
+crab submit crab_configs/qcd_qcdmg_qcdmg500_fall15.py
+crab submit crab_configs/qcd_qcdmg_qcdmg700_fall15.py
+crab submit crab_configs/qcd_qcdmg_qcdmg1000_fall15.py
+crab submit crab_configs/qcd_qcdmg_qcdmg1500_fall15.py
+crab submit crab_configs/qcd_qcdmg_qcdmg2000_fall15.py

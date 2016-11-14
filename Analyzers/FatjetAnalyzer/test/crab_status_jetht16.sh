@@ -1,0 +1,7 @@
+crab status crab_projects/crab_tuple_jetht16b_0800_pt400
+crab status crab_projects/crab_tuple_jetht16c_0800_pt400
+crab status crab_projects/crab_tuple_jetht16d_0800_pt400
+crab status crab_projects/crab_tuple_jetht16e_0800_pt400
+crab status crab_projects/crab_tuple_jetht16f_0800_pt400
+crab status crab_projects/crab_tuple_jetht16g_0800_pt400
+#crab status crab_projects/crab_tuple_jetht16h_0800_pt400		# No events created.

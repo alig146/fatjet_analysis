@@ -1,0 +1,5 @@
+crab status crab_projects/crab_tuple_qcdmg500_fall15_pt400
+crab status crab_projects/crab_tuple_qcdmg700_fall15_pt400
+crab status crab_projects/crab_tuple_qcdmg1000_fall15_pt400
+crab status crab_projects/crab_tuple_qcdmg1500_fall15_pt400
+crab status crab_projects/crab_tuple_qcdmg2000_fall15_pt400

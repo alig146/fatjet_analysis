@@ -1,0 +1,9 @@
+crab submit crab_configs/qcd_qcdp_qcdp300_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp470_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp600_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp800_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp1000_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp1400_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp1800_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp2400_fall15.py
+crab submit crab_configs/qcd_qcdp_qcdp3200_fall15.py
