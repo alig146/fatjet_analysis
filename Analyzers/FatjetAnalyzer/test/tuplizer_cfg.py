@@ -18,7 +18,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing     # Module used to pass 
 from Configuration.AlCa.autoCond import autoCond          # For automatically determining global tags
 ## Custom:
 from decortication import dataset
-from truculence import analysis           # For "get_cmssw()"
+from truculence import cmssw
 # /IMPORTS
 
 # FUNCTIONS:
@@ -38,8 +38,8 @@ def check_jec(jec_path, data=False, algorithm="ak8"):
 
 # SET UP:
 ## Very basic variables:
-out_dir_default = "/uscms/home/tote/temp"      # This is where output goes when it's not put into EOS by CRAB.
-cmssw = analysis.get_cmssw()                   # The CMSSW version that this configuration file is using.
+out_dir_default = "/uscms/home/tote/temp"             # This is where output goes when it's not put into EOS by CRAB.
+cmssw_version = cmssw.get_version()                   # The CMSSW version that this configuration file is using.
 
 ## Construct process:
 process = cms.Process("fatjets")
@@ -128,18 +128,23 @@ options.register ('weight',
 	VarParsing.varType.float,
 	"The event weight."
 )
+options.register ('mask',
+	'',
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.string,
+	"Luminosity mask"
+)
 
 options.parseArguments()
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))		# Set up the number of events to run over.
 
 if options.suffix == "1":
-	options.suffix = options.cutPtFilter
+	options.suffix = "pt{0}".format(options.cutPtFilter)
 
 ### Input:
 if options.subprocess:
 	miniaod = dataset.fetch_miniaod(options.subprocess, options.generation)
-	miniaod.set_connections(down=False, up=True)
-	sample = miniaod.sample
+	sample = miniaod.get_sample()
 	sigma = sample.sigma
 	if sigma == None:		# 161013: Added after removing sigma from jetht datasets.
 		sigma = -1
@@ -177,7 +182,7 @@ if (not in_files) and (not options.crab):
 
 ### Output:
 if not options.outFile:
-	options.outFile = "tuple_{0}_{1}_{2}_{3}.root".format(options.subprocess, options.generation, options.suffix, cmssw)
+	options.outFile = "tuple_{0}_{1}_{2}_{3}.root".format(options.subprocess, options.generation, options.suffix, cmssw_version)
 # /SET UP
 
 # CONFIGURATION:
@@ -194,13 +199,13 @@ process.options = cms.untracked.PSet(
 
 ## Input:
 #in_files = ["file:fall15.root"]
-if options.crab:
-	process.source = cms.Source("PoolSource")
-else:
-	process.source = cms.Source(
-		"PoolSource",
-		fileNames= cms.untracked.vstring([f.encode('utf8') for f in in_files])		# "in_files" is a list of input files defined above in the SET UP section.
-	)
+process.source = cms.Source("PoolSource")
+if not options.crab:
+	setattr(process.source, "fileNames", cms.untracked.vstring([f.encode('utf8') for f in in_files]))		# "in_files" is a list of input files defined above in the SET UP section.
+#print process.source.fileNames
+if options.mask:
+	setattr(process.source, "lumisToProcess", cms.untracked.VLuminosityBlockRange(cmssw.convert_lumi_json(options.mask)))
+#print process.source.lumisToProcess
 
 ## Output:
 if options.crab:

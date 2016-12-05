@@ -3,7 +3,7 @@
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="sq200to4j"
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="qcdmg1000"
 #cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="qcdmg1000" generation="fall15" suffix="pt400" crab=False
-#cmsRun tuplizer_cfg.py maxEvents=200 cutPtFilter=400 subprocess="jethtd" generation="0706" suffix="pt400" crab=False data=True
+cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="jetht16d" generation="0800" suffix="pt400" crab=False data=True # mask="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/Cert_271036-280385_13TeV_PromptReco_Collisions16_JSON.txt"
 #cmsRun tuplizer_cfg.py maxEvents=2 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False data=False
 #cmsRun tuplizer_cfg.py subprocess="sq200to4j" inFile="/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_56.root","/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_57.root"
 
@@ -26,14 +26,14 @@
 
 #cmsRun tuplizer_cfg.py maxEvents=50000 cutPtFilter=400 subprocess="jethtd" generation="0706" suffix="pt400" crab=False data=True> logs/tuplizer_jethtd.log 2>&1 &
 
-# RUN OVER SqTo4J:
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq100to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq100to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq150to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq200to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq200to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq250to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq250to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq300to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq300to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq400to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq400to4j.log 2>&1 &
-cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq500to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq500to4j.log 2>&1 &
+## RUN OVER SqTo4J:		(161115)
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq100to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq100to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq150to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq200to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq200to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq250to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq250to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq300to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq300to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq400to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq400to4j.log 2>&1 &
+#cmsRun tuplizer_cfg.py maxEvents=30000 cutPtFilter=400 subprocess="sq500to4j" generation="0706" suffix="pt400" crab=False> logs/tuplizer_sq500to4j.log 2>&1 &
 
 
 # JUNK:

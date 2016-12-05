@@ -1,0 +1,28 @@
+nocut: 1
+presel: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0
+preselAndMasy: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0&&masy_p<0.10
+selfj: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0&&tau43[0]<0.75&&tau42[0]<0.45
+selfjp: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0&&masy_p<0.10&&Max$(tau43)<0.75&&Max$(tau42)<0.45
+selfjLoose: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0&&tau43[0]<0.80&&tau42[0]<0.55
+selfjpLoose: Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<1.0&&masy_p<0.10&&Max$(tau43)<0.80&&Max$(tau42)<0.55
+
+# n-1 cuts:
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&tau43s<0.45&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&deta<0.6&&tau43s<0.45&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&deta<0.6&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&deta<0.6&&tau43s<0.45
+#
+##Max$(m_t)>50
+##Max$(m_t)>50&&htak8>900
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&deta<0.6
+##Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p<0.10&&deta<0.6&&tau43s<0.45&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&masy_p>0.10&&masy_p<0.3&&deta>0.6&&tau43s<0.45&&tau42s<0.15
+##Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.75&&tau42s<0.15&&masy_p>0.10&&masy_p<0.3&&deta>0.6
+##Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35&&masy_p<0.10&&deta<0.6
+#Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.45&&tau42s<0.35&&masy_p>0.10&&masy_p<0.3&&deta>0.6
+##Max$(m_t)>50&&htak8>900&&Min$(tau21)>0.5&&tau43s<0.40&&tau42s<0.13
