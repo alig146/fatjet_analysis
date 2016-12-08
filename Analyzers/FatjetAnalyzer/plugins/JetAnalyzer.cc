@@ -840,7 +840,7 @@ void JetAnalyzer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 //		cout << status << "  " << pdgid << endl;
 		
 		// Fill branches:
-		if (abs(pdgid) == 6 and status == 22) {
+		if ((abs(pdgid) == 6 || abs(pdgid) == 1000006) and status == 22) {
 			branches[name_type]["phi"].push_back(phi);
 			branches[name_type]["eta"].push_back(eta);
 			branches[name_type]["y"].push_back(y);
