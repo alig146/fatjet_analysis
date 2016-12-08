@@ -39,7 +39,7 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
-#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
+//#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 ///// JEC:
@@ -95,7 +95,8 @@ class JetAnalyzer : public edm::EDAnalyzer {
 		virtual void process_muons_pf(const edm::Event&, EDGetTokenT<vector<pat::Muon>>);
 		virtual void process_tauons_pf(const edm::Event&, EDGetTokenT<vector<pat::Tau>>);
 		virtual void process_photons_pf(const edm::Event&, EDGetTokenT<vector<pat::Photon>>);
-		virtual void process_squarks_pf(const edm::Event&, EDGetTokenT<vector<pat::PackedGenParticle>>);
+//		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<pat::PackedGenParticle>>);
+		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<reco::GenParticle>>);
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void endJob();
 		virtual void beginRun(const edm::Run&, const edm::EventSetup&);
@@ -166,7 +167,8 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	EDGetTokenT<vector<pat::Muon>> muonCollection_;
 	EDGetTokenT<vector<pat::Tau>> tauCollection_;
 	EDGetTokenT<vector<pat::Photon>> photonCollection_;
-	EDGetTokenT<vector<pat::PackedGenParticle>> genCollection_;
+//	EDGetTokenT<vector<pat::PackedGenParticle>> genCollection_;
+	EDGetTokenT<vector<reco::GenParticle>> genCollection_;
 };
 // \CLASS DEFINITIONS
 
@@ -219,7 +221,10 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	muonCollection_(consumes<vector<pat::Muon>>(iConfig.getParameter<InputTag>("muonCollection"))),
 	tauCollection_(consumes<vector<pat::Tau>>(iConfig.getParameter<InputTag>("tauCollection"))),
 	photonCollection_(consumes<vector<pat::Photon>>(iConfig.getParameter<InputTag>("photonCollection"))),
-	genCollection_(consumes<vector<pat::PackedGenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
+//	genCollection_(consumes<vector<pat::PackedGenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
+	genCollection_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
+	
+	
 {
 //do what ever initialization is needed
 	// Collections setup:
@@ -260,8 +265,8 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	
 	/// "gen"
 	gen_names = {"sq", "q"};
-	gen_types = {"pf"};
-	lep_variables = {		// List of event branch variables for each collection.
+	gen_types = {"gn"};
+	gen_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m", "pid",
 	};
 	
@@ -807,45 +812,46 @@ void JetAnalyzer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 	}		// :End collection loop
 }
 
-/// Squarks method:
-void JetAnalyzer::process_squarks_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::PackedGenParticle>> token) {
+/// Quarks method:
+void JetAnalyzer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector<reco::GenParticle>> token) {
 	// Arguments:
-	string name = "sq";
-	string type = "pf";
+	string name = "q";
+	string type = "gn";
 	string name_type = name + "_" + type;
 	
-	Handle<vector<pat::PackedGenParticle>> gens;
+	Handle<vector<reco::GenParticle>> gens;
 	iEvent.getByToken(token, gens);
 	
 	// Loop over the collection:
-	for (vector<pat::PackedGenParticle>::const_iterator gen = gens->begin(); gen != gens->end(); ++ gen) {
+	for (vector<reco::GenParticle>::const_iterator gen = gens->begin(); gen != gens->end(); ++ gen) {
 		// Define some useful event variables:
-//		double m = gen->mass();
-//		double px = gen->px();
-//		double py = gen->py();
-//		double pz = gen->pz();
-//		double e = gen->energy();
-//		double pt = gen->pt();
-//		double phi = gen->phi();
-//		double eta = gen->eta();
-//		double y = gen->y();
+		double m = gen->mass();
+		double px = gen->px();
+		double py = gen->py();
+		double pz = gen->pz();
+		double e = gen->energy();
+		double pt = gen->pt();
+		double phi = gen->phi();
+		double eta = gen->eta();
+		double y = gen->y();
 		double status = gen->status();
 		double pdgid = gen->pdgId();
 		
-		cout << status << "  " << pdgid << endl;
+//		cout << status << "  " << pdgid << endl;
 		
-//		// Fill branches:
-//		if (pt > 5) {
-//			branches[name_type]["phi"].push_back(phi);
-//			branches[name_type]["eta"].push_back(eta);
-//			branches[name_type]["y"].push_back(y);
-//			branches[name_type]["px"].push_back(px);
-//			branches[name_type]["py"].push_back(py);
-//			branches[name_type]["pz"].push_back(pz);
-//			branches[name_type]["e"].push_back(e);
-//			branches[name_type]["pt"].push_back(pt);
-//			branches[name_type]["m"].push_back(m);
-//		}
+		// Fill branches:
+		if (abs(pdgid) == 6 and status == 22) {
+			branches[name_type]["phi"].push_back(phi);
+			branches[name_type]["eta"].push_back(eta);
+			branches[name_type]["y"].push_back(y);
+			branches[name_type]["px"].push_back(px);
+			branches[name_type]["py"].push_back(py);
+			branches[name_type]["pz"].push_back(pz);
+			branches[name_type]["e"].push_back(e);
+			branches[name_type]["pt"].push_back(pt);
+			branches[name_type]["m"].push_back(m);
+			branches[name_type]["pid"].push_back(pdgid);
+		}
 	}		// :End collection loop
 }
 
@@ -885,6 +891,17 @@ void JetAnalyzer::analyze(
 				string type = *j;
 				string name_type = name + "_" + type;
 				for (vector<string>::iterator k = lep_variables.begin(); k != lep_variables.end(); k++) {
+					branches[name_type][*k].clear();
+				}
+			}
+		}
+		/// "gen":
+		for (vector<string>::const_iterator i = gen_names.begin(); i != gen_names.end(); i++) {
+			string name = *i;
+			for (vector<string>::const_iterator j = gen_types.begin(); j != gen_types.end(); j++) {
+				string type = *j;
+				string name_type = name + "_" + type;
+				for (vector<string>::iterator k = gen_variables.begin(); k != gen_variables.end(); k++) {
 					branches[name_type][*k].clear();
 				}
 			}
@@ -955,7 +972,7 @@ void JetAnalyzer::analyze(
 		process_muons_pf(iEvent, muonCollection_);
 		process_tauons_pf(iEvent, tauCollection_);
 		process_photons_pf(iEvent, photonCollection_);
-//		process_squarks_pf(iEvent, genCollection_);
+		process_quarks_gn(iEvent, genCollection_);
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

@@ -38,7 +38,7 @@ def check_jec(jec_path, data=False, algorithm="ak8"):
 
 # SET UP:
 ## Very basic variables:
-out_dir_default = "/uscms/home/tote/temp"             # This is where output goes when it's not put into EOS by CRAB.
+out_dir_default = "~/temp"             # This is where output goes when it's not put into EOS by CRAB.
 cmssw_version = cmssw.get_version()                   # The CMSSW version that this configuration file is using.
 
 ## Construct process:
@@ -340,7 +340,8 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 	tauCollection=cms.InputTag("slimmedTaus"),
 	photonCollection=cms.InputTag("slimmedPhotons"),
 	## Particles:
-	genCollection=cms.InputTag("packedGenParticles"),
+#	genCollection=cms.InputTag("packedGenParticles"),
+	genCollection=cms.InputTag("prunedGenParticles"),
 )
 #process.analyzer.testtt = "test"		# This works.
 
