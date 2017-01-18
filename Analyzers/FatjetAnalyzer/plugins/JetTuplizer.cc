@@ -1,10 +1,10 @@
 /*#######################################################
 # CMSSW EDAnalyzer                                      #
-# Name: JetAnalyzer.cc                                  #
+# Name: JetTuplizer.cc                                  #
 # Author: Elliot Hughes                                 #
 #                                                       #
-# Description: To analyze fatjets or B2G ntuples:       #
-# select jets, create ntuples.                          #
+# Description: To tuplize fatjets or B2G ntuples:       #
+# select jets, create tuples.                           #
 #######################################################*/
 
 // INCLUDES:
@@ -80,10 +80,10 @@ using namespace edm;
 // \STRUCTURES
 
 // CLASS DEFINITIONS:
-class JetAnalyzer : public edm::EDAnalyzer {
+class JetTuplizer : public edm::EDAnalyzer {
 	public:
-		explicit JetAnalyzer(const edm::ParameterSet&);		// Set the class argument to be (a reference to) a parameter set (?)
-		~JetAnalyzer();		// Create the destructor.
+		explicit JetTuplizer(const edm::ParameterSet&);		// Set the class argument to be (a reference to) a parameter set (?)
+		~JetTuplizer();		// Create the destructor.
 		static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 	private:
@@ -118,7 +118,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
 	
 	// Input collections:
-	vector<string> jet_names, jet_types;
+	vector<string> jet_names, jet_types, jet_collections;
 	vector<string> lep_names, lep_types;
 	vector<string> gen_names, gen_types;
 	
@@ -185,7 +185,7 @@ class JetAnalyzer : public edm::EDAnalyzer {
 // static data member definitions
 
 // constructors and destructors
-JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
+JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	v_(iConfig.getParameter<bool>("v")),
 	is_data_(iConfig.getParameter<bool>("is_data")),
 	in_type_(iConfig.getParameter<int>("in_type")),
@@ -231,6 +231,11 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	/// "jet"
 	jet_names = {"ak4", "ak8", "ca12"};
 	jet_types = {"pf", "pff", "pfp", "pfs", "pft", "gn", "maod"};
+	jet_collections = {
+		"ak4_maod", "ak4_gn", "ak4_pf",
+		"ak8_maod", "ak8_gn", "ak8_pf",
+		"ca12_gn", "ca12_pf", "ca12_pff", "ca12_pfp", "ca12_pfs", "ca12_pft"
+	};
 	jet_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
 		"m",          // Ungroomed mass
@@ -264,7 +269,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	};
 	
 	/// "gen"
-	gen_names = {"sq", "q"};
+	gen_names = {"q"};
 	gen_types = {"gn"};
 	gen_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m", "pid",
@@ -292,16 +297,18 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 	ttrees["events"]->SetName("events");
 	
 	//// "jet":
-	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
-		string name = *i;
-		for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
-			string type = *j;
-			string name_type = name + "_" + type;
-			for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
-				string variable = *k;
-				string branch_name = name + "_" + type + "_" + variable;
-				tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
-			}
+//	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
+//		string name = *i;
+//		for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
+//			string type = *j;
+//			string name_type = name + "_" + type;
+
+	for (vector<string>::const_iterator i = jet_collections.begin(); i != jet_collections.end(); i++) {
+		for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
+			string name_type = *i;
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
 		}
 	}
 	//// "lep":
@@ -397,7 +404,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig) :
 }
 
 // DEFINE THE DESTRUCTOR
-JetAnalyzer::~JetAnalyzer()
+JetTuplizer::~JetTuplizer()
 {
 	cout << "======================================================" << endl;
 	cout << "Error records:" << endl;
@@ -412,7 +419,7 @@ JetAnalyzer::~JetAnalyzer()
 }
 
 // ------------ called once each job just before starting event loop  ------------
-void JetAnalyzer::beginJob()
+void JetTuplizer::beginJob()
 {
 	n_event = 0;
 //	cout << "maxEvents = " << nevents_ << endl;
@@ -422,7 +429,7 @@ void JetAnalyzer::beginJob()
 // CLASS METHODS ("method" = "member function")
 
 /// PF jets method:
-void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
+void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
 	// Arguments:
 	string type = "pf";
 	if (!groom.empty()) {
@@ -555,7 +562,7 @@ void JetAnalyzer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 }
 
 /// GN jets method:
-void JetAnalyzer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTokenT<vector<reco::GenJet>> token) {
+void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTokenT<vector<reco::GenJet>> token) {
 	// Arguments:
 	string type = "gn";
 	string algo_type = algo + "_" + type;
@@ -606,7 +613,7 @@ void JetAnalyzer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 }
 
 /// MAOD jets method:
-void JetAnalyzer::process_jets_maod(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
+void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
 	// Arguments:
 	string type = "maod";
 	string algo_type = algo + "_" + type;
@@ -661,7 +668,7 @@ void JetAnalyzer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 }
 
 /// Electrons method:
-void JetAnalyzer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Electron>> token) {
+void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Electron>> token) {
 	// Arguments:
 	string name = "le";
 	string type = "pf";
@@ -699,7 +706,7 @@ void JetAnalyzer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vec
 }
 
 /// Muons method:
-void JetAnalyzer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Muon>> token) {
+void JetTuplizer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Muon>> token) {
 	// Arguments:
 	string name = "lm";
 	string type = "pf";
@@ -737,7 +744,7 @@ void JetAnalyzer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<
 }
 
 /// Tauons method:
-void JetAnalyzer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Tau>> token) {
+void JetTuplizer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Tau>> token) {
 	// Arguments:
 	string name = "lt";
 	string type = "pf";
@@ -775,7 +782,7 @@ void JetAnalyzer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector
 }
 
 /// Photons method:
-void JetAnalyzer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Photon>> token) {
+void JetTuplizer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Photon>> token) {
 	// Arguments:
 	string name = "lp";
 	string type = "pf";
@@ -813,7 +820,7 @@ void JetAnalyzer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 }
 
 /// Quarks method:
-void JetAnalyzer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector<reco::GenParticle>> token) {
+void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector<reco::GenParticle>> token) {
 	// Arguments:
 	string name = "q";
 	string type = "gn";
@@ -857,7 +864,7 @@ void JetAnalyzer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 
 
 // ------------ called for each event  ------------
-void JetAnalyzer::analyze(
+void JetTuplizer::analyze(
 	const edm::Event& iEvent,
 	const edm::EventSetup& iSetup
 ){
@@ -870,18 +877,18 @@ void JetAnalyzer::analyze(
 		}
 	}
 	else if (in_type_ == 1) {
-		if (v_) {cout << "Running over JetToolbox collections ..." << endl;}
+		if (v_) {cout << "Running over JetWorkshop collections ..." << endl;}
 		
 		// Clear branches:
 		/// "jet":
-		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
-			string name = *i;
-			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
-				string type = *j;
-				string name_type = name + "_" + type;
-				for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
-					branches[name_type][*k].clear();
-				}
+//		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
+//			string name = *i;
+//			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
+//				string type = *j;
+//				string name_type = name + "_" + type;
+		for (vector<string>::const_iterator i = jet_collections.begin(); i != jet_collections.end(); i++) {
+			for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
+				branches[*i][*k].clear();
 			}
 		}
 		/// "lep":
@@ -983,37 +990,37 @@ void JetAnalyzer::analyze(
 }
 
 // ------------  called once each job just after ending the event loop  ------------
-void JetAnalyzer::endJob()
+void JetTuplizer::endJob()
 {
 //	cout << "END!" << endl;
 }
 
 // ------------ method called when starting to processes a run  ------------
 void 
-JetAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
+JetTuplizer::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
 void 
-JetAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
+JetTuplizer::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void 
-JetAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+JetTuplizer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 void 
-JetAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+JetTuplizer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 void
-JetAnalyzer::respondToOpenInputFile(edm::FileBlock const& fb)
+JetTuplizer::respondToOpenInputFile(edm::FileBlock const& fb)
 {
 //	cout << "NEW FILE" << endl;
 //	cout << fb.fileName() << endl;
@@ -1021,7 +1028,7 @@ JetAnalyzer::respondToOpenInputFile(edm::FileBlock const& fb)
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-JetAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+JetTuplizer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -1030,4 +1037,4 @@ JetAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(JetAnalyzer);
+DEFINE_FWK_MODULE(JetTuplizer);

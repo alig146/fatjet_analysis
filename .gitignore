@@ -1,5 +1,6 @@
 # python:
 *.pyc
+*__init__.py
 Analyzers/FatjetAnalyzer/test/jec_data/*.txt
 Analyzers/FatjetAnalyzer/test/condor_jobs
 Analyzers/FatjetAnalyzer/test/crab_projects

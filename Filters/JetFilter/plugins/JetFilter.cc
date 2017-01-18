@@ -107,7 +107,6 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	// Get CA12 jets:
 	Handle<vector<pat::Jet>> jets_edm;
 	iEvent.getByToken(jetCollection_, jets_edm);
-//	iEvent.getByLabel("selectedPatJetsCA12PFCHS", "", jets_edm);
 	
 	// Ensure the top two jets have pT greater than cut_pt_:
 //	for (vector<pat::Jet>::const_iterator jet = jets_edm->begin(); jet != jets_edm->end(); ++ jet) {
@@ -147,7 +146,9 @@ JetFilter::beginJob() {
 void 
 JetFilter::endJob() {
 	cout << "=================================" << endl;
-	cout << "Jet filter results:" << endl;
+	cout << "JetFilter information:" << endl;
+	cout << "pT cut = " << cut_pt_ << " GeV" << endl;
+	cout << "abs(eta) cut = " << cut_eta_ << endl;
 	cout << "total events: " << nevents << endl;
 	cout << "accepted events: " << nevents_passed << endl;
 	cout << "=================================" << endl;
