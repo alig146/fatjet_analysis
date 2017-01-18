@@ -5,7 +5,7 @@ The JetFilter filters events based on their jet content. The user specifies the 
 * a pT cut (in GeV)
 * an abs(eta) cut
 
-If the two leading jets of the specified jet collection both pass these the cuts, the event passes the filter.
+If the two leading jets of the specified jet collection both pass these cuts, the event passes the filter.
 
 ## Example
 An example of usage in a CMSSW configuration file:

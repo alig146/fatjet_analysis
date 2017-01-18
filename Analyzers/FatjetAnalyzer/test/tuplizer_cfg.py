@@ -113,10 +113,10 @@ options.register ('cutEtaFilter',
 	2.5,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"Cut on the eta of the leading jets. The default is 2.5 GeV."
+	"Cut on the abs(eta) of the leading jets. The default is 2.5 GeV."
 )
-### Analyzer options:
-options.register ('cutPtAnalyzer',
+### Tuplizer options:
+options.register ('cutPtTuplizer',
 	10,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
@@ -212,7 +212,7 @@ if options.crab:
 	out_location = "{0}".format(options.outFile)
 else:
 	out_location = "{0}/{1}".format(options.outDir, options.outFile)
-	print out_location
+print out_location
 
 process.out = cms.OutputModule("PoolOutputModule",
 	fileName = cms.untracked.string(out_location),
@@ -292,7 +292,7 @@ process.filter = cms.EDFilter("JetFilter",
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string(out_location)
 )
-# Analyzer:
+# Tuplizer:
 ## JEC data path:
 jec_path = "jec_data/Spring16_25nsV2"
 if not check_jec(jec_path, data=options.data):
@@ -300,13 +300,13 @@ if not check_jec(jec_path, data=options.data):
 	sys.exit()
 
 ## Initialize the EDAnalyzer:
-process.analyzer = cms.EDAnalyzer("JetAnalyzer",
+process.tuplizer = cms.EDAnalyzer("JetTuplizer",
 	v=cms.bool(False),
 	is_data=cms.bool(options.data),
 	in_type=cms.int32(1),                    # Input type (0: B2G, 1: fatjets)
 	sigma=cms.double(sigma),                 # The dataset's cross section
 	weight=cms.double(options.weight),       # The event weight
-	cut_pt=cms.double(options.cutPtAnalyzer),
+	cut_pt=cms.double(options.cutPtTuplizer),
 	jec_version=cms.string(jec_path),
 	genInfo=cms.InputTag("generator"),
 	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
@@ -343,11 +343,11 @@ process.analyzer = cms.EDAnalyzer("JetAnalyzer",
 #	genCollection=cms.InputTag("packedGenParticles"),
 	genCollection=cms.InputTag("prunedGenParticles"),
 )
-#process.analyzer.testtt = "test"		# This works.
+#process.tuplizer.testtt = "test"		# This works.
 
 # PATH:
 process.p = cms.Path(
 	process.filter *
-	process.analyzer
+	process.tuplizer
 )
 #process.outpath = cms.EndPath(process.out)
