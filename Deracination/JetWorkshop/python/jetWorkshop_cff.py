@@ -278,7 +278,8 @@ def add_jet_collection(
 	data=False,                     # Is the input dataset data? (False: MC, True: data)
 	tags_dict=input_tags.copy(),
 	output="out",                   # The name of the PoolOutputModule.
-	taus=None
+	taus=None,
+	keep_all=False,
 ):
 	# Arguments:
 	tags_dict_original = tags_dict.copy()
@@ -335,6 +336,8 @@ def add_jet_collection(
 		"*_selectedPatJets*_*_*",
 		"*_taus*_*_*",
 	]
+	if keep_all: products_keep.extend(["*_jets*_*_*", "*_patJets*_*_*"])
+	
 	products_drop = [
 		"*_patJets*_calo*_*",
 		"*_patJets*_tagInfos_*",
