@@ -13,7 +13,9 @@ The jet branches contain the following variables:
 * `mef` - Muon energy fraction
 * `nm` - Neutral particle multiplicity
 * `cm` - Charged particle multiplicity
-* `n` - Number of constituents
+* `n` - Number of constituents, `nm+cm`
+* `f` - Hadron flavor: `5` for *b*-hadron, `4` for *c*-hadron, `0` for light hadron
+* `bd_csv` - Combined secondary vertex b-tag discriminator (MiniAOD jets only)
 * [...]
 
 ### Lepton branches

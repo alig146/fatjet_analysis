@@ -45,6 +45,9 @@
 ///// JEC:
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+///// b-tag scale factors:
+#include "CondFormats/BTauObjects/interface/BTagCalibration.h"
+#include "CondTools/BTau/interface/BTagCalibrationReader.h"
 
 //// Meta includes:
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -97,6 +100,8 @@ class JetTuplizer : public edm::EDAnalyzer {
 		virtual void process_photons_pf(const edm::Event&, EDGetTokenT<vector<pat::Photon>>);
 //		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<pat::PackedGenParticle>>);
 		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<reco::GenParticle>>);
+		virtual void match_bjets();
+		virtual void find_btagsf();
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void endJob();
 		virtual void beginRun(const edm::Run&, const edm::EventSetup&);
@@ -126,6 +131,10 @@ class JetTuplizer : public edm::EDAnalyzer {
 	string jec_prefix;
 	vector<string> jec_ak4_files, jmc_ak4_files, jec_ak8_files, jmc_ak8_files;
 	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
+	
+	// b-tag scale factor things:
+	BTagCalibration btagsf_calib;
+	BTagCalibrationReader btagsf_reader;
 	
 	// Ntuple information:
 	vector<string> jet_variables, lep_variables, gen_variables, event_variables;
@@ -251,6 +260,9 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"bd_cisv",
 		"jec",        // Jet energy correction
 		"jmc",        // Jet mass correction
+		"bsf",        // b-tag scale factor
+		"bsf_u",      // b-tag scale factor uncertainty up (?)
+		"bsf_d",      // b-tag scale factor uncertainty down (?)
 		"neef",       // Neutral EM energy fraction
 		"ceef",       // Charged EM energy fraction
 		"nhef",       // Neutral hadron energy fraction
@@ -258,7 +270,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"mef",        // Muon energy fraction
 		"nm",         // Neutral multiplicity
 		"cm",         // Charged multiplicity
-		"n"           // Number of constituents
+		"n",          // Number of constituents
+		"f"           // Hadron flavor
 	};
 	
 	/// "lep"
@@ -393,6 +406,13 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	}
 	jmc_corrector_ak8 = new FactorizedJetCorrector(jmc_parameters_ak8);
 	
+	// b-tag scale factor setup:
+	BTagCalibration btagsf_calib("csvv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
+//	BTagCalibration btagsf_calib("csvv2");		// What value should I enter here when I don't use a csv file?
+	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
+	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_B, "comb");
+	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_C, "comb");
+	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_UDSG, "comb");
 	
 	// Debug:
 	cout << endl;
@@ -478,6 +498,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 		double nm = jet->neutralMultiplicity();
 		double cm = jet->chargedMultiplicity();
 		double n = nm + cm;
+		double f = jet->hadronFlavour();
 		if (algo == "ak8") {
 			if (pt > 150) {
 				ht += pt;
@@ -555,6 +576,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			branches[algo_type]["nm"].push_back(nm);
 			branches[algo_type]["cm"].push_back(cm);
 			branches[algo_type]["n"].push_back(n);
+			branches[algo_type]["f"].push_back(f);
 		}
 	}		// :End collection loop
 	
@@ -645,6 +667,7 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 		else {
 			ht += pt;
 		}
+		
 		
 		// Fill branches:
 		if (pt > cut_pt_) {
@@ -862,6 +885,70 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 	}		// :End collection loop
 }
 
+// B-jet matching method:
+void JetTuplizer::match_bjets() {
+	for (int ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
+		double bd_te_max = 0;
+		double bd_tp_max = 0;
+		double bd_csv_max = 0;
+		double bd_cisv_max = 0;
+		for (unsigned int ijet_ak4 = 0; ijet_ak4 < branches["ak4_maod"]["pt"].size(); ijet_ak4++) {
+//			double ca12_pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
+			double ca12_eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
+			double ca12_phi = branches["ca12_pf"]["phi"].at(ijet_ca12);
+//			double ak4_pt = branches["ak4_pf"]["pt"].at(ijet_ak4);
+			double ak4_eta = branches["ak4_maod"]["eta"].at(ijet_ak4);
+			double ak4_phi = branches["ak4_maod"]["phi"].at(ijet_ak4);
+			double bd_te = branches["ak4_maod"]["bd_te"].at(ijet_ak4);
+			double bd_tp = branches["ak4_maod"]["bd_tp"].at(ijet_ak4);
+			double bd_csv = branches["ak4_maod"]["bd_csv"].at(ijet_ak4);
+			double bd_cisv = branches["ak4_maod"]["bd_cisv"].at(ijet_ak4);
+			double dR = reco::deltaR(ca12_eta, ca12_phi, ak4_eta, ak4_phi);
+//			double dR = sqrt(pow(ca12_eta - ak4_eta, 2) + pow(M_PI - abs(M_PI - abs(ca12_phi - ak4_phi)), 2));		// Same as above.
+			
+			if (dR < 0.6 && bd_te > bd_te_max) {bd_te_max = bd_te;}
+			if (dR < 0.6 && bd_tp > bd_tp_max) {bd_tp_max = bd_tp;}
+			if (dR < 0.6 && bd_csv > bd_csv_max) {bd_csv_max = bd_csv;}
+			if (dR < 0.6 && bd_cisv > bd_cisv_max) {bd_cisv_max = bd_cisv;}
+		}
+		branches["ca12_pf"]["bd_te"].push_back(bd_te_max);
+		branches["ca12_pf"]["bd_tp"].push_back(bd_tp_max);
+		branches["ca12_pf"]["bd_csv"].push_back(bd_csv_max);
+		branches["ca12_pf"]["bd_cisv"].push_back(bd_cisv_max);
+	}
+}
+
+// B-jet scale factors:
+/// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagCalibration#Example_code_in_C
+void JetTuplizer::find_btagsf() {
+	for (int ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
+		double pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
+		double eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
+		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
+		double bsf = 1;
+		double bsf_u = 1;
+		double bsf_d = 1;
+		
+		if (f == 5) {
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
+		}
+		else if (f == 4) {
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
+		}
+		else if (f == 0) {
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
+		}
+		branches["ca12_pf"]["bsf"].push_back(bsf);
+		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
+		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
+	}
+}
 
 // ------------ called for each event  ------------
 void JetTuplizer::analyze(
@@ -979,7 +1066,9 @@ void JetTuplizer::analyze(
 		process_muons_pf(iEvent, muonCollection_);
 		process_tauons_pf(iEvent, tauCollection_);
 		process_photons_pf(iEvent, photonCollection_);
-		process_quarks_gn(iEvent, genCollection_);
+		if (!is_data_) {process_quarks_gn(iEvent, genCollection_);}
+		match_bjets();
+//		find_btagsf();		// Seg faults ... (170119)
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

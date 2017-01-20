@@ -4,7 +4,7 @@
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="qcdmg1000"
 cmsRun tuplizer_cfg.py maxEvents=100 cutPtFilter=400 subprocess="ttbar" generation="fall15" suffix="pt400" crab=False
 #cmsRun tuplizer_cfg.py maxEvents=1000 cutPtFilter=400 subprocess="sq200to4j" generation="0706" suffix="pt400" crab=False
-#cmsRun tuplizer_cfg.py maxEvents=10 cutPtFilter=400 subprocess="jetht16d" generation="0800" suffix="pt400" crab=False data=True # mask="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/Cert_271036-280385_13TeV_PromptReco_Collisions16_JSON.txt"
+#cmsRun tuplizer_cfg.py maxEvents=1000 cutPtFilter=400 subprocess="jetht16d" generation="0800" suffix="pt400" crab=False data=True # mask="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/Cert_271036-280385_13TeV_PromptReco_Collisions16_JSON.txt"
 #cmsRun tuplizer_cfg.py maxEvents=2 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False data=False
 #cmsRun tuplizer_cfg.py subprocess="sq200to4j" inFile="/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_56.root","/store/user/tote/Sq150To4J/Sq150To4J/160504_092455/0000/sq150to4j_07040101_aodsim_57.root"
 

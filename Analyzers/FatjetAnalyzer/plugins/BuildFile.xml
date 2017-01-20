@@ -11,5 +11,7 @@
 <use name = "FWCore/ServiceRegistry"/>
 <use name = "fastjet"/>
 <use name = "CondFormats/JetMETObjects"/>
+<use name = "CondFormats/BTauObjects"/>
+<use name = "CondTools/BTau"/>
 <flags EDM_PLUGIN = "1"/>
 
