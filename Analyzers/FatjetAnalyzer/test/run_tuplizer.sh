@@ -2,7 +2,8 @@
 #cmsRun jetanalyzer_cfg.py maxEvents=2 dataset="QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="sq200to4j"
 #cmsRun contuplizer_cfg.py maxEvents=100 subprocess="qcdmg1000"
-cmsRun tuplizer_cfg.py maxEvents=100 cutPtFilter=400 subprocess="ttbar" generation="fall15" suffix="pt400" crab=False
+cmsRun tuplizer_cfg.py maxEvents=10000 cutPtFilter=400 subprocess="jetht16b" generation="0800" suffix="cutpt400eta25" data=True crab=False
+#cmsRun tuplizer_cfg.py maxEvents=-1 cutPtFilter=400 subprocess="ttbar" generation="fall15" suffix="pt400" crab=False inFile="file:/uscms_data/d3/tote/data/examples/maod_mc_fall15_1000.root"
 #cmsRun tuplizer_cfg.py maxEvents=1000 cutPtFilter=400 subprocess="sq200to4j" generation="0706" suffix="pt400" crab=False
 #cmsRun tuplizer_cfg.py maxEvents=1000 cutPtFilter=400 subprocess="jetht16d" generation="0800" suffix="pt400" crab=False data=True # mask="https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/Cert_271036-280385_13TeV_PromptReco_Collisions16_JSON.txt"
 #cmsRun tuplizer_cfg.py maxEvents=2 cutPtFilter=400 subprocess="sq150to4j" generation="0706" suffix="pt400" crab=False data=False

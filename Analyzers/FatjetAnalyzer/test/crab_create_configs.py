@@ -2,7 +2,8 @@ import os, sys
 from decortication import variables, dataset, production
 
 # VARIABLES:
-cut_pt_filter = 400		# The eta 2.5 cut is the default.
+cut_pt_filter = 400
+cut_eta_filter = 2.5		# Default.
 # /VARIABLES
 
 if __name__ == "__main__":
@@ -20,7 +21,8 @@ if __name__ == "__main__":
 			kind="tuple",
 			miniaod=miniaod,
 			cmssw_config="tuplizer_cfg.py",
-			cut_pt_filter=cut_pt_filter
+			cut_pt_filter=cut_pt_filter,
+			cut_eta_filter=cut_eta_filter
 		)
 		with open(path + "/{}.py".format(miniaod.Name), "w") as out:
 			out.write(config)

@@ -16,6 +16,8 @@ The jet branches contain the following variables:
 * `n` - Number of constituents, `nm+cm`
 * `f` - Hadron flavor: `5` for *b*-hadron, `4` for *c*-hadron, `0` for light hadron
 * `bd_csv` - Combined secondary vertex b-tag discriminator (MiniAOD jets only)
+* `jetid_l` - Loose [https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID](jetID flag): `0` means the jet did not pass, `1` means that it did.
+* `jetid_t` - Tight [https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID](jetID flag): `0` means the jet did not pass, `1` means that it did.
 * [...]
 
 ### Lepton branches

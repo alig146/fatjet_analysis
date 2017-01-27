@@ -6,6 +6,7 @@ import FWCore.ParameterSet.Config as cms
 
 from RecoJets.JetProducers.PFJetParameters_cfi import PFJetParameters
 from RecoJets.JetProducers.AnomalousCellParameters_cfi import AnomalousCellParameters
+from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
 
 import RecoJets.Configuration.RecoPFJets_cff as PFJets
 from RecoJets.Configuration.RecoGenJets_cff import ak4GenJets
@@ -18,6 +19,7 @@ from PhysicsTools.PatAlgos.producersLayer1.patCandidates_cff import *
 from PhysicsTools.PatAlgos.selectionLayer1.jetSelector_cfi import selectedPatJets
 from PhysicsTools.PatAlgos.tools.jetTools import addJetCollection, updateJetCollection
 from RecoJets.JetProducers.nJettinessAdder_cfi import Njettiness
+from Deracination.JetWorkshop.subjetAdder_cfi import Subjetter, subjet_variables
 # /IMPORTS
 
 # CLASSES:
@@ -179,8 +181,17 @@ def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=False):
 		"src": cms.InputTag(pfcon_tag),
 		"doAreaFastjet": True,
 	}
+##	## Subjet arguments:
+#	arguments.update({
+#		"writeCompound": cms.bool(True),
+#		"jetCollInstanceName": cms.string("subjets"),
+#		"nSubjets": cms.int32(3),
+#	})
+	
 	if groom:
-		arguments["useExplicitGhosts"] = cms.bool(True)		# The code (https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/RecoJets/JetProducers/plugins/FastjetJetProducer.cc#L152) makes it look like I don't need this, but warnings say otherwise.
+		arguments.update({
+			"useExplicitGhosts": cms.bool(True),		# The code (https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/RecoJets/JetProducers/plugins/FastjetJetProducer.cc#L152) makes it look like I don't need this, but warnings say otherwise.
+		})
 		for key, value in groom.params.items():
 			arguments[key] = value
 		if groom.name in ["s"]:
@@ -189,6 +200,7 @@ def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=False):
 	jet_producer_base = cms.EDProducer("FastjetJetProducer", 
 		PFJetParameters,
 		AnomalousCellParameters,
+#		SubJetParameters,
 		cms.PSet(jetAlgorithm=cms.string(algo.title), rParam=cms.double(algo.r)),
 	)
 	jet_producer = jet_producer_base.clone(**arguments)
@@ -205,6 +217,29 @@ def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=False):
 #	sequence += getattr(process, tag_cons)
 	
 	return tag_jets
+
+
+def make_pfsubjet_collection(process, sequence, pfcon_tag, algo, pum, nsubjets=4):
+	# Make a PF jet collection:
+	tag_subjets = "subjetsPF" + algo.name.upper() + pum.title
+	
+	# Subjet producer arguments:
+	arguments = {
+		"src": cms.InputTag(pfcon_tag),
+		"nSubjets": cms.int32(nsubjets),
+	}
+	
+	subjet_producer_base = cms.EDProducer("SubJetProducer", 
+		PFJetParameters,
+		AnomalousCellParameters,
+		SubJetParameters,
+		cms.PSet(jetAlgorithm=cms.string(algo.title), rParam=cms.double(algo.r)),
+	)
+	subjet_producer = subjet_producer_base.clone(**arguments)
+	setattr(process, tag_subjets, subjet_producer)
+	sequence += getattr(process, tag_subjets)
+	
+	return tag_subjets
 
 
 def make_gnjet_collection(process, sequence, collection, algo, suffix="", data=False):
@@ -269,6 +304,20 @@ def add_tau_variables(process, sequence, pfjet_tag, patjet_tag, algo, taus):
 	sequence += getattr(process, tag)
 	return tag
 
+def add_subjet_variables(process, sequence, pfjet_tag, patjet_tag, algo, nsubjets):
+	tag = "subjets" + patjet_tag.replace("patJets", "")
+	subjet_calculator = Subjetter.clone(
+		src=cms.InputTag(pfjet_tag),
+		nSubjets=cms.uint32(nsubjets),
+	)
+	setattr(process, tag, subjet_calculator)
+	
+	for var in subjet_variables:
+		for isj in range(nsubjets):
+			getattr(process, patjet_tag).userData.userFloats.src += ['{}:{}{}'.format(tag, var, isj)]
+	
+	sequence += getattr(process, tag)
+	return tag
 
 def add_jet_collection(
 	process,
@@ -283,6 +332,7 @@ def add_jet_collection(
 ):
 	# Arguments:
 	tags_dict_original = tags_dict.copy()
+	tags_dict = tags_dict.copy()
 	
 	algo = jet_algorithm(algo_name)   # Jet algorithm object to use.
 	if not algo:
@@ -314,10 +364,13 @@ def add_jet_collection(
 	
 	# Make normal jet collections:
 	pfjet_tag = make_pfjet_collection(process, sequence, tags_dict["pf"], algo, pum)
+#	pfsubjet_tag = make_pfsubjet_collection(process, sequence, tags_dict["pf"], algo, pum)
 	gnjet_tag = make_gnjet_collection(process, sequence, tags_dict["gn_pat"], algo, "NoNu", data=data)
 	patjet_tag = make_patjet_collection(process, sequence, pfjet_tag, gnjet_tag, tags_dict, algo, algo.name.upper() + pum.title, matching=not data)
 	## Nsubjettiness for ungroomed collections:
 	if taus: tau_tag = add_tau_variables(process, sequence, pfjet_tag, patjet_tag, algo, taus)
+	
+	if algo.name == "ca12": subjet_tag = add_subjet_variables(process, sequence, pfjet_tag, patjet_tag, algo, 4)
 	
 	# Make groomed collections:
 	pfjet_tags_groomed = {}
@@ -328,22 +381,28 @@ def add_jet_collection(
 		patjet_tags_groomed[groom.name] = make_patjet_collection(process, sequence, pfjet_tags_groomed[groom.name], gnjet_tag, tags_dict, algo, algo.name.upper() + pum.title + groom.title, matching=False)
 		## Nsubjettiness for groomed collections:
 		if taus: tau_tags_groomed[groom.name] = add_tau_variables(process, sequence, pfjet_tags_groomed[groom.name], patjet_tags_groomed[groom.name], algo, taus)
-	
+
 	# Define output:
 	products_keep = [
+#		"*",
 #		"*_jets*_*_*",
-#		"*_patJets*_*_*",
+#		"*_jets*_subjets_*",
+#		"*_patJets*_pfCandidates_*",
 		"*_selectedPatJets*_*_*",
 		"*_taus*_*_*",
+		"*_subjets*_*_*",
+#		"*_packedPFCandidatesCHS_*_*",
 	]
-	if keep_all: products_keep.extend(["*_jets*_*_*", "*_patJets*_*_*"])
+#	if keep_all: products_keep.extend(["*_jets*_*_*", "*_patJets*_*_*"])
 	
 	products_drop = [
+		"*_jets*_*_*",
 		"*_patJets*_calo*_*",
 		"*_patJets*_tagInfos_*",
 		"*_selectedPatJets*_calo*_*",
 		"*_selectedPatJets*_tagInfos_*",
 	]
+	
 	getattr(process, output).outputCommands.extend(["keep {}".format(tag) for tag in products_keep])
 	getattr(process, output).outputCommands.extend(["drop {}".format(tag) for tag in products_drop])
 # /FUNCTIONS

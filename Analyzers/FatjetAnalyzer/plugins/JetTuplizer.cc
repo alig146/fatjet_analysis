@@ -271,7 +271,9 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"nm",         // Neutral multiplicity
 		"cm",         // Charged multiplicity
 		"n",          // Number of constituents
-		"f"           // Hadron flavor
+		"f",          // Hadron flavor
+		"jetid_l",    // Loose jetID flag
+		"jetid_t"     // Tight jetID flag
 	};
 	
 	/// "lep"
@@ -408,7 +410,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	
 	// b-tag scale factor setup:
 	BTagCalibration btagsf_calib("csvv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
-//	BTagCalibration btagsf_calib("csvv2");		// What value should I enter here when I don't use a csv file?
+//	BTagCalibration btagsf_calib("csvv2", "CSVv2.csv");
+//	BTagCalibration btagsf_calib("CSVv2");		// What value should I enter here when I don't use a csv file?
 	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_B, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_C, "comb");
@@ -499,6 +502,24 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 		double cm = jet->chargedMultiplicity();
 		double n = nm + cm;
 		double f = jet->hadronFlavour();
+		// JetID:
+		/// Loose:
+		double jetid_l = 0;
+		if (nhef < 0.99 && neef < 0.99 && n > 1) {		// This only applies for abs(eta) <= 2.7.
+			if (abs(eta) <= 2.4){
+				if (chef > 0 && cm > 0 && ceef < 0.99) {jetid_l = 1;}
+			}
+			else {jetid_l = 1;}
+		}
+		/// Tight:
+		double jetid_t = 0;
+		if (nhef < 0.90 && neef < 0.90 && n > 1) {
+			if (abs(eta) <= 2.4){
+				if (chef > 0 && cm > 0 && ceef < 0.99) {jetid_t = 1;}
+			}
+			else {jetid_t = 1;}
+		}
+		// HT:
 		if (algo == "ak8") {
 			if (pt > 150) {
 				ht += pt;
@@ -577,6 +598,8 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			branches[algo_type]["cm"].push_back(cm);
 			branches[algo_type]["n"].push_back(n);
 			branches[algo_type]["f"].push_back(f);
+			branches[algo_type]["jetid_l"].push_back(jetid_l);
+			branches[algo_type]["jetid_t"].push_back(jetid_t);
 		}
 	}		// :End collection loop
 	
@@ -925,28 +948,37 @@ void JetTuplizer::find_btagsf() {
 		double pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
 		double eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
+		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
 		double bsf = 1;
 		double bsf_u = 1;
 		double bsf_d = 1;
+		cout << bsf << endl;
+		cout << bsf_u << endl;
+		cout << bsf_d << endl;
+		cout << f << endl;
+		cout << bd_csv << endl;
 		
-		if (f == 5) {
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
+//		if (f == 5) {
+		if (bd_csv > 0.46) {
+			bsf = btagsf_reader.eval(BTagEntry::FLAV_B, eta, pt);
+//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
+//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
+//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
 		}
-		else if (f == 4) {
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
-		}
-		else if (f == 0) {
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
-		}
-		branches["ca12_pf"]["bsf"].push_back(bsf);
-		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
-		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
+//		else if (f == 4) {
+//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
+//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
+//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
+//		}
+//		else if (f == 0) {
+//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
+//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
+//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
+//		}
+//		cout << bsf << endl;
+//		branches["ca12_pf"]["bsf"].push_back(bsf);
+//		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
+//		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
 	}
 }
 
