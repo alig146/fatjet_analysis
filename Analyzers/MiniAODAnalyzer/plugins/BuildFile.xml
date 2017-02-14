@@ -4,4 +4,5 @@
 <use name="CommonTools/UtilAlgos"/>
 <use name="PhysicsTools/UtilAlgos"/>
 <use name="DataFormats/Common"/>
+<use name="SimDataFormats/PileupSummaryInfo"/>
 <flags EDM_PLUGIN="1"/>

@@ -32,6 +32,7 @@
 /// Custom includes:
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
@@ -67,6 +68,7 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
       // ----------member data ---------------------------
       int nevents;
       EDGetTokenT<vector<reco::GenParticle>> genParticles_;
+      EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo_;
       EDGetTokenT<TriggerResults> triggerResults_;
       EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 };
@@ -84,6 +86,7 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 //
 MiniAODAnalyzer::MiniAODAnalyzer(const edm::ParameterSet& iConfig):
 //	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles")))
+	pileupInfo_(consumes<vector<PileupSummaryInfo>>(iConfig.getParameter<InputTag>("pileupInfo"))),
 	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
 	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales")))
 
@@ -118,15 +121,19 @@ MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	iEvent.getByToken(triggerResults_, triggerResults);
 	Handle<pat::PackedTriggerPrescales> triggerPrescales;
 	iEvent.getByToken(triggerPrescales_, triggerPrescales);
+	Handle<vector<PileupSummaryInfo>> pileupInfo;
+	iEvent.getByToken(pileupInfo_, pileupInfo);
 	
-	const TriggerNames& triggerNames = iEvent.triggerNames(*triggerResults); 
-	
-    for (unsigned int i=0, n=triggerResults->size(); i < n; ++i) {
-        std::cout << "Trigger " << triggerNames.triggerName(i) <<
-                ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
-                ": " << (triggerResults->accept(i) ? "PASS" : "fail (or not run)")
-                << std::endl;
-    }
+//	const TriggerNames& triggerNames = iEvent.triggerNames(*triggerResults); 
+//	
+//    for (unsigned int i=0, n=triggerResults->size(); i < n; ++i) {
+//        std::cout << "Trigger " << triggerNames.triggerName(i) <<
+//                ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
+//                ": " << (triggerResults->accept(i) ? "PASS" : "fail (or not run)")
+//                << std::endl;
+//    }
+
+	cout << pileupInfo->size() << endl;
 	
 	nevents ++;
 	

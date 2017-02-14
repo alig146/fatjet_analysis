@@ -42,6 +42,7 @@
 //#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
@@ -105,7 +106,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 //		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<pat::PackedGenParticle>>);
 		virtual void process_quarks_gn(const edm::Event&, EDGetTokenT<vector<reco::GenParticle>>);
 		virtual void match_bjets();
-		virtual void find_btagsf();
+		virtual void find_btagsf(BTagCalibrationReader);
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void endJob();
 		virtual void beginRun(const edm::Run&, const edm::EventSetup&);
@@ -156,6 +157,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 	EDGetTokenT<GenEventInfoProduct> genInfo_;
 	EDGetTokenT<double> rhoInfo_;
 	EDGetTokenT<reco::VertexCollection> vertexCollection_;
+	EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo_;
 	EDGetTokenT<TriggerResults> triggerResults_;
 	EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 	EDGetTokenT<vector<pat::Jet>> ak4PFCollection_;
@@ -212,6 +214,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
 	rhoInfo_(consumes<double>(iConfig.getParameter<InputTag>("rhoInfo"))),
 	vertexCollection_(consumes<reco::VertexCollection>(iConfig.getParameter<InputTag>("vertexCollection"))),
+	pileupInfo_(consumes<vector<PileupSummaryInfo>>(iConfig.getParameter<InputTag>("pileupInfo"))),
 	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
 	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales"))),
 	ak4PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFCollection"))),
@@ -319,6 +322,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"event",
 		"lumi",
 		"run",
+		"tnpv",       // True number of interactions (used in pile-up re-weighting)
 		"trig_pfht800",
 		"trig_pfht900",
 		"trig_pfak8ht650mt50",
@@ -437,13 +441,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	jmc_corrector_ak8 = new FactorizedJetCorrector(jmc_parameters_ak8);
 	
 	// b-tag scale factor setup:
-	BTagCalibration btagsf_calib("CSVv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
-//	BTagCalibration btagsf_calib("CSVv2");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
-//	BTagCalibration btagsf_calib("CSVv2", "CSVv2.csv");
-//	BTagCalibration btagsf_calib("CSVv2");		// What value should I enter here when I don't use a csv file?
-//	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
-	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central");
-	cout << BTagEntry::OP_LOOSE << endl;
+	btagsf_calib = BTagCalibration("CSVv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
+	btagsf_reader = BTagCalibrationReader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_B, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_C, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_UDSG, "comb");
@@ -1116,45 +1115,31 @@ void JetTuplizer::match_bjets() {
 
 // B-jet scale factors:
 /// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagCalibration#Example_code_in_C
-void JetTuplizer::find_btagsf() {
+void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 	for (int ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
-		double pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
-		double eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
+		float pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
+		float eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
 		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
 		double bsf = 1;
 		double bsf_u = 1;
 		double bsf_d = 1;
-		cout << bsf << endl;
-		cout << bsf_u << endl;
-		cout << bsf_d << endl;
-		cout << f << endl;
-		cout << bd_csv << endl;
 		
 		if (f == 5) {
-//		if (bd_csv > 0.46) {
-			bsf = btagsf_reader.eval(BTagEntry::FLAV_B, eta, pt);
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
+			bsf = reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
+			bsf_u = reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
+			bsf_d = reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
 		}
 		else if (f == 4) {
-			cout << BTagEntry::FLAV_C << " " << pt << " " << eta << endl;
-//			bsf = btagsf_reader.eval(BTagEntry::FLAV_C, eta, pt);
-//			cout << "here1" << endl;
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
-			cout << "here2" << endl;
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
-			cout << "here3" << endl;
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
-			cout << "here4" << endl;
+			bsf = reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
+			bsf_u = reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
+			bsf_d = reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
 		}
 		else if (f == 0) {
-			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
-			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
-			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf = reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_u = reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_d = reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
 		}
-		cout << bsf << endl;
 		branches["ca12_pf"]["bsf"].push_back(bsf);
 		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
 		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
@@ -1241,6 +1226,20 @@ void JetTuplizer::analyze(
 				npv += 1;
 			}
 		}
+		/// True number of interactions (for pile-up re-weighting):
+		/// https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupMCReweightingUtilities#Calling_the_Function_to_get_an_E
+		float tnpv = -1;
+		if (!is_data_) {
+			Handle<vector<PileupSummaryInfo>> pileupInfo;
+			iEvent.getByToken(pileupInfo_, pileupInfo);
+			for (std::vector<PileupSummaryInfo>::const_iterator pvi = pileupInfo->begin(); pvi != pileupInfo->end(); ++pvi) {
+				int bx = pvi->getBunchCrossing();
+				if (bx == 0) {
+					tnpv = pvi->getTrueNumInteractions();
+					continue;
+				}
+			}
+		}
 		
 		/// Save event-wide variables:
 		branches["event"]["sigma"].push_back(sigma_);             // Provided in the configuration file
@@ -1252,6 +1251,8 @@ void JetTuplizer::analyze(
 		branches["event"]["event"].push_back(iEvent.id().event());
 		branches["event"]["lumi"].push_back(iEvent.id().luminosityBlock());
 		branches["event"]["run"].push_back(iEvent.id().run());
+		branches["event"]["npv"].push_back(npv);
+		branches["event"]["tnpv"].push_back(tnpv);
 		
 		// Process each object collection:
 		process_triggers(iEvent, triggerResults_, triggerPrescales_);
@@ -1281,7 +1282,7 @@ void JetTuplizer::analyze(
 		process_photons_pf(iEvent, photonCollection_);
 		if (!is_data_) {process_quarks_gn(iEvent, genCollection_);}
 		match_bjets();
-		find_btagsf();		// Seg faults ... (170119)
+		find_btagsf(btagsf_reader);		// Seg faults ... (170119)
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.
