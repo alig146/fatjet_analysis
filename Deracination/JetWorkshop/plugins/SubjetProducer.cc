@@ -137,7 +137,7 @@ SubjetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			subjet_values.insert(pair<string, vector<float>>(name, vector<float>(nJets, 0)));
 		}
 	}
-	cout << subjet_values["px0"].size() << endl;
+//	cout << subjet_values["px0"].size() << endl;
 	
 	JetDefinition algo_ca12(cambridge_algorithm, 1.2);
 	
@@ -146,7 +146,7 @@ SubjetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //			pat::Jet jet = (*jets)[ijet];
 			reco::Jet jet = (*jets)[ijet];
 			vector<PseudoJet> subjets = get_subjets(jet, algo_ca12, nSubjets_);
-			cout << subjets.size() << endl;
+//			cout << subjets.size() << endl;
 			for (unsigned isj=0; isj < nSubjets_; isj++) {
 				subjet_values["px" + to_string(isj)][ijet] = subjets[isj].px();
 				subjet_values["py" + to_string(isj)][ijet] = subjets[isj].py();

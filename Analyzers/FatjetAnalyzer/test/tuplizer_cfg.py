@@ -311,6 +311,8 @@ process.tuplizer = cms.EDAnalyzer("JetTuplizer",
 	genInfo=cms.InputTag("generator"),
 	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
 	vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),
+	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
+	triggerPrescales=cms.InputTag("patTrigger", ""),
 	## AK4 collections:
 	ak4MAODCollection=cms.InputTag("slimmedJets"),
 	ak4GNCollection=cms.InputTag("selectedPatJetsAK4CHS", "genJets"),

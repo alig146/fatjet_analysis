@@ -42,6 +42,9 @@
 //#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 ///// JEC:
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
@@ -91,6 +94,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 
 	private:
 		virtual void beginJob();
+		virtual void process_triggers(const edm::Event&, EDGetTokenT<TriggerResults>, EDGetTokenT<pat::PackedTriggerPrescales>);
 		virtual void process_jets_pf(const edm::Event&, string, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
 		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
@@ -152,6 +156,8 @@ class JetTuplizer : public edm::EDAnalyzer {
 	EDGetTokenT<GenEventInfoProduct> genInfo_;
 	EDGetTokenT<double> rhoInfo_;
 	EDGetTokenT<reco::VertexCollection> vertexCollection_;
+	EDGetTokenT<TriggerResults> triggerResults_;
+	EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 	EDGetTokenT<vector<pat::Jet>> ak4PFCollection_;
 	EDGetTokenT<vector<pat::Jet>> ak4PFFilteredCollection_;
 	EDGetTokenT<vector<pat::Jet>> ak4PFPrunedCollection_;
@@ -206,6 +212,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
 	rhoInfo_(consumes<double>(iConfig.getParameter<InputTag>("rhoInfo"))),
 	vertexCollection_(consumes<reco::VertexCollection>(iConfig.getParameter<InputTag>("vertexCollection"))),
+	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
+	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales"))),
 	ak4PFCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFCollection"))),
 	ak4PFFilteredCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFFilteredCollection"))),
 	ak4PFPrunedCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("ak4PFPrunedCollection"))),
@@ -246,6 +254,10 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"ca12_gn", "ca12_pf", "ca12_pff", "ca12_pfp", "ca12_pfs", "ca12_pft"
 	};
 	jet_variables = {		// List of event branch variables for each collection.
+		// Jet collection variables:
+		"ht",         // Sum of jet pTs (with some minimum pT cutoff)
+		"njets",      // Total number of jets (with some minimum pT cutoff)
+		// Individual jet variables
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
 		"m",          // Ungroomed mass
 		"tau1",       // Nsubjettiness 1
@@ -253,7 +265,6 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"tau3",       // Nsubjettiness 3
 		"tau4",       // Nsubjettiness 4
 		"tau5",       // Nsubjettiness 5
-		"ht",         // Sum of jet pTs. In the case of AK8, it's the sum of the jet pTs with pT > 150 GeV
 		"bd_te",
 		"bd_tp",
 		"bd_csv",
@@ -273,7 +284,12 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"n",          // Number of constituents
 		"f",          // Hadron flavor
 		"jetid_l",    // Loose jetID flag
-		"jetid_t"     // Tight jetID flag
+		"jetid_t",     // Tight jetID flag
+		// Subjet variables:
+		"spx0", "spy0", "spz0", "se0", "spt0", "sm0", "seta0", "sphi0",
+		"spx1", "spy1", "spz1", "se1", "spt1", "sm1", "seta1", "sphi1",
+		"spx2", "spy2", "spz2", "se2", "spt2", "sm2", "seta2", "sphi2",
+		"spx3", "spy3", "spz3", "se3", "spt3", "sm3", "seta3", "sphi3"
 	};
 	
 	/// "lep"
@@ -288,6 +304,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	gen_types = {"gn"};
 	gen_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m", "pid",
+		"sf"		// ttbar rewighting scale factor: https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
 	};
 	
 	/// "event"
@@ -301,7 +318,18 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"npv",        // Number of primary vertices
 		"event",
 		"lumi",
-		"run"
+		"run",
+		"trig_pfht800",
+		"trig_pfht900",
+		"trig_pfak8ht650mt50",
+		"trig_pfak8ht700mt50",
+		"trig_pfak8pt360mt30",
+		"trig_pfak8pt280pt200mt30csvm020",
+		"trig_pfpt450",
+		"trig_pfht750pt50x4",		// probably not needed
+		"trig_pfht750pt70x4",		// probably not needed
+		"trig_pfht800pt50x4",		// probably not needed
+		"trig_mupt50"		// probably not needed
 	};
 	
 	// Ntuple setup:
@@ -409,10 +437,13 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	jmc_corrector_ak8 = new FactorizedJetCorrector(jmc_parameters_ak8);
 	
 	// b-tag scale factor setup:
-	BTagCalibration btagsf_calib("csvv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
-//	BTagCalibration btagsf_calib("csvv2", "CSVv2.csv");
+	BTagCalibration btagsf_calib("CSVv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
+//	BTagCalibration btagsf_calib("CSVv2");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
+//	BTagCalibration btagsf_calib("CSVv2", "CSVv2.csv");
 //	BTagCalibration btagsf_calib("CSVv2");		// What value should I enter here when I don't use a csv file?
-	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
+//	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
+	BTagCalibrationReader btagsf_reader(BTagEntry::OP_LOOSE, "central");
+	cout << BTagEntry::OP_LOOSE << endl;
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_B, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_C, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_UDSG, "comb");
@@ -450,6 +481,47 @@ void JetTuplizer::beginJob()
 }
 
 // CLASS METHODS ("method" = "member function")
+/// Trigger bits method:
+void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<TriggerResults> resultsToken, EDGetTokenT<pat::PackedTriggerPrescales> prescalesToken) {
+	Handle<TriggerResults> results;
+	iEvent.getByToken(resultsToken, results);
+	Handle<pat::PackedTriggerPrescales> prescales;
+	iEvent.getByToken(prescalesToken, prescales);
+	
+	const TriggerNames& names = iEvent.triggerNames(*results);
+	
+	vector<vector<string>> trigger_desired = {
+		{"trig_pfht800", "HLT_PFHT800", ""},
+		{"trig_pfht900", "HLT_PFHT900", ""},
+		{"trig_pfak8ht650mt50", "HLT_AK8PFHT650_TrimR0p1PT0p03Mass50", ""},
+		{"trig_pfak8ht700mt50", "HLT_AK8PFHT700_TrimR0p1PT0p03Mass50", ""},
+		{"trig_pfak8pt360mt30", "HLT_AK8PFJet360_TrimMass30", ""},
+		{"trig_pfak8pt280pt200mt30csvm020", "HLT_AK8PFDiJet280_200_TrimMass30_CSVM_0p20", ""},
+		{"trig_pfpt450", "HLT_PFJet450", ""},
+		{"trig_pfht750pt50x4", "HLT_PFHT750_4JetPt50", ""},
+		{"trig_pfht750pt70x4", "HLT_PFHT750_4JetPt70", ""},
+		{"trig_pfht800pt50x4", "HLT_PFHT800_4JetPt50", ""},
+		{"trig_mupt50", "HLT_Mu50", ""}
+	};
+	
+	for (unsigned int i=0; i < results->size(); ++i) {
+		string full_name = names.triggerName(i);
+		for (unsigned int j=0; j < trigger_desired.size(); ++j) {
+			size_t found = full_name.find(trigger_desired[j][1]);
+			if (found != string::npos) {		// If contains
+				trigger_desired[j][2] = full_name;
+			}
+		}
+	}
+	for (unsigned int i=0; i < trigger_desired.size(); ++i) {
+		string branch_name = trigger_desired[i][0];
+		string trigger_name = trigger_desired[i][2];
+		if (trigger_name != ""){
+//			cout << branch_name << "  " << trigger_name << endl;
+			branches["event"][branch_name].push_back(results->accept(names.triggerIndex(trigger_name)));
+		}
+	}
+}
 
 /// PF jets method:
 void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
@@ -471,11 +543,10 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
 	
 	// Loop over the collection:
-	double ht = 0;
 	int njet = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
 		njet ++;
-		if (!groom.empty() && njet > 4) break;
+		if (njet > 4) break;
 		// Define some useful event variables:
 		double m = jet->mass();
 		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + groom + string(":tau");
@@ -519,19 +590,8 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			}
 			else {jetid_t = 1;}
 		}
-		// HT:
-		if (algo == "ak8") {
-			if (pt > 150) {
-				ht += pt;
-			}
-		}
-		else {
-			ht += pt;
-		}
-		
 		// Get JECs:
-		double jec = -1;
-		double jmc = -1;
+		double jec = -1, jmc = -1;
 		if (algo == "ak4") {
 			jec_corrector_ak4->setJetPt(pt);
 			jec_corrector_ak4->setJetEta(eta);
@@ -570,6 +630,46 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			jmc_corrector_ak8->setNPV(npv);
 			jmc = jmc_corrector_ak8->getCorrection();
 		}
+		// Subjet variables:
+		double spx0 = 0, spy0 = 0, spz0 = 0, se0 = 0, spt0 = 0, sm0 = 0, seta0 = 0, sphi0 = 0;
+		double spx1 = 0, spy1 = 0, spz1 = 0, se1 = 0, spt1 = 0, sm1 = 0, seta1 = 0, sphi1 = 0;
+		double spx2 = 0, spy2 = 0, spz2 = 0, se2 = 0, spt2 = 0, sm2 = 0, seta2 = 0, sphi2 = 0;
+		double spx3 = 0, spy3 = 0, spz3 = 0, se3 = 0, spt3 = 0, sm3 = 0, seta3 = 0, sphi3 = 0;
+		if (algo == "ca12" && groom.empty()) {		// Only get subjet variables for ungroomed CA12 jets.
+			string subjet_tag = string("subjets") + boost::to_upper_copy<string>(algo) + string("CHS") + groom + string(":");
+			spx0 = jet->userFloat(subjet_tag + string("px0"));
+			spx1 = jet->userFloat(subjet_tag + string("px1"));
+			spx2 = jet->userFloat(subjet_tag + string("px2"));
+			spx3 = jet->userFloat(subjet_tag + string("px3"));
+			spy0 = jet->userFloat(subjet_tag + string("py0"));
+			spy1 = jet->userFloat(subjet_tag + string("py1"));
+			spy2 = jet->userFloat(subjet_tag + string("py2"));
+			spy3 = jet->userFloat(subjet_tag + string("py3"));
+			spz0 = jet->userFloat(subjet_tag + string("pz0"));
+			spz1 = jet->userFloat(subjet_tag + string("pz1"));
+			spz2 = jet->userFloat(subjet_tag + string("pz2"));
+			spz3 = jet->userFloat(subjet_tag + string("pz3"));
+			se0 = jet->userFloat(subjet_tag + string("e0"));
+			se1 = jet->userFloat(subjet_tag + string("e1"));
+			se2 = jet->userFloat(subjet_tag + string("e2"));
+			se3 = jet->userFloat(subjet_tag + string("e3"));
+			spt0 = jet->userFloat(subjet_tag + string("pt0"));
+			spt1 = jet->userFloat(subjet_tag + string("pt1"));
+			spt2 = jet->userFloat(subjet_tag + string("pt2"));
+			spt3 = jet->userFloat(subjet_tag + string("pt3"));
+			sm0 = jet->userFloat(subjet_tag + string("m0"));
+			sm1 = jet->userFloat(subjet_tag + string("m1"));
+			sm2 = jet->userFloat(subjet_tag + string("m2"));
+			sm3 = jet->userFloat(subjet_tag + string("m3"));
+			seta0 = jet->userFloat(subjet_tag + string("eta0"));
+			seta1 = jet->userFloat(subjet_tag + string("eta1"));
+			seta2 = jet->userFloat(subjet_tag + string("eta2"));
+			seta3 = jet->userFloat(subjet_tag + string("eta3"));
+			sphi0 = jet->userFloat(subjet_tag + string("phi0"));
+			sphi1 = jet->userFloat(subjet_tag + string("phi1"));
+			sphi2 = jet->userFloat(subjet_tag + string("phi2"));
+			sphi3 = jet->userFloat(subjet_tag + string("phi3"));
+		}
 		
 		// Fill branches:
 		if (pt > cut_pt_) {
@@ -600,10 +700,60 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			branches[algo_type]["f"].push_back(f);
 			branches[algo_type]["jetid_l"].push_back(jetid_l);
 			branches[algo_type]["jetid_t"].push_back(jetid_t);
+			// Subjet branches:
+			branches[algo_type]["spx0"].push_back(spx0);
+			branches[algo_type]["spy0"].push_back(spy0);
+			branches[algo_type]["spz0"].push_back(spz0);
+			branches[algo_type]["se0"].push_back(se0);
+			branches[algo_type]["spt0"].push_back(spt0);
+			branches[algo_type]["sm0"].push_back(sm0);
+			branches[algo_type]["seta0"].push_back(seta0);
+			branches[algo_type]["sphi0"].push_back(sphi0);
+			branches[algo_type]["spx1"].push_back(spx1);
+			branches[algo_type]["spy1"].push_back(spy1);
+			branches[algo_type]["spz1"].push_back(spz1);
+			branches[algo_type]["se1"].push_back(se1);
+			branches[algo_type]["spt1"].push_back(spt1);
+			branches[algo_type]["sm1"].push_back(sm1);
+			branches[algo_type]["seta1"].push_back(seta1);
+			branches[algo_type]["sphi1"].push_back(sphi1);
+			branches[algo_type]["spx2"].push_back(spx2);
+			branches[algo_type]["spy2"].push_back(spy2);
+			branches[algo_type]["spz2"].push_back(spz2);
+			branches[algo_type]["se2"].push_back(se2);
+			branches[algo_type]["spt2"].push_back(spt2);
+			branches[algo_type]["sm2"].push_back(sm2);
+			branches[algo_type]["seta2"].push_back(seta2);
+			branches[algo_type]["sphi2"].push_back(sphi2);
+			branches[algo_type]["spx3"].push_back(spx3);
+			branches[algo_type]["spy3"].push_back(spy3);
+			branches[algo_type]["spz3"].push_back(spz3);
+			branches[algo_type]["se3"].push_back(se3);
+			branches[algo_type]["spt3"].push_back(spt3);
+			branches[algo_type]["sm3"].push_back(sm3);
+			branches[algo_type]["seta3"].push_back(seta3);
+			branches[algo_type]["sphi3"].push_back(sphi3);
 		}
 	}		// :End collection loop
 	
+	// Loop through all jets to calculate HT:
+	double ht = 0;
+	int njets = 0;
+	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		double pt = jet->pt();
+		
+		if (pt > 10) {njets ++;}
+		
+		if (algo == "ak8") {
+			if (pt > 150) {ht += pt;}
+		}
+		else if (algo == "ak4") {
+			if (pt > 30) {ht += pt;}
+		}
+		else {ht += pt;}
+	}
 	branches[algo_type]["ht"].push_back(ht);
+	branches[algo_type]["njets"].push_back(njets);
 }
 
 /// GN jets method:
@@ -619,8 +769,10 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
 	
 	// Loop over the collection:
-	double ht = 0;
+	int njet = 0;
 	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		njet ++;
+		if (njet > 4) break;
 		// Define some useful event variables:
 		double m = jet->mass();
 		double px = jet->px();
@@ -631,14 +783,6 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 		double phi = jet->phi();
 		double eta = jet->eta();
 		double y = jet->y();
-		if (algo == "ak8") {
-			if (pt > 150) {
-				ht += pt;
-			}
-		}
-		else {
-			ht += pt;
-		}
 		
 		// Fill branches:
 		if (pt > cut_pt_) {
@@ -654,7 +798,24 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 		}
 	}		// :End collection loop
 	
+	// Loop through all jets to calculate HT:
+	double ht = 0;
+	int njets = 0;
+	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		double pt = jet->pt();
+		
+		if (pt > 10) {njets ++;}
+		
+		if (algo == "ak8") {
+			if (pt > 150) {ht += pt;}
+		}
+		else if (algo == "ak4") {
+			if (pt > 30) {ht += pt;}
+		}
+		else {ht += pt;}
+	}
 	branches[algo_type]["ht"].push_back(ht);
+	branches[algo_type]["njets"].push_back(njets);
 }
 
 /// MAOD jets method:
@@ -670,8 +831,10 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
 	
 	// Loop over the collection:
-	double ht = 0;
+	int njet = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		njet ++;
+		if (njet > 4) break;
 		// Define some useful event variables:
 		double m = jet->mass();
 		double px = jet->px();
@@ -682,15 +845,6 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 		double phi = jet->phi();
 		double eta = jet->eta();
 		double y = jet->y();
-		if (algo == "ak8") {
-			if (pt > 150) {
-				ht += pt;
-			}
-		}
-		else {
-			ht += pt;
-		}
-		
 		
 		// Fill branches:
 		if (pt > cut_pt_) {
@@ -710,7 +864,24 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 		}
 	}		// :End collection loop
 	
+	// Loop through all jets to calculate HT:
+	double ht = 0;
+	int njets = 0;
+	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
+		double pt = jet->pt();
+		
+		if (pt > 10) {njets ++;}
+		
+		if (algo == "ak8") {
+			if (pt > 150) {ht += pt;}
+		}
+		else if (algo == "ak4") {
+			if (pt > 30) {ht += pt;}
+		}
+		else {ht += pt;}
+	}
 	branches[algo_type]["ht"].push_back(ht);
+	branches[algo_type]["njets"].push_back(njets);
 }
 
 /// Electrons method:
@@ -904,18 +1075,20 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 			branches[name_type]["pt"].push_back(pt);
 			branches[name_type]["m"].push_back(m);
 			branches[name_type]["pid"].push_back(pdgid);
+			if (abs(pdgid) == 6) {branches[name_type]["sf"].push_back(exp(0.0615 - 0.0005*pt));} // ttbar scale factor (https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting)
 		}
 	}		// :End collection loop
 }
 
 // B-jet matching method:
 void JetTuplizer::match_bjets() {
-	for (int ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
+	for (unsigned ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
+		if (ijet_ca12 == branches["ca12_pf"]["pt"].size()) {break;}
 		double bd_te_max = 0;
 		double bd_tp_max = 0;
 		double bd_csv_max = 0;
 		double bd_cisv_max = 0;
-		for (unsigned int ijet_ak4 = 0; ijet_ak4 < branches["ak4_maod"]["pt"].size(); ijet_ak4++) {
+		for (unsigned ijet_ak4 = 0; ijet_ak4 < branches["ak4_maod"]["pt"].size(); ijet_ak4++) {
 //			double ca12_pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
 			double ca12_eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 			double ca12_phi = branches["ca12_pf"]["phi"].at(ijet_ca12);
@@ -928,7 +1101,7 @@ void JetTuplizer::match_bjets() {
 			double bd_cisv = branches["ak4_maod"]["bd_cisv"].at(ijet_ak4);
 			double dR = reco::deltaR(ca12_eta, ca12_phi, ak4_eta, ak4_phi);
 //			double dR = sqrt(pow(ca12_eta - ak4_eta, 2) + pow(M_PI - abs(M_PI - abs(ca12_phi - ak4_phi)), 2));		// Same as above.
-			
+		
 			if (dR < 0.6 && bd_te > bd_te_max) {bd_te_max = bd_te;}
 			if (dR < 0.6 && bd_tp > bd_tp_max) {bd_tp_max = bd_tp;}
 			if (dR < 0.6 && bd_csv > bd_csv_max) {bd_csv_max = bd_csv;}
@@ -958,27 +1131,33 @@ void JetTuplizer::find_btagsf() {
 		cout << f << endl;
 		cout << bd_csv << endl;
 		
-//		if (f == 5) {
-		if (bd_csv > 0.46) {
+		if (f == 5) {
+//		if (bd_csv > 0.46) {
 			bsf = btagsf_reader.eval(BTagEntry::FLAV_B, eta, pt);
-//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
-//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
-//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_B, eta, pt);
 		}
-//		else if (f == 4) {
-//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
-//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
-//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
-//		}
-//		else if (f == 0) {
-//			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
-//			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
-//			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
-//		}
-//		cout << bsf << endl;
-//		branches["ca12_pf"]["bsf"].push_back(bsf);
-//		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
-//		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
+		else if (f == 4) {
+			cout << BTagEntry::FLAV_C << " " << pt << " " << eta << endl;
+//			bsf = btagsf_reader.eval(BTagEntry::FLAV_C, eta, pt);
+//			cout << "here1" << endl;
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_C, eta, pt);
+			cout << "here2" << endl;
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_C, eta, pt);
+			cout << "here3" << endl;
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_C, eta, pt);
+			cout << "here4" << endl;
+		}
+		else if (f == 0) {
+			bsf = btagsf_reader.eval_auto_bounds("central", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_u = btagsf_reader.eval_auto_bounds("up", BTagEntry::FLAV_UDSG, eta, pt);
+			bsf_d = btagsf_reader.eval_auto_bounds("down", BTagEntry::FLAV_UDSG, eta, pt);
+		}
+		cout << bsf << endl;
+		branches["ca12_pf"]["bsf"].push_back(bsf);
+		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
+		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
 	}
 }
 
@@ -1047,6 +1226,7 @@ void JetTuplizer::analyze(
 				pt_hat = gn_event_info->binningValues()[0];
 			}
 		}
+		
 		/// Rho:
 		rho = -1;
 		edm::Handle<double> rho_;
@@ -1074,6 +1254,7 @@ void JetTuplizer::analyze(
 		branches["event"]["run"].push_back(iEvent.id().run());
 		
 		// Process each object collection:
+		process_triggers(iEvent, triggerResults_, triggerPrescales_);
 		process_jets_pf(iEvent, "ak4", "", ak4PFCollection_);
 		process_jets_pf(iEvent, "ak4", "Filtered", ak4PFFilteredCollection_);
 		process_jets_pf(iEvent, "ak4", "Pruned", ak4PFPrunedCollection_);
@@ -1100,7 +1281,7 @@ void JetTuplizer::analyze(
 		process_photons_pf(iEvent, photonCollection_);
 		if (!is_data_) {process_quarks_gn(iEvent, genCollection_);}
 		match_bjets();
-//		find_btagsf();		// Seg faults ... (170119)
+		find_btagsf();		// Seg faults ... (170119)
 		
 		// Fill ntuple:
 		ttrees["events"]->Fill();		// Fills all defined branches.

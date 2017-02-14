@@ -15,7 +15,10 @@ from truculence import utilities, cmssw
 # /CLASSES
 
 # VARIABLES:
-cut_pt_filter = 400		# The eta 2.5 cut is the default.
+cut_pt_filter = 400
+cut_eta_filter = 2.5
+#cut_pt_filter = 0
+#cut_eta_filter = -1
 n_per = 10000
 # /VARIABLES
 
@@ -25,7 +28,8 @@ def main():
 	a = variables.arguments()
 	miniaods = dataset.fetch_entries("miniaod", a.query)
 	tstring = utilities.time_string()[:-4]
-	suffix = "cutpt{}".format(cut_pt_filter)
+	suffix = "cutpt{}eta{}".format(cut_pt_filter, int(cut_eta_filter*10))
+#	suffix = "cutpt{}".format(cut_pt_filter)
 	cmssw_version = cmssw.get_version(parsed=False)
 	
 	for miniaod in miniaods:
@@ -57,6 +61,7 @@ def main():
 	
 		# Create job scripts:
 		for i, group in enumerate(groups):
+			job_name = "job_{}_{}_{}_{}".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
 			job_script = "#!/bin/bash\n"
 			job_script += "\n"
 			job_script += "# Untar CMSSW area:\n"
@@ -70,7 +75,7 @@ def main():
 			job_script += "# Run CMSSW:\n"
 			list_str = ",".join(['"{}"'.format(g) for g in group])
 			out_file = "tuple_{}_{}_{}_{}.root".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
-			job_script += 'cmsRun tuplizer_cfg.py subprocess="{}" generation="{}" cutPtFilter={} outDir="." outFile="{}" inFile={}'.format(miniaod.subprocess, miniaod.generation, cut_pt_filter, out_file, list_str)
+			job_script += 'cmsRun tuplizer_cfg.py subprocess="{}" generation="{}" cutPtFilter={} cutEtaFilter={} outDir="." outFile="{}" inFile={}'.format(miniaod.subprocess, miniaod.generation, cut_pt_filter, cut_eta_filter, out_file, list_str)
 			if sample.data:
 				job_script += ' data=True'.format(sample.data)
 			if sample.mask:
@@ -78,25 +83,26 @@ def main():
 			job_script += " &&\n"
 			job_script += "xrdcp -f {} root://cmseos.fnal.gov/{} &&\n".format(out_file, eos_path)
 			job_script += "rm {}\n".format(out_file)
-			with open("{}/job_{}.sh".format(path, i+1), "w") as out:
+			with open("{}/{}.sh".format(path, job_name), "w") as out:
 				out.write(job_script)
 	
 		# Create condor configs:
 		for i, group in enumerate(groups):
+			job_name = "job_{}_{}_{}_{}".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
 			job_config = "universe = vanilla\n"
-			job_config += "Executable = job_{}.sh\n".format(i+1)
+			job_config += "Executable = {}.sh\n".format(job_name)
 			job_config += "Should_Transfer_Files = YES\n"
 			job_config += "WhenToTransferOutput = ON_EXIT\n"
 			job_config += "Transfer_Input_Files = {}.tar.gz\n".format(cmssw_version)
 			job_config += "Transfer_Output_Files = \"\"\n"
-			job_config += "Output = logs/job_{}.stdout\n".format(i+1)
-			job_config += "Error = logs/job_{}.stderr\n".format(i+1)
-			job_config += "Log = logs/job_{}.log\n".format(i+1)
+			job_config += "Output = logs/{}.stdout\n".format(job_name)
+			job_config += "Error = logs/{}.stderr\n".format(job_name)
+			job_config += "Log = logs/{}.log\n".format(job_name)
 			job_config += "notify_user = ${LOGNAME}@FNAL.GOV\n"
 			job_config += "x509userproxy = $ENV(X509_USER_PROXY)\n"
 			job_config += "Queue 1\n"
 		
-			with open("{}/job_{}.jdl".format(path, i+1), "w") as out:
+			with open("{}/{}.jdl".format(path, job_name), "w") as out:
 				out.write(job_config)
 	
 	
@@ -124,7 +130,8 @@ def main():
 		run_script += "\n"
 		run_script += "# Submit condor jobs:\n"
 		for i, group in enumerate(groups):
-			run_script += "condor_submit job_{}.jdl\n".format(i+1)
+			job_name = "job_{}_{}_{}_{}".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
+			run_script += "condor_submit {}.jdl\n".format(job_name)
 		run_script += "\n"
 		run_script += "# Remove tarball:\n"
 		run_script += "#rm ${CMSSW_VERSION}.tar.gz\n"		# I if remove this, the jobs might complain.

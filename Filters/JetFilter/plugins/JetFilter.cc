@@ -117,7 +117,7 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if (jets_edm->size() >= 2) {
 			pat::Jet jet0 = jets_edm->at(0);
 			pat::Jet jet1 = jets_edm->at(1);
-			if (min(jet0.pt(), jet1.pt()) > cut_pt_ && max(abs(jet0.eta()), abs(jet1.eta())) < cut_eta_) {
+			if (min(jet0.pt(), jet1.pt()) > cut_pt_ && ((max(abs(jet0.eta()), abs(jet1.eta())) < cut_eta_) || cut_eta_ < 0)) {
 				nevents_passed ++;
 				return true;
 			}

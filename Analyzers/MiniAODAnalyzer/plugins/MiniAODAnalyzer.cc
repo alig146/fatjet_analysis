@@ -32,6 +32,9 @@
 /// Custom includes:
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
 // NAMESPACES:
 using namespace std;
@@ -64,6 +67,8 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
       // ----------member data ---------------------------
       int nevents;
       EDGetTokenT<vector<reco::GenParticle>> genParticles_;
+      EDGetTokenT<TriggerResults> triggerResults_;
+      EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 };
 
 //
@@ -78,7 +83,9 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 // constructors and destructor
 //
 MiniAODAnalyzer::MiniAODAnalyzer(const edm::ParameterSet& iConfig):
-	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles")))
+//	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles")))
+	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
+	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales")))
 
 {
    //now do what ever initialization is needed
@@ -105,18 +112,30 @@ MiniAODAnalyzer::~MiniAODAnalyzer()
 void
 MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-	Handle<vector<reco::GenParticle>> genParticles;
+//	Handle<vector<reco::GenParticle>> genParticles;
+//	iEvent.getByToken(genParticles_, genParticles);
+	Handle<TriggerResults> triggerResults;
+	iEvent.getByToken(triggerResults_, triggerResults);
+	Handle<pat::PackedTriggerPrescales> triggerPrescales;
+	iEvent.getByToken(triggerPrescales_, triggerPrescales);
 	
-	iEvent.getByToken(genParticles_, genParticles);
+	const TriggerNames& triggerNames = iEvent.triggerNames(*triggerResults); 
+	
+    for (unsigned int i=0, n=triggerResults->size(); i < n; ++i) {
+        std::cout << "Trigger " << triggerNames.triggerName(i) <<
+                ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
+                ": " << (triggerResults->accept(i) ? "PASS" : "fail (or not run)")
+                << std::endl;
+    }
 	
 	nevents ++;
 	
-	for (vector<reco::GenParticle>::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++ genParticle) {
-//		if (abs(genParticle->pdgId()) == 6 && genParticle->pt() > 400) {
-		if (abs(genParticle->pdgId()) > 1000000) {
-			cout << nevents << "   " << genParticle->pt() << "   " << genParticle->pdgId() << "   " << genParticle->status() << endl;
-		}
-	}
+//	for (vector<reco::GenParticle>::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++ genParticle) {
+////		if (abs(genParticle->pdgId()) == 6 && genParticle->pt() > 400) {
+//		if (abs(genParticle->pdgId()) > 1000000) {
+//			cout << nevents << "   " << genParticle->pt() << "   " << genParticle->pdgId() << "   " << genParticle->status() << endl;
+//		}
+//	}
 }
 
 
