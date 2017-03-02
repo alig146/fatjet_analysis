@@ -148,8 +148,8 @@ if options.subprocess:
 	sigma = sample.sigma
 	if sigma == None:		# 161013: Added after removing sigma from jetht datasets.
 		sigma = -1
-	weight = miniaod.weight
 	if options.weight < 0:
+		weight = miniaod.weight
 		factor = 1
 		if not options.crab:
 			if options.maxEvents > 0:		# If maxEvents is -1, run over everything

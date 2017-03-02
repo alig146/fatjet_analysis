@@ -1,0 +1,785 @@
+variables:
+# Event variables:
+    - name: run
+      dimension: 1
+      type: event
+      description: run number
+      
+    - name: lumi
+      dimension: 1
+      type: event
+      description: lumisection number
+      
+    - name: event
+      dimension: 1
+      type: event
+      description: event number
+      
+    - name: w
+      dimension: 1
+      type: event
+      description: event weight
+      
+    - name: sigma
+      dimension: 1
+      type: event
+      description: the physical process' cross section
+      
+#    - name: njets
+#      dimension: 1
+#      type: event
+#      description: the number of AK4 jets in the event with pT > 10 GeV
+      
+    - name: pt_hat
+      dimension: 1
+      type: event
+      description: pt-hat
+      
+    - name: htak4
+      dimension: 1
+      type: event
+      description: HT of the event calculated from AK4 PF jets with pT > 30
+      
+    - name: htak8
+      dimension: 1
+      type: event
+      description: HT of the event calculated from AK8 PF jets with pT > 150
+      
+    - name: wtt
+      dimension: 1
+      type: event
+      description: TTbar pT reweight, sqrt(sf0*sf1)
+    
+# Jet variables:
+    - name: m
+      dimension: 2
+      type: jet
+      description: ungroomed jet mass
+    
+    - name: m_f
+      dimension: 2
+      type: jet
+      description: filtered jet mass
+    
+    - name: m_p
+      dimension: 2
+      type: jet
+      description: pruned jet mass
+    
+    - name: m_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet mass
+    
+    - name: m_t
+      dimension: 2
+      type: jet
+      description: trimmed jet mass
+    
+    - name: dm
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair mass difference
+    
+    - name: dm_f
+      dimension: 1
+      type: jet
+      description: filtered jet pair mass difference
+    
+    - name: dm_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair mass difference
+    
+    - name: dm_s
+      dimension: 1
+      type: jet
+      description: SoftDropped jet pair mass difference
+    
+    - name: dm_t
+      dimension: 1
+      type: jet
+      description: trimmed jet pair mass difference
+    
+    - name: mavg
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair mass average
+    
+    - name: mavg_f
+      dimension: 1
+      type: jet
+      description: filtered jet pair mass average
+    
+    - name: mavg_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair mass average
+    
+    - name: mavg_s
+      dimension: 1
+      type: jet
+      description: SoftDropped jet pair mass average
+    
+    - name: mavg_t
+      dimension: 1
+      type: jet
+      description: trimmed jet pair mass average
+    
+    - name: masy
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair mass asymmetry
+    
+    - name: masy_f
+      dimension: 1
+      type: jet
+      description: filtered jet pair mass asymmetry
+    
+    - name: masy_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair mass asymmetry
+    
+    - name: masy_s
+      dimension: 1
+      type: jet
+      description: SoftDropped jet pair mass asymmetry
+    
+    - name: masy_t
+      dimension: 1
+      type: jet
+      description: trimmed jet pair mass asymmetry
+    
+    - name: px
+      dimension: 2
+      type: jet
+      description: x-component of the ungroomed jet momentum
+    
+    - name: px_p
+      dimension: 2
+      type: jet
+      description: x-component of the pruned jet momentum
+    
+    - name: py
+      dimension: 2
+      type: jet
+      description: y-component of the ungroomed jet momentum
+    
+    - name: py_p
+      dimension: 2
+      type: jet
+      description: y-component of the pruned jet momentum
+    
+    - name: pz
+      dimension: 2
+      type: jet
+      description: z-component of the ungroomed jet momentum
+    
+    - name: pz_p
+      dimension: 2
+      type: jet
+      description: z-component of the pruned jet momentum
+    
+    - name: pt
+      dimension: 2
+      type: jet
+      description: ungroomed jet transverse momentum
+    
+    - name: pt_p
+      dimension: 2
+      type: jet
+      description: pruned jet transverse momentum
+    
+    - name: ptasy
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair transverse momentum asymmetry
+    
+    - name: ptasy_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair transverse momentum asymmetry
+    
+    - name: e
+      dimension: 2
+      type: jet
+      description: ungroomed jet energy
+    
+    - name: e_p
+      dimension: 2
+      type: jet
+      description: pruned jet energy
+    
+    - name: eta
+      dimension: 2
+      type: jet
+      description: ungroomed jet pseudorapidity
+    
+    - name: eta_p
+      dimension: 2
+      type: jet
+      description: pruned jet pseudorapidity
+    
+    - name: deta
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair pseudorapidity difference
+    
+    - name: deta_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair pseudorapidity difference
+    
+    - name: phi
+      dimension: 2
+      type: jet
+      description: ungroomed jet phi
+    
+    - name: phi_p
+      dimension: 2
+      type: jet
+      description: pruned jet phi
+    
+    - name: dr
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair pseudoangular separation
+    
+    - name: dr_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair pseudoangular separation
+    
+    - name: tau1
+      dimension: 2
+      type: jet
+      description: ungroomed jet 1-subjettiness
+    
+    - name: tau1_f
+      dimension: 2
+      type: jet
+      description: filtered jet 1-subjettiness
+    
+    - name: tau1_p
+      dimension: 2
+      type: jet
+      description: pruned jet 1-subjettiness
+    
+    - name: tau1_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 1-subjettiness
+    
+    - name: tau1_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 1-subjettiness
+    
+    - name: tau2
+      dimension: 2
+      type: jet
+      description: ungroomed jet 2-subjettiness
+    
+    - name: tau2_f
+      dimension: 2
+      type: jet
+      description: filtered jet 2-subjettiness
+    
+    - name: tau2_p
+      dimension: 2
+      type: jet
+      description: pruned jet 2-subjettiness
+    
+    - name: tau2_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 2-subjettiness
+    
+    - name: tau2_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 2-subjettiness
+    
+    - name: tau3
+      dimension: 2
+      type: jet
+      description: ungroomed jet 3-subjettiness
+    
+    - name: tau3_f
+      dimension: 2
+      type: jet
+      description: filtered jet 3-subjettiness
+    
+    - name: tau3_p
+      dimension: 2
+      type: jet
+      description: pruned jet 3-subjettiness
+    
+    - name: tau3_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 3-subjettiness
+    
+    - name: tau3_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 3-subjettiness
+    
+    - name: tau4
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness
+    
+    - name: tau4_f
+      dimension: 2
+      type: jet
+      description: filtered jet 4-subjettiness
+    
+    - name: tau4_p
+      dimension: 2
+      type: jet
+      description: pruned jet 4-subjettiness
+    
+    - name: tau4_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 4-subjettiness
+    
+    - name: tau4_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 4-subjettiness
+    
+    - name: tau5
+      dimension: 2
+      type: jet
+      description: ungroomed jet 5-subjettiness
+    
+    - name: tau43
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau43_f
+      dimension: 2
+      type: jet
+      description: filtered jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau43_p
+      dimension: 2
+      type: jet
+      description: pruned jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau43_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau43_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau42
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau42_f
+      dimension: 2
+      type: jet
+      description: filtered jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau42_p
+      dimension: 2
+      type: jet
+      description: pruned jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau42_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau42_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau41
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau41_f
+      dimension: 2
+      type: jet
+      description: filtered jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau41_p
+      dimension: 2
+      type: jet
+      description: pruned jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau41_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau41_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau32
+      dimension: 2
+      type: jet
+      description: ungroomed jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau32_f
+      dimension: 2
+      type: jet
+      description: filtered jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau32_p
+      dimension: 2
+      type: jet
+      description: pruned jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau32_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau32_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau31
+      dimension: 2
+      type: jet
+      description: ungroomed jet 3-subjettiness over 1-subjettiness
+    
+    - name: tau31_f
+      dimension: 2
+      type: jet
+      description: filtered jet 3-subjettiness over 1-subjettiness
+    
+    - name: tau31_p
+      dimension: 2
+      type: jet
+      description: pruned jet 3-subjettiness over 1-subjettiness
+    
+    - name: tau31_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 3-subjettiness over 1-subjettiness
+    
+    - name: tau31_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 3-subjettiness over 1-subjettiness
+    
+    - name: tau21
+      dimension: 2
+      type: jet
+      description: ungroomed jet 2-subjettiness over 1-subjettiness
+    
+    - name: tau21_f
+      dimension: 2
+      type: jet
+      description: filtered jet 2-subjettiness over 1-subjettiness
+    
+    - name: tau21_p
+      dimension: 2
+      type: jet
+      description: pruned jet 2-subjettiness over 1-subjettiness
+    
+    - name: tau21_s
+      dimension: 2
+      type: jet
+      description: SoftDropped jet 2-subjettiness over 1-subjettiness
+    
+    - name: tau21_t
+      dimension: 2
+      type: jet
+      description: trimmed jet 2-subjettiness over 1-subjettiness
+    
+    - name: neef
+      dimension: 2
+      type: jet
+      description: ungroomed jet neutral EM energy fraction
+    
+    - name: ceef
+      dimension: 2
+      type: jet
+      description: ungroomed jet charged EM energy fraction
+    
+    - name: nhef
+      dimension: 2
+      type: jet
+      description: ungroomed jet neutral hadron energy fraction
+    
+    - name: chef
+      dimension: 2
+      type: jet
+      description: ungroomed jet charged hadron energy fraction
+    
+    - name: mef
+      dimension: 2
+      type: jet
+      description: ungroomed jet muon energy fraction
+    
+    - name: nm
+      dimension: 2
+      type: jet
+      description: ungroomed jet neutral constituent multiplicity
+    
+    - name: cm
+      dimension: 2
+      type: jet
+      description: ungroomed jet charged constituent multiplicity
+    
+    - name: n
+      dimension: 2
+      type: jet
+      description: ungroomed jet constituent multiplicity
+    
+    - name: bd
+      dimension: 2
+      type: jet
+      description: ungroomed jet b-tag CSV discriminator
+    
+    - name: jec
+      dimension: 2
+      type: jet
+      description: ungroomed jet energy correction
+    
+    - name: jmc
+      dimension: 2
+      type: jet
+      description: ungroomed jet mass correction
+    
+    - name: jetid
+      dimension: 2
+      type: jet
+      description: loose JetID flag
+    
+    - name: f
+      dimension: 2
+      type: jet
+      description: jet hadron flavor (5 is b, 4 is charm, 0 is udsg)
+    
+# Subjet variables:
+    - name: spx0
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's leading subjet
+    
+    - name: spy0
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's leading subjet
+    
+    - name: spz0
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's leading subjet
+    
+    - name: se0
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's leading subjet
+    
+    - name: spt0
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's leading subjet
+    
+    - name: sm0
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's leading subjet
+    
+    - name: seta0
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's leading subjet
+    
+    - name: sphi0
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's leading subjet
+    
+    - name: spx1
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: spy1
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: spz1
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: se1
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's second-leading subjet
+    
+    - name: spt1
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's second-leading subjet
+    
+    - name: sm1
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's second-leading subjet
+    
+    - name: seta1
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's second-leading subjet
+    
+    - name: sphi1
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's second-leading subjet
+    
+    - name: spx2
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: spy2
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: spz2
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: se2
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's third-leading subjet
+    
+    - name: spt2
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's third-leading subjet
+    
+    - name: sm2
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's third-leading subjet
+    
+    - name: seta2
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's third-leading subjet
+    
+    - name: sphi2
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's third-leading subjet
+    
+    - name: spx3
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: spy3
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: spz3
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: se3
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's fourth-leading subjet
+    
+    - name: spt3
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: sm3
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's fourth-leading subjet
+    
+    - name: seta3
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's fourth-leading subjet
+    
+    - name: sphi3
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's fourth-leading subjet
+    
+# Trigger bits:
+    - name: trig_pfht900
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_PFHT900
+    
+    - name: trig_pfak8ht650mt50
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_AK8PFHT650_TrimR0p1PT0p03Mass50
+    
+    - name: trig_pfak8ht700mt50
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_AK8PFHT700_TrimR0p1PT0p03Mass50
+    
+    - name: trig_pfak8pt360mt30
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_AK8PFJet360_TrimMass30
+    
+    - name: trig_pfak8pt280pt200mt30csvm020
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_AK8PFDiJet280_200_TrimMass30_CSVM_0p20 (I don't know when this was introduced.)
+    
+    - name: trig_pfpt450
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_PFJet450
+    
+    - name: trig_pfht750pt50x4
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_PFHT750_4JetPt50
+    
+    - name: trig_pfht750pt70x4
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_PFHT750_4JetPt70
+    
+    - name: trig_pfht800pt50x4
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_PFHT800_4JetPt50
+    
+    - name: trig_mupt50
+      dimension: 1
+      type: event
+      description: trigger bit for HLT_Mu50
+    

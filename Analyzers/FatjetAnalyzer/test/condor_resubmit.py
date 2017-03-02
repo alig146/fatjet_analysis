@@ -26,9 +26,9 @@ def retar_cmssw(indir):
 		return False
 	return True
 
-def submit_jobs(indir, n_jobs):
+def submit_jobs(indir, n_jobs, prefix):
 	os.chdir(indir)
-	jlist = ["job_{}.jdl".format(n) for n in n_jobs]
+	jlist = ["{}_{}.jdl".format(prefix, n) for n in n_jobs]
 	FNULL = open(os.devnull, 'w')
 	for j in jlist:
 		subprocess.Popen(["condor_submit", j], stdout=FNULL, stderr=subprocess.STDOUT)
@@ -53,12 +53,15 @@ def main():
 		print "Resubmitting jobs for {}".format(miniaod.Name)
 		print "[..] Figuring out what jobs to resubmit."
 		results = check_stderr_logs(indir)
+		results_queue = check_queue(miniaod)
 		jobs_error = sorted(utilities.flatten_list([jobs_list for code, jobs_list in {k: v for k, v in results.items() if k > 0}.items()]))
-		jobs_unsuborrun = sorted(utilities.flatten_list([jobs_list for code, jobs_list in {k: v for k, v in results.items() if k < 0}.items()]))
-		jobs_resubmit = jobs_error + jobs_unsuborrun if force_flag else jobs_error
+		jobs_unsub_or_queue = sorted(utilities.flatten_list([jobs_list for code, jobs_list in {k: v for k, v in results.items() if k < 0}.items()]))
+		jobs_queue = sorted(utilities.flatten_list([jobs_list for code, jobs_list in results_queue.items()]))
+		jobs_unsub = sorted(list(set(jobs_unsub_or_queue).difference(set(jobs_queue))))
+		jobs_resubmit = jobs_error + jobs_unsub
 		print "[..] Resubmitting {} jobs:".format(len(jobs_resubmit))
 		print jobs_resubmit
-		submit_jobs(indir, jobs_resubmit)
+		submit_jobs(indir, jobs_resubmit, prefix="job_{}_{}_{}".format(miniaod.subprocess, miniaod.generation, suffix))
 	return True
 # :FUNCTIONS
 

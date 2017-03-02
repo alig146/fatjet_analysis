@@ -100,6 +100,7 @@ def main():
 			job_config += "Log = logs/{}.log\n".format(job_name)
 			job_config += "notify_user = ${LOGNAME}@FNAL.GOV\n"
 			job_config += "x509userproxy = $ENV(X509_USER_PROXY)\n"
+			job_config += "request_memory = 3500\n"
 			job_config += "Queue 1\n"
 		
 			with open("{}/{}.jdl".format(path, job_name), "w") as out:
