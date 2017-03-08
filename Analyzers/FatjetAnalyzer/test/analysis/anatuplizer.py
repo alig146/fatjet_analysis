@@ -112,11 +112,11 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 			elif var_name == "htak4": branches[var_name][0] = getattr(event, "ak4_pf_ht")[0]
 			elif var_name == "htak8": branches[var_name][0] = getattr(event, "ak8_pf_ht")[0]
 			elif var_name == "wtt": branches[var_name][0] = (getattr(event, "q_gn_sf")[0]*getattr(event, "q_gn_sf")[1])**0.5 if len(getattr(event, "q_gn_sf")) == 2 else 1
-			elif var_name == "bd": 
+			elif var_name == "bd":
 				for i in range(var_dim): branches[var_name][i] = getattr(event, "ca12_pf_bd_csv")[i]
-			elif var_name == "jetid": 
+			elif var_name == "jetid":
 				for i in range(var_dim): branches[var_name][i] = getattr(event, "ca12_pf_jetid_l")[i]
-			elif var_name in vars_calc: 
+			elif var_name in vars_calc:
 				for i in range(var_dim): branches[var_name][i] = vars_calc[var_name][i]
 			else:
 				pieces = var_name.split("_")
@@ -145,6 +145,8 @@ def main():
 	if not tuples:
 		tuples = dataset.fetch_entries("tuple", a.query)
 		tuples = dataset.sort_datasets(tuples)
+	else:
+		tuples = {args.process: tuples}
 	
 	## Print an introduction:
 	print "The analyzer will run over the following tuples:"
@@ -156,18 +158,13 @@ def main():
 	else:
 		print "\t{}".format(tuples)
 	
-#	print tuples
-#	sys.exit()
+	out_dir = None
+	out_file = None
+	if args.output:
+		out_file = args.output.split("/")[-1]
+		out_dir = "/".join(args.output.split("/")[:-1])
 	
-	## Analyzer object:
-#	tuples = {}
-	
-	### food = 2:
-#	tuples = {(tup.Name_safe if [t.process for t in tups].count(tup.process) > 1 else tup.process): tup for tup in tups}
-	count = False
-	if isinstance(tuples, list):
-		if isinstance(tuples[0], str): count = True
-	ana = analyzer.analyzer(tuples, save=True, v=args.verbose, count=count)		# Add "out_dir=" and "out_file=".
+	ana = analyzer.analyzer(tuples, save=True, v=args.verbose, out_file=out_file, use_condor=args.condor)
 	vs_out = get_variables()
 	ana.define_branches(vs_out)
 #	branches = create_tuples(ana)
@@ -177,7 +174,7 @@ def main():
 	for key, loop in ana.loops.iteritems():
 		loop.treatment = treat_event
 #		print "here"
-		loop.progress = True
+		loop.progress = True if not ana.condor else False
 		loop.run(n=args.n, rand=False, arguments={"alg": args.algorithm})
 #	event_loop(ana.tt[key]["analyzer/events"], branches[key], ana.tuples[key], n_events=n_events_sq)
 	# Output:
