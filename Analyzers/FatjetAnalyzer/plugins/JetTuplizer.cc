@@ -1121,7 +1121,7 @@ void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 		float pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
 		float eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
-		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
+//		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
 		double bsf = 1;
 		double bsf_u = 1;
 		double bsf_d = 1;

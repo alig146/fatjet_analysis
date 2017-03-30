@@ -35,6 +35,7 @@ def main():
 	suffix = "cutpt{}eta{}".format(cut_pt_filter, int(cut_eta_filter*10))
 #	suffix = "cutpt{}".format(cut_pt_filter)
 	cmssw_version = cmssw.get_version(parsed=False)
+	condor.unclean()		# A weird bug makes this necessary if there's more than one sample. (WHY?!)
 	
 	for miniaod in miniaods:
 		print "Making condor setup for {} ...".format(miniaod.Name)
