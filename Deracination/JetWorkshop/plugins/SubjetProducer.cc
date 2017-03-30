@@ -112,7 +112,9 @@ vector<PseudoJet> SubjetProducer::get_subjets(reco::Jet jet, JetDefinition algo,
 	ClusterSequence cs(constituents, algo);
 	
 	// Extract subjets:
+	vector<fastjet::PseudoJet> inc = cs.inclusive_jets();
 	vector<fastjet::PseudoJet> subjets = sorted_by_pt(cs.exclusive_jets_up_to(n));
+//	if (inc.size() > 1) cout << inc.size() << "  " << subjets.size() << endl;
 	
 	return subjets;
 }
@@ -128,7 +130,7 @@ SubjetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	unsigned nJets = jets->size();
 	vector<float> values(nJets, 0);
 	
-//	vector<vector<float>> subjet_px(nSubjets_), subjet_py(nSubjets_);
+//	vector<vector<float>> subjet_px(nSubjets_), subjet_py(nSubjets_)cd;
 	
 	map<string, vector<float>> subjet_values;
 	for (vector<string>::const_iterator v = subjet_variables.begin(); v != subjet_variables.end(); v++) {
@@ -140,23 +142,25 @@ SubjetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //	cout << subjet_values["px0"].size() << endl;
 	
 	JetDefinition algo_ca12(cambridge_algorithm, 1.2);
+	JetDefinition algo_kt15(kt_algorithm, 1.5);
+	JetDefinition algo_ak15(antikt_algorithm, 1.5);
 	
 	for (unsigned ijet=0; ijet < jets->size(); ijet++) {		// Only find subjets for two leading jets.
-		if (ijet < 2) {
-//			pat::Jet jet = (*jets)[ijet];
-			reco::Jet jet = (*jets)[ijet];
-			vector<PseudoJet> subjets = get_subjets(jet, algo_ca12, nSubjets_);
-//			cout << subjets.size() << endl;
-			for (unsigned isj=0; isj < nSubjets_; isj++) {
-				subjet_values["px" + to_string(isj)][ijet] = subjets[isj].px();
-				subjet_values["py" + to_string(isj)][ijet] = subjets[isj].py();
-				subjet_values["pz" + to_string(isj)][ijet] = subjets[isj].pz();
-				subjet_values["e" + to_string(isj)][ijet] = subjets[isj].e();
-				subjet_values["pt" + to_string(isj)][ijet] = subjets[isj].pt();
-				subjet_values["m" + to_string(isj)][ijet] = subjets[isj].m();
-				subjet_values["eta" + to_string(isj)][ijet] = subjets[isj].eta();
-				subjet_values["phi" + to_string(isj)][ijet] = subjets[isj].phi();
-			}
+		if (ijet > 1) break;
+//		pat::Jet jet = (*jets)[ijet];
+		reco::Jet jet = (*jets)[ijet];
+//		cout << "jet:" << ijet << endl;
+		vector<PseudoJet> subjets = get_subjets(jet, algo_kt15, nSubjets_);
+//		cout << subjets.size() << endl;
+		for (unsigned isj=0; isj < nSubjets_; isj++) {
+			subjet_values["px" + to_string(isj)][ijet] = subjets[isj].px();
+			subjet_values["py" + to_string(isj)][ijet] = subjets[isj].py();
+			subjet_values["pz" + to_string(isj)][ijet] = subjets[isj].pz();
+			subjet_values["e" + to_string(isj)][ijet] = subjets[isj].e();
+			subjet_values["pt" + to_string(isj)][ijet] = subjets[isj].pt();
+			subjet_values["m" + to_string(isj)][ijet] = subjets[isj].m();
+			subjet_values["eta" + to_string(isj)][ijet] = subjets[isj].eta();
+			subjet_values["phi" + to_string(isj)][ijet] = subjets[isj].phi();
 		}
 	}
 //	cout << subjets.size() << endl;

@@ -148,6 +148,14 @@ def main():
 	else:
 		tuples = {args.process: tuples}
 	
+	## Combine jetht15 and jetht16:
+	for name in ["jetht15", "jetht16"]:
+		if name in tuples:
+			if "jetht" not in tuples: tuples["jetht"] = []
+			tuples["jetht"].extend(tuples[name])
+			tuples.pop(name, None)
+	
+	
 	## Print an introduction:
 	print "The analyzer will run over the following tuples:"
 	if isinstance(tuples, dict):

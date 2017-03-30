@@ -24,6 +24,8 @@ def main():
 	args = a.args
 	tuples = dataset.fetch_entries("tuple", a.query)
 	tuples = dataset.sort_datasets(tuples)
+	tuples = {key.split("_")[0]: value for key, value in tuples.items()}		# Kludge to keep only "process" as the key.
+	
 	
 	## Print an introduction:
 	print "Making anatuplizer jobs for the following tuples:"
@@ -36,7 +38,6 @@ def main():
 		print "\t{}".format(tuples)
 	
 	ana = analyzer.analyzer(tuples, v=args.verbose, count=False)
-#	ana.Print()
 	path = ana.create_jobs(cmd="python anatuplizer.py --condor %%N%% -f %%FILE%% -p %%PROCESS%%", input_files=["anatuplizer.py", "anatuple.yaml"])
 	condor.tar_cmssw(path)
 # /FUNCTIONS
