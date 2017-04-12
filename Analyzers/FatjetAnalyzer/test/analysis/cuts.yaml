@@ -1,0 +1,6 @@
+pre: "w*(htak8>900&&Max$(m_t)>50&&Min$(tau21)>0.5)"
+predeta: "w*(htak8>900&&Max$(m_t)>50&&Min$(tau21)>0.5&&deta<1.0)"
+
+fjp_sig: "w*(htak8>900&&Max$(m_t)>50&&Min$(tau21)>0.5&&deta<1.0&&Max$(tau43)<0.80&&Max$(tau42)<0.45&&masy_p<0.1)"
+fjp_sb: "w*(htak8>900&&Max$(m_t)>50&&Min$(tau21)>0.5&&deta<1.0&&Max$(tau43)<0.90&&Max$(tau42)<0.55&&(Min$(tau42)>0.45||Min$(tau43)>0.80)&&masy_p<0.1)"
+fjp_sbb: "w*(htak8>900&&Max$(m_t)>50&&Min$(tau21)>0.5&&deta<1.0&&Max$(tau43)<0.90&&Max$(tau42)<0.55&&(Min$(tau42)>0.45||Min$(tau43)>0.80)&&masy_p<0.1&&Min$(bd)>0.46)"

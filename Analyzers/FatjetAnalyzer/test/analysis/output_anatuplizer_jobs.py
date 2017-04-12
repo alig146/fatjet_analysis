@@ -29,7 +29,7 @@ def main():
 	files = eos.listdir(eos_path, root=True, interactive=True)
 	
 	print "[..] hadding"
-	root.hadd(args.output, files)
+	root.hadd(args.output, files, n=100)
 # /FUNCTIONS
 
 # MAIN:
