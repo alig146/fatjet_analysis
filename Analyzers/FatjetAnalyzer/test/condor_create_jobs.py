@@ -8,7 +8,7 @@
 import os
 import argparse       # For commandline options
 from decortication import dataset, variables
-from truculence import utilities, cmssw
+from truculence import utilities, cmssw, condor
 # /IMPORTS
 
 # CLASSES:
@@ -27,10 +27,15 @@ def main():
 	# Arguments:
 	a = variables.arguments()
 	miniaods = dataset.fetch_entries("miniaod", a.query)
+	if not miniaods:
+		print "[!!] There were no miniaods to run over based on your query:"
+		print a.query
+		return False
 	tstring = utilities.time_string()[:-4]
 	suffix = "cutpt{}eta{}".format(cut_pt_filter, int(cut_eta_filter*10))
 #	suffix = "cutpt{}".format(cut_pt_filter)
 	cmssw_version = cmssw.get_version(parsed=False)
+	condor.unclean()		# A weird bug makes this necessary if there's more than one sample. (WHY?!)
 	
 	for miniaod in miniaods:
 		print "Making condor setup for {} ...".format(miniaod.Name)
@@ -70,6 +75,7 @@ def main():
 			job_script += "\n"
 			job_script += "# Setup CMSSW:\n"
 			job_script += "source /cvmfs/cms.cern.ch/cmsset_default.sh\n"
+			job_script += "scramv1 b ProjectRename\n"
 			job_script += "eval `scramv1 runtime -sh`		#cmsenv\n"
 			job_script += "\n"
 			job_script += "# Run CMSSW:\n"
@@ -122,10 +128,10 @@ def main():
 		run_script += "cp -r $HOME/decortication/resources $CMSSW_BASE/python\n"
 		run_script += "cp -r $HOME/truculence/truculence $CMSSW_BASE/python\n"
 		run_script += "\n"
-		run_script += "# Make tarball:\n"
-		run_script += "echo 'Making a tarball of the CMSSW area ...'\n"
-		run_script += "tar --exclude-caches-all -zcf ${CMSSW_VERSION}.tar.gz -C ${CMSSW_BASE}/.. ${CMSSW_VERSION}\n"
-		run_script += "\n"
+#		run_script += "# Make tarball:\n"
+#		run_script += "echo 'Making a tarball of the CMSSW area ...'\n"
+#		run_script += "tar --exclude-caches-all -zcf ${CMSSW_VERSION}.tar.gz -C ${CMSSW_BASE}/.. ${CMSSW_VERSION}\n"
+#		run_script += "\n"
 		run_script += "# Prepare EOS:\n"
 		run_script += "eos root://cmseos.fnal.gov mkdir -p {}\n".format(eos_path)
 		run_script += "\n"
@@ -134,17 +140,12 @@ def main():
 			job_name = "job_{}_{}_{}_{}".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
 			run_script += "condor_submit {}.jdl\n".format(job_name)
 		run_script += "\n"
-		run_script += "# Remove tarball:\n"
-		run_script += "#rm ${CMSSW_VERSION}.tar.gz\n"		# I if remove this, the jobs might complain.
-		run_script += "\n"
-		run_script += "# Remove python packages:\n"
-		run_script += "#rm -rf $CMSSW_BASE/python/decortication\n"
-		run_script += "#rm -rf $CMSSW_BASE/python/resources\n"
-		run_script += "#rm -rf $CMSSW_BASE/python/truculence\n"
 	
 		with open("{}/run.sh".format(path), "w") as out:
 			out.write(run_script)
-	
+		
+		condor.tar_cmssw(path)
+		
 		print "\tThe jobs are in {}".format(path)
 	return True
 # /FUNCTIONS

@@ -7,7 +7,7 @@
 # IMPORTS:
 import os, sys, subprocess
 from condor_status import *
-from truculence import utilities
+from truculence import utilities, condor
 # :IMPORTS
 
 # CLASSES:
@@ -18,13 +18,13 @@ force_flag = 0
 # :VARIABLES
 
 # FUNCTIONS:
-def retar_cmssw(indir):
-	try:
-		subprocess.check_call("tar --exclude-caches-all -zcf " + indir + "/${CMSSW_VERSION}.tar.gz -C ${CMSSW_BASE}/.. ${CMSSW_VERSION}", shell=True)
-	except Exception as ex:
-		print ex
-		return False
-	return True
+#def retar_cmssw(indir):
+#	try:
+#		subprocess.check_call("tar --exclude-caches-all -zcf " + indir + "/${CMSSW_VERSION}.tar.gz -C ${CMSSW_BASE}/.. ${CMSSW_VERSION}", shell=True)
+#	except Exception as ex:
+#		print ex
+#		return False
+#	return True
 
 def submit_jobs(indir, n_jobs, prefix):
 	os.chdir(indir)
@@ -47,7 +47,7 @@ def main():
 	for miniaod in miniaods:
 		indir = "/uscms/home/tote/8_0_20/Analyzers/FatjetAnalyzer/test/condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
 		print "\n[..] Remaking the CMSSW tarball."
-		if not retar_cmssw(indir):
+		if not condor.tar_cmssw(indir):
 			print "[!!] Something went wrong."
 			return False
 		print "Resubmitting jobs for {}".format(miniaod.Name)

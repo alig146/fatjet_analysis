@@ -1074,7 +1074,8 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 			branches[name_type]["pt"].push_back(pt);
 			branches[name_type]["m"].push_back(m);
 			branches[name_type]["pid"].push_back(pdgid);
-			if (abs(pdgid) == 6) {branches[name_type]["sf"].push_back(exp(0.0615 - 0.0005*pt));} // ttbar scale factor (https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting)
+			branches[name_type]["sf"].push_back(exp(0.0615 - 0.0005*pt));   // Record ttbar SF even for squarks.
+//			if (abs(pdgid) == 6) {branches[name_type]["sf"].push_back(exp(0.0615 - 0.0005*pt));} // ttbar scale factor (https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting)
 		}
 	}		// :End collection loop
 }
@@ -1120,7 +1121,7 @@ void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 		float pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
 		float eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
-		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
+//		double bd_csv = branches["ca12_pf"]["bd_csv"].at(ijet_ca12);
 		double bsf = 1;
 		double bsf_u = 1;
 		double bsf_d = 1;
