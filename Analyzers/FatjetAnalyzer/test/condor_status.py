@@ -8,7 +8,7 @@
 import os, sys, re
 from subprocess import Popen, PIPE, check_output
 from decortication import dataset, variables
-from truculence import utilities
+from truculence import utilities, condor
 # :IMPORTS
 
 # CLASSES:
@@ -38,22 +38,22 @@ def list_logs(indir):
 	return results
 
 
-def parse_job_name(name):
-	name = name.split("/")[-1]
-	result = {}
-	info, result["ext"] = name.split(".")
-	name_pieces = info.split("_")[1:]
-	if (len(name_pieces) == 1): result["n"] = name_pieces[0]
-	elif (len(name_pieces) == 4): result["subprocess"], result["generation"], result["suffix"], result["n"] = name_pieces
-	result["n"] = int(result["n"])
-	return result
+#def parse_job_name(name):
+#	name = name.split("/")[-1]
+#	result = {}
+#	info, result["ext"] = name.split(".")
+#	name_pieces = info.split("_")[1:]
+#	if (len(name_pieces) == 1): result["n"] = name_pieces[0]
+#	elif (len(name_pieces) == 4): result["subprocess"], result["generation"], result["suffix"], result["n"] = name_pieces
+#	result["n"] = int(result["n"])
+#	return result
 
 
 def analyze_log_stderr(path):
 	n_lines = utilities.wcl(path)
 	if n_lines == 0: return {"code": -1, "n": n_lines}
 	last = check_output(["tail", "-n1", path]).strip()
-	if not last: last = subprocess.check_output(["tail", "-n1", path]).strip()
+	if not last: last = check_output(["tail", "-n1", path]).strip()
 	
 	if not last: return {"code": 3, "n": n_lines}
 	if "[100%][==================================================]" in last: return {"code": 0, "n": n_lines}
@@ -89,7 +89,7 @@ def check_queue(miniaod, user="tote"):
 		pieces = line.split()
 		status = int(pieces[0])
 #		if status == "<": status = "R"
-		info = parse_job_name(pieces[1])
+		info = condor.parse_job_name(pieces[1])
 		if "subprocess" in info and "generation" in info:
 			if info["subprocess"] == miniaod.subprocess and info["generation"] == miniaod.generation:
 				if status not in results: results[status] = []
@@ -110,7 +110,11 @@ def main():
 		indir = "/uscms/home/tote/8_0_20/Analyzers/FatjetAnalyzer/test/condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
 		print "\nStatusing {}".format(miniaod.Name)
 		print "[..] Scanning the condor directory."
-		jdls = [f for f in os.listdir(indir) if ".jdl" in f]
+		try:
+			jdls = [f for f in os.listdir(indir) if ".jdl" in f]
+		except Exception as ex:
+			print ex
+			continue
 		njobs = len(jdls)
 	
 		log_dict = list_logs(indir)
@@ -135,12 +139,16 @@ def main():
 		print "[..] Checking jobs."
 		log_results = check_stderr_logs(indir, logs_stderr)
 		queue_results = check_queue(miniaod)
+#		print log_results
+#		print
+#		print queue_results
 #		print queue_results[1]
 #		print len(queue_results[1])
 		
 		if 0 in log_results: print "{}/{} jobs completed successfully.".format(len(log_results[0]), njobs)
-		if -1 in log_results: print "{}/{} jobs are unsubmitted or running.".format(len(log_results[-1]), njobs)
-		for key, nlist in queue_results.items(): print "\t{}/{} jobs are {}.".format(len(nlist), len(log_results[-1]), queue_codes[key] if key in queue_codes else "?")
+		if -1 in log_results:
+			print "{}/{} jobs are unsubmitted or running.".format(len(log_results[-1]), njobs)
+			for key, nlist in queue_results.items(): print "\t{}/{} jobs are {}.".format(len(nlist), len(log_results[-1]), queue_codes[key] if key in queue_codes else "?")
 		for code, jobs in {key: value for key, value in log_results. items() if key > 0}.items():
 			print "{}/{} jobs have error code {}: {}".format(len(log_results[code]), njobs, code, error_codes[code])
 			print jobs

@@ -49,7 +49,7 @@ def main():
 		print "\n[..] Remaking the CMSSW tarball."
 		if not condor.tar_cmssw(indir):
 			print "[!!] Something went wrong."
-			return False
+			continue
 		print "Resubmitting jobs for {}".format(miniaod.Name)
 		print "[..] Figuring out what jobs to resubmit."
 		results = check_stderr_logs(indir)
