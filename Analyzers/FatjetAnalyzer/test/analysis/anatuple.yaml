@@ -783,3 +783,9 @@ variables:
       type: event
       description: trigger bit for HLT_Mu50
     
+# Leptons:
+#    - name: pt
+#      dimension: 1
+#      type: lepton
+#      description: trigger bit for HLT_Mu50
+

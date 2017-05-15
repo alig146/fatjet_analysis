@@ -34,6 +34,10 @@ def get_variables(f="anatuple.yaml"):
 		info = utilities.ordered_load(f_in)
 	return info["variables"]
 
+def match_leptons(loop):
+	for ijet, jet_pt in enumerate(loop.branches["pt"]):
+		print ijet, jet_pt
+
 def treat_event(loop, event, args):		# Where "loop" refers to an event_loop object
 	# Parse arguments:
 	alg = "ca12"
@@ -105,6 +109,9 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 			var_dim = variable["dimension"]
 			var_type = variable["type"]
 	#		print var_name, var_dim, var_type
+			
+			# Skip lepton variables for now: (I match them later.)
+			if var_type == "lepton": continue
 		
 			if var_name == "w": branches[var_name][0] = getattr(event, var_name)[0]*n_events_tc/n_events
 			elif var_name == "njets": branches[var_name][0] = getattr(event, "ak4_pf_njets")[0]
@@ -128,6 +135,8 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 				if var_type == "jet":
 					groomer = pieces[1] if len(pieces) > 1 else ""
 					for i in range(var_dim): branches[var_name][i] = getattr(event, "{}_pf{}_{}".format(alg, groomer, var_stem))[i]
+	
+	match_leptons(loop)
 	
 	loop.tt_out.Fill()
 

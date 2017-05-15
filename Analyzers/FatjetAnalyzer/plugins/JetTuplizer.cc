@@ -299,7 +299,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	lep_names = {"le", "lm", "lt", "lp"};
 	lep_types = {"pf"};
 	lep_variables = {		// List of event branch variables for each collection.
-		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m",
+		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m"
 	};
 	
 	/// "gen"
@@ -1277,7 +1277,7 @@ void JetTuplizer::analyze(
 		process_jets_gn(iEvent, "ca12", ca12GNCollection_);
 		process_jets_maod(iEvent, "ak4", ak4MAODCollection_);
 		process_jets_maod(iEvent, "ak8", ak8MAODCollection_);
-		process_electrons_pf(iEvent, electronCollection_);
+		process_electrons_pf(iEvent, "ca12_pfp", electronCollection_);
 		process_muons_pf(iEvent, muonCollection_);
 		process_tauons_pf(iEvent, tauCollection_);
 		process_photons_pf(iEvent, photonCollection_);

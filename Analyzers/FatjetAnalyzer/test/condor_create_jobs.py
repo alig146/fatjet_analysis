@@ -85,8 +85,8 @@ def main():
 			job_script += 'cmsRun tuplizer_cfg.py subprocess="{}" generation="{}" cutPtFilter={} cutEtaFilter={} outDir="." outFile="{}" inFile={}'.format(miniaod.subprocess, miniaod.generation, cut_pt_filter, cut_eta_filter, out_file, list_str)
 			if sample.data:
 				job_script += ' data=True'.format(sample.data)
-			if sample.mask:
-				job_script += ' mask="{}"'.format(sample.mask)
+			if miniaod.mask:
+				job_script += ' mask="{}"'.format(miniaod.mask)
 			job_script += " &&\n"
 			job_script += "xrdcp -f {} root://cmseos.fnal.gov/{} &&\n".format(out_file, eos_path)
 			job_script += "rm {}\n".format(out_file)
