@@ -23,10 +23,13 @@ def main():
 	a = variables.arguments()
 	args = a.args
 	tstring = [piece for piece in args.dir.split("/") if piece][-1]
+	if not args.output: args.output = "temp"
 	
 	print "[..] Finding files to hadd."
 	eos_path = "/store/user/tote/analyzer_jobs/{}".format(tstring)
 	files = eos.listdir(eos_path, root=True, interactive=True)
+#	print files
+#	print len(files)
 	
 	print "[..] hadding"
 	root.hadd(args.output, files, n=100)

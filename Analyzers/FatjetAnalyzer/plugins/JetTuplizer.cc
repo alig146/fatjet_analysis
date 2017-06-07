@@ -482,6 +482,7 @@ void JetTuplizer::beginJob()
 // CLASS METHODS ("method" = "member function")
 /// Trigger bits method:
 void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<TriggerResults> resultsToken, EDGetTokenT<pat::PackedTriggerPrescales> prescalesToken) {
+	if (v_) cout << "Begin process_triggers." << endl;
 	Handle<TriggerResults> results;
 	iEvent.getByToken(resultsToken, results);
 	Handle<pat::PackedTriggerPrescales> prescales;
@@ -520,10 +521,12 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 			branches["event"][branch_name].push_back(results->accept(names.triggerIndex(trigger_name)));
 		}
 	}
+	if (v_) cout << "End process_triggers." << endl;
 }
 
 /// PF jets method:
 void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
+	if (v_) cout << "Begin process_jets_pf." << endl;
 	// Arguments:
 	string type = "pf";
 	if (!groom.empty()) {
@@ -753,10 +756,13 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 	}
 	branches[algo_type]["ht"].push_back(ht);
 	branches[algo_type]["njets"].push_back(njets);
+	
+	if (v_) cout << "End process_jets_pf." << endl;
 }
 
 /// GN jets method:
 void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTokenT<vector<reco::GenJet>> token) {
+	if (v_) cout << "Begin process_jets_gn." << endl;
 	// Arguments:
 	string type = "gn";
 	string algo_type = algo + "_" + type;
@@ -815,6 +821,7 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 	}
 	branches[algo_type]["ht"].push_back(ht);
 	branches[algo_type]["njets"].push_back(njets);
+	if (v_) cout << "End process_jets_gn." << endl;
 }
 
 /// MAOD jets method:
@@ -885,6 +892,7 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 
 /// Electrons method:
 void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Electron>> token) {
+	if (v_) cout << "Begin process_electrons_pf." << endl;
 	// Arguments:
 	string name = "le";
 	string type = "pf";
@@ -919,6 +927,7 @@ void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vec
 			branches[name_type]["m"].push_back(m);
 		}
 	}		// :End collection loop
+	if (v_) cout << "End process_electrons_pf." << endl;
 }
 
 /// Muons method:
@@ -1082,6 +1091,7 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 
 // B-jet matching method:
 void JetTuplizer::match_bjets() {
+	if (v_) cout << "Begin match_bjets." << endl;
 	for (unsigned ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
 		if (ijet_ca12 == branches["ca12_pf"]["pt"].size()) {break;}
 		double bd_te_max = 0;
@@ -1112,12 +1122,14 @@ void JetTuplizer::match_bjets() {
 		branches["ca12_pf"]["bd_csv"].push_back(bd_csv_max);
 		branches["ca12_pf"]["bd_cisv"].push_back(bd_cisv_max);
 	}
+	if (v_) cout << "End match_bjets." << endl;
 }
 
 // B-jet scale factors:
 /// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagCalibration#Example_code_in_C
 void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
-	for (int ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
+	if (v_) cout << "Begin find_btagsf." << endl;
+	for (unsigned ijet_ca12 = 0; ijet_ca12 < branches["ca12_pf"]["pt"].size(); ijet_ca12++) {
 		float pt = branches["ca12_pf"]["pt"].at(ijet_ca12);
 		float eta = branches["ca12_pf"]["eta"].at(ijet_ca12);
 		double f = branches["ca12_pf"]["f"].at(ijet_ca12);
@@ -1145,6 +1157,7 @@ void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 		branches["ca12_pf"]["bsf_u"].push_back(bsf_u);
 		branches["ca12_pf"]["bsf_d"].push_back(bsf_d);
 	}
+	if (v_) cout << "End find_btagsf." << endl;
 }
 
 // ------------ called for each event  ------------
