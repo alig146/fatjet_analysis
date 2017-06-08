@@ -171,10 +171,13 @@ if (not in_files) and (not options.crab):
 	assert miniaod
 	if miniaod.files:
 		in_files = miniaod.files
+		if not miniaod.dir.eos: in_files = ["file:" + f for f in in_files]
 	else:
 		print "ERROR (tuplizer): What files should be run over?"
 		sys.exit()
 #		in_files = dataset.get_paths(ds.miniaod_name)
+print "You are running over {} files. An example file is the following:".format(len(in_files))
+print "\t" + in_files[0] 
 
 if (not in_files) and (not options.crab):
 	print "ERROR: You're not running over any files! Check your dataset."
