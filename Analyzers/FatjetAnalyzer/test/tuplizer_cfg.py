@@ -7,7 +7,6 @@
 # Description: [something]                              #
 #########################################################
 
-
 # IMPORTS:
 ## Generic:
 import re         # For regular expressions
@@ -208,7 +207,7 @@ if not options.crab:
 #print process.source.fileNames
 if options.mask:
 	setattr(process.source, "lumisToProcess", cms.untracked.VLuminosityBlockRange(cmssw.convert_lumi_json(options.mask)))
-#print process.source.lumisToProcess
+process.source.duplicateCheckMode = cms.untracked.string("noDuplicateCheck")		# 170608: I added this for sgto3j miniaods ...
 
 ## Output:
 if options.crab:

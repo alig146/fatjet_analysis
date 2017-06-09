@@ -11,8 +11,8 @@ git clone git@github.com:elliot-hughes/decortication.git
 #mkdir ../python
 #cd ../python
 cd $CMSSW_BASE/python
-ln -s $CMSSW_BASE/src/Deracination/Straphanger/test/decortication/decortication/ decortication
-ln -s $CMSSW_BASE/src/Deracination/Straphanger/test/truculence/truculence/ truculence
+ln -s ../src/Deracination/Straphanger/test/decortication/decortication/ decortication
+ln -s ../src/Deracination/Straphanger/test/truculence/truculence/ truculence
 
 cd $CMSSW_BASE/src
 echo "[..] Compiling CMSSW area."

@@ -18,3 +18,5 @@ Then,
 cd Analyzers/FatjetAnalyzer/test
 bash install.sh
 ```
+
+At this point, you should be able to run the basic code. For more advanced functionality, refer to the applicable directions on the [repository wiki](https://github.com/elliot-hughes/fatjet_analysis/wiki).
