@@ -76,7 +76,7 @@ def main():
 			job_script = "#!/bin/bash\n"
 			job_script += "\n"
 			job_script += "# Untar CMSSW area:\n"
-			job_script += "tar -xzf {}.tar.gz\n".format(cmssw_version)
+			job_script += "tar -xhzf {}.tar.gz\n".format(cmssw_version)
 			job_script += "cd {}/src/Analyzers/FatjetAnalyzer/test\n".format(cmssw_version)
 			job_script += "\n"
 			job_script += "# Setup CMSSW:\n"
@@ -93,9 +93,10 @@ def main():
 			if miniaod.mask:
 				job_script += ' mask="{}"'.format(miniaod.mask)
 			job_script += " &&\n"
-			if Dir.eos: job_script += "xrdcp -f {} root://cmseos.fnal.gov/{} &&\n".format(out_file, out_path)
-			else: job_script += "mv {} {} &&\n".format(out_file, out_path)
-			job_script += "rm {}\n".format(out_file)
+			if Dir.eos:
+				job_script += "xrdcp -f {} root://cmseos.fnal.gov/{} &&\n".format(out_file, out_path)
+				job_script += "rm {}\n".format(out_file)
+			else: job_script += "mv {} {}\n".format(out_file, out_path)
 			with open("{}/{}.sh".format(path, job_name), "w") as out:
 				out.write(job_script)
 	
