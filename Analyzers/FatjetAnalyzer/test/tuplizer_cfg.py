@@ -170,7 +170,8 @@ if (not in_files) and (not options.crab):
 	assert miniaod
 	if miniaod.files:
 		in_files = miniaod.files
-		if not miniaod.dir.eos: in_files = ["file:" + f for f in in_files]
+#		if not miniaod.dir.eos: in_files = ["file:" + f for f in in_files]		# This is broken ATM, I need a better way of knowing where data is
+		in_files = ["file:" + f if f[:7] != "/store/" else f for f in in_files]
 	else:
 		print "ERROR (tuplizer): What files should be run over?"
 		sys.exit()
