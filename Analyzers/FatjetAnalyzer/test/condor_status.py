@@ -107,7 +107,7 @@ def main():
 		indate = "170126_203418"
 	
 	for miniaod in miniaods:
-		indir = "/uscms/home/tote/8_0_20/Analyzers/FatjetAnalyzer/test/condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
+		indir = "condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
 		print "\nStatusing {}".format(miniaod.Name)
 		print "[..] Scanning the condor directory."
 		try:
