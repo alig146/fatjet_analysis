@@ -15,9 +15,9 @@ from truculence import utilities, cmssw, condor
 # /CLASSES
 
 # VARIABLES:
-cut_pt_filter = 400
+#cut_pt_filter = 400
 cut_eta_filter = 2.5
-#cut_pt_filter = 0
+cut_pt_filter = 0
 #cut_eta_filter = -1
 n_per = 10000
 Site = site.get_site()
@@ -52,7 +52,8 @@ def main():
 		for i, n in enumerate(miniaod.ns):
 			n_group += n
 			fname = miniaod.files[i]
-			if not Dir.eos: fname = "file:" + fname
+#			if not Dir.eos: fname = "file:" + fname
+			if fname[:7] != "/store/": fname = "file:" + fname
 			group.append(fname)
 			if (n_group >= n_per) or (i == len(miniaod.ns) - 1):
 				groups.append(group)
@@ -115,6 +116,8 @@ def main():
 			if Site.name == "cmslpc":
 				job_config += "notify_user = ${LOGNAME}@FNAL.GOV\n"
 				job_config += "x509userproxy = $ENV(X509_USER_PROXY)\n"
+			elif Site.name == "hexcms":
+				job_config += "x509userproxy = $ENV(HOME)/myproxy\n"
 			job_config += "request_memory = 3500\n"
 			job_config += "Queue 1\n"
 		
@@ -129,7 +132,8 @@ def main():
 		run_script += "# Grid proxy existence & expiration check:\n"
 		run_script += "PCHECK=`voms-proxy-info -timeleft`\n"
 		run_script += "if [[ ($? -ne 0) || (\"$PCHECK\" -eq 0) ]]; then\n"
-		run_script += "\tvoms-proxy-init -voms cms --valid 168:00\n"
+		if Site.name == "hexcms": run_script += "\tvoms-proxy-init -voms cms --valid 168:00 --out $HOME/myproxy\n"
+		else: run_script += "\tvoms-proxy-init -voms cms --valid 168:00\n"
 		run_script += "fi\n"
 		run_script += "\n"
 #		run_script += "# Copy python packages to CMSSW area:\n"

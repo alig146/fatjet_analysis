@@ -73,7 +73,7 @@ names_bkg = [
 
 def read_cutflow(tt_names):
 	rf = root.rfile("cutflow_plots.root")
-	ttrees = rf.get_ttrees()
+#	ttrees = rf.get_ttrees()
 	with open("cutflow.yaml") as f:
 		info = yaml.load(f)
 	
@@ -96,7 +96,7 @@ def read_cutflow(tt_names):
 
 def make_tables(results, name, caption="", n=3):
 	path = "cutflow_results/tables"
-	if not os.path.exists(path): os.mkdir(path)
+	if not os.path.exists(path): os.makedirs(path)
 	
 	tt_names = results.keys()
 	
@@ -104,6 +104,7 @@ def make_tables(results, name, caption="", n=3):
 	groups = [tt_names[i:n+i] for i in range(0, len(tt_names), n)]
 	for igroup, group in enumerate(groups):
 		table_name = "table_cutflow_{}_{}".format(name, igroup)
+		label_name = "table:cutflow_{}_{}".format(name, igroup)
 		
 		# Open the table:
 		n_ds = len(group)
@@ -140,7 +141,9 @@ def make_tables(results, name, caption="", n=3):
 			table += "\t\t" + row
 
 		# Close the table:
-		table += "\t\end{tabular}}\n\end{table}"
+		table += "\t\end{tabular}}\n"
+		table += "\t\label{" + label_name + "}\n"
+		table += "\end{table}"
 		tables[table_name] = table
 		
 		with open("{}/{}.tex".format(path, table_name), "w") as out:

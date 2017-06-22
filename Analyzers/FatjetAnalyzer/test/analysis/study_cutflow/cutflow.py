@@ -19,8 +19,8 @@ from ROOT import TFile, TCut, TH1F, gROOT
 # /CLASSES
 
 # VARIABLES:
-#anatuple_in = "~/anatuples/anatuple_sqto4j_0706_cutpt400eta25.root"
-anatuple_in = "~/anatuples/anatuple_cutpt400eta25.root"
+#anatuple_in = "~/anatuples/anatuple_cutpt400eta25.root"
+anatuple_in = "~/anatuples/anatuple_cutpt400eta25_prextau.root"
 # /VARIABLES
 
 # FUNCTIONS:
@@ -103,22 +103,22 @@ def main():
 			if True:
 				ths[tt_name, "sig", "n"].Fill(0)
 				ths[tt_name, "sig", "w"].Fill(0, event.w)
-				if event.htak8 > 900:
+				if event.htak8 > 900 and max(event.m_t) > 50:
 					ths[tt_name, "sig", "n"].Fill(1)
 					ths[tt_name, "sig", "w"].Fill(1, event.w)
-					if max(event.m_t) > 50:
+					if min(event.pt) > 400 and max([abs(v) for v in event.eta]):
 						ths[tt_name, "sig", "n"].Fill(2)
 						ths[tt_name, "sig", "w"].Fill(2, event.w)
-						if min(event.tau21) > 0.5:
+						if event.deta < 1.0:
 							ths[tt_name, "sig", "n"].Fill(3)
 							ths[tt_name, "sig", "w"].Fill(3, event.w)
-							if event.deta < 1.0:
+							if max(event.tau43) < 0.80:
 								ths[tt_name, "sig", "n"].Fill(4)
 								ths[tt_name, "sig", "w"].Fill(4, event.w)
-								if max(event.tau43) < 0.80:
+								if max(event.tau42) < 0.45:
 									ths[tt_name, "sig", "n"].Fill(5)
 									ths[tt_name, "sig", "w"].Fill(5, event.w)
-									if max(event.tau42) < 0.45:
+									if max(event.tau21) < 0.75:
 										ths[tt_name, "sig", "n"].Fill(6)
 										ths[tt_name, "sig", "w"].Fill(6, event.w)
 										if event.masy_p < 0.1:
