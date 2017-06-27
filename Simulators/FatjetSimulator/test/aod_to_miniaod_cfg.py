@@ -1,13 +1,13 @@
-# Auto generated configuration file
-# using: 
-# Revision: 1.19 
-# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: --step PAT --mc --eventcontent MINIAODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --runUnscheduled --filein file:aod.root --fileout file:miniaod.root --datatier MINIAODSIM --no_exec -n 2 --python_filename aod_to_miniaod_cfg.py
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
 process = cms.Process('PAT',eras.Run2_25ns)
+
+from tools import get_options
+options = get_options()
+if not options.generation: options.generation = "moriond17"
+if not options.outFile: options.outFile = "file:miniaod_{}_{}.root".format(options.subprocess, options.generation)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -27,7 +27,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:aod.root'),
+    fileNames = cms.untracked.vstring(options.inFile),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -54,7 +54,7 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
     dropMetaData = cms.untracked.string('ALL'),
     eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
     fastCloning = cms.untracked.bool(False),
-    fileName = cms.untracked.string('file:miniaod.root'),
+    fileName = cms.untracked.string(options.outFile),
     outputCommands = process.MINIAODSIMEventContent.outputCommands,
     overrideInputFileSplitLevels = cms.untracked.bool(True)
 )
