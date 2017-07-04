@@ -1,10 +1,5 @@
 sig:
-    - "1"
-    - "htak8>900"
-    - "Max$(m_t)>50"
-    - "pt"
-    - "deta<1.0"
-    - "Max$(tau43)<0.80"
-    - "Max$(tau42)<0.45"
-    - "Min$(tau21)<0.75"
-    - "masy_p<0.1"
+    - "Pre-selection"                  # 0
+    - "$\\abs{\\Delta\\eta} < 1.0$"    # 1
+    - "$A_m < 0.1$"                    # 2
+    - "$\\tau_{ij}$ cuts"              # 3

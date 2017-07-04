@@ -24,7 +24,7 @@ def main():
 	f_in = sys.argv[1]
 	with open("cuts.yaml") as f:
 		known_cuts = yaml.load(f)
-	cut_key = "predeta"
+	cut_key = "pre"
 	if len(sys.argv) > 2:
 		if sys.argv[2] in known_cuts:
 			cut_key = sys.argv[2]

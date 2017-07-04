@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("Analyzer")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
-
+process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(False))
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
 
 process.source = cms.Source("PoolSource",
@@ -17,13 +17,10 @@ process.source = cms.Source("PoolSource",
     )
 )
 
-process.analyzer = cms.EDAnalyzer('MiniAODAnalyzer',
-#	genParticles=cms.InputTag("prunedGenParticles"),
+process.analyzer = cms.EDAnalyzer('SampleWeightAnalyzer',
 	genInfo=cms.InputTag("generator"),
-	pileupInfo=cms.InputTag("slimmedAddPileupInfo"),
-	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
-	triggerPrescales=cms.InputTag("patTrigger", ""),
 )
 
+process.TFileService = cms.Service("TFileService", fileName=cms.string('sample_weights.root'))
 
 process.p = cms.Path(process.analyzer)

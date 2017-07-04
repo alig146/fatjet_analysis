@@ -20,7 +20,8 @@ from ROOT import TFile, TCut, TH1F, gROOT
 
 # VARIABLES:
 #anatuple_in = "~/anatuples/anatuple_cutpt400eta25.root"
-anatuple_in = "~/anatuples/anatuple_cutpt400eta25_prextau.root"
+anatuple_in = "~/anatuples/anatuple_cutpt400eta25_pre.root"
+weight_factor = 38.180/2.183
 # /VARIABLES
 
 # FUNCTIONS:
@@ -99,31 +100,23 @@ def main():
 				th.GetXaxis().SetBinLabel(icut + 1, cut)
 	
 	for tt_name, ttree in ttrees.items():
-		for event in ttree:
-			if True:
+		print "[..] Making cutflow for {}.".format(tt_name)
+		wf = 1 if "jetht" in tt_name else weight_factor
+		print "\tWill apply a weight factor of {:.2f}".format(wf)
+		for ievent, event in enumerate(ttree):
+			if ievent%10000 == 0: print "\t[..] Processing event {}.".format(ievent)
+			if event.htak8 > 900 and max(event.m_t) > 50 and min(event.pt) > 400 and max([abs(v) for v in event.eta]) < 2.0:
 				ths[tt_name, "sig", "n"].Fill(0)
-				ths[tt_name, "sig", "w"].Fill(0, event.w)
-				if event.htak8 > 900 and max(event.m_t) > 50:
+				ths[tt_name, "sig", "w"].Fill(0, event.w*wf)
+				if event.deta < 1.0:
 					ths[tt_name, "sig", "n"].Fill(1)
-					ths[tt_name, "sig", "w"].Fill(1, event.w)
-					if min(event.pt) > 400 and max([abs(v) for v in event.eta]):
+					ths[tt_name, "sig", "w"].Fill(1, event.w*wf)
+					if event.masy_p < 0.1:
 						ths[tt_name, "sig", "n"].Fill(2)
-						ths[tt_name, "sig", "w"].Fill(2, event.w)
-						if event.deta < 1.0:
+						ths[tt_name, "sig", "w"].Fill(2, event.w*wf)
+						if max(event.tau43) < 0.80 and max(event.tau42) < 0.45 and max(event.tau21) < 0.75:
 							ths[tt_name, "sig", "n"].Fill(3)
-							ths[tt_name, "sig", "w"].Fill(3, event.w)
-							if max(event.tau43) < 0.80:
-								ths[tt_name, "sig", "n"].Fill(4)
-								ths[tt_name, "sig", "w"].Fill(4, event.w)
-								if max(event.tau42) < 0.45:
-									ths[tt_name, "sig", "n"].Fill(5)
-									ths[tt_name, "sig", "w"].Fill(5, event.w)
-									if max(event.tau21) < 0.75:
-										ths[tt_name, "sig", "n"].Fill(6)
-										ths[tt_name, "sig", "w"].Fill(6, event.w)
-										if event.masy_p < 0.1:
-											ths[tt_name, "sig", "n"].Fill(7)
-											ths[tt_name, "sig", "w"].Fill(7, event.w)
+							ths[tt_name, "sig", "w"].Fill(3, event.w*wf)
 	for th in ths.values(): th.Write()
 	sys.exit()
 	

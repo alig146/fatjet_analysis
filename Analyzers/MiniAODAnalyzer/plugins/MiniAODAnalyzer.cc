@@ -36,6 +36,7 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 // NAMESPACES:
 using namespace std;
@@ -67,6 +68,7 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 
       // ----------member data ---------------------------
       int nevents;
+      EDGetTokenT<GenEventInfoProduct> genInfo_;
       EDGetTokenT<vector<reco::GenParticle>> genParticles_;
       EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo_;
       EDGetTokenT<TriggerResults> triggerResults_;
@@ -86,6 +88,7 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 //
 MiniAODAnalyzer::MiniAODAnalyzer(const edm::ParameterSet& iConfig):
 //	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles")))
+	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
 	pileupInfo_(consumes<vector<PileupSummaryInfo>>(iConfig.getParameter<InputTag>("pileupInfo"))),
 	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
 	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales")))
@@ -117,6 +120,8 @@ MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 {
 //	Handle<vector<reco::GenParticle>> genParticles;
 //	iEvent.getByToken(genParticles_, genParticles);
+	Handle<GenEventInfoProduct> genInfo;
+	iEvent.getByToken(genInfo_, genInfo);
 	Handle<TriggerResults> triggerResults;
 	iEvent.getByToken(triggerResults_, triggerResults);
 	Handle<pat::PackedTriggerPrescales> triggerPrescales;
@@ -132,8 +137,8 @@ MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 //                ": " << (triggerResults->accept(i) ? "PASS" : "fail (or not run)")
 //                << std::endl;
 //    }
-
-	cout << pileupInfo->size() << endl;
+	cout << genInfo->weight() << endl;
+//	cout << pileupInfo->size() << endl;
 	
 	nevents ++;
 	
