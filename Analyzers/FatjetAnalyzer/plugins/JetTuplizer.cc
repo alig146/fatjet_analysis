@@ -42,10 +42,12 @@
 //#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+///// Pile-up re-weighting:
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 ///// JEC:
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
@@ -96,6 +98,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 	private:
 		virtual void beginJob();
 		virtual void process_triggers(const edm::Event&, EDGetTokenT<TriggerResults>, EDGetTokenT<pat::PackedTriggerPrescales>);
+		virtual void process_pileup(const edm::Event&, LumiReWeighting, EDGetTokenT<vector<PileupSummaryInfo>>);
 		virtual void process_jets_pf(const edm::Event&, string, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
 		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
@@ -122,6 +125,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 	int in_type_;               // Input type (0: B2G, 1: fatjets)
 	double sigma_, weight_, cut_pt_;
 	bool make_gen_, make_pf_;		// Controls to make gen fatjets or pf fatjets
+	string pileup_path_;
 	string jec_version_;
 	// Basic fatjet variables
 	// Algorithm variables
@@ -131,6 +135,9 @@ class JetTuplizer : public edm::EDAnalyzer {
 	vector<string> jet_names, jet_types, jet_collections;
 	vector<string> lep_names, lep_types;
 	vector<string> gen_names, gen_types;
+	
+	// Pile-up re-weighting components:
+	LumiReWeighting lumi_weights;
 	
 	// JEC info:
 	string jec_prefix;
@@ -209,6 +216,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	sigma_(iConfig.getParameter<double>("sigma")),
 	weight_(iConfig.getParameter<double>("weight")),
 	cut_pt_(iConfig.getParameter<double>("cut_pt")),
+	pileup_path_(iConfig.getParameter<string>("pileup_path")),
 	jec_version_(iConfig.getParameter<string>("jec_version")),
 	// Consume statements:
 	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
@@ -322,7 +330,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"event",
 		"lumi",
 		"run",
-		"tnpv",       // True number of interactions (used in pile-up re-weighting)
+		"wpu",        // Pile-up re-weighting factor
 		"trig_pfht800",
 		"trig_pfht900",
 		"trig_pfak8ht650mt50",
@@ -389,6 +397,9 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		string branch_name = *i;
 		tbranches["event"][*i] = ttrees["events"]->Branch(branch_name.c_str(), &(branches["event"][*i]), 64000, 0);
 	}
+	
+	// Pile-up re-weighting setup:
+	lumi_weights = LumiReWeighting(pileup_path_ + "pileup_distribution_moriond17.root", pileup_path_ + "pileup_distribution_data16.root", "pileup", "pileup");
 	
 	// JEC setup:
 	if (is_data_) jec_prefix = jec_version_ + "_DATA";
@@ -480,6 +491,28 @@ void JetTuplizer::beginJob()
 }
 
 // CLASS METHODS ("method" = "member function")
+/// Pile-up re-weighting calculation:
+void JetTuplizer::process_pileup(const edm::Event& iEvent, LumiReWeighting weights, EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo) {
+	if (v_) cout << "Begin process_pileup." << endl;
+	float tnpv = -1;
+	float wpu = 1;
+	if (!is_data_) {
+		Handle<vector<PileupSummaryInfo>> info;
+		iEvent.getByToken(pileupInfo, info);
+		for (std::vector<PileupSummaryInfo>::const_iterator pvi = info->begin(); pvi != info->end(); ++pvi) {
+			int bx = pvi->getBunchCrossing();
+			if (bx == 0) {
+				tnpv = pvi->getTrueNumInteractions();
+				continue;
+			}
+		}
+		wpu = weights.weight(tnpv);
+	}
+	if (v_) cout << "wpu = " << wpu << endl;
+	branches["event"]["wpu"].push_back(wpu);
+	if (v_) cout << "End process_pileup." << endl;
+}
+
 /// Trigger bits method:
 void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<TriggerResults> resultsToken, EDGetTokenT<pat::PackedTriggerPrescales> prescalesToken) {
 	if (v_) cout << "Begin process_triggers." << endl;
@@ -1240,21 +1273,6 @@ void JetTuplizer::analyze(
 				npv += 1;
 			}
 		}
-		/// True number of interactions (for pile-up re-weighting):
-		/// https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupMCReweightingUtilities#Calling_the_Function_to_get_an_E
-		float tnpv = -1;
-		if (!is_data_) {
-			Handle<vector<PileupSummaryInfo>> pileupInfo;
-			iEvent.getByToken(pileupInfo_, pileupInfo);
-			for (std::vector<PileupSummaryInfo>::const_iterator pvi = pileupInfo->begin(); pvi != pileupInfo->end(); ++pvi) {
-				int bx = pvi->getBunchCrossing();
-				if (bx == 0) {
-					tnpv = pvi->getTrueNumInteractions();
-					continue;
-				}
-			}
-		}
-		
 		/// Save event-wide variables:
 		branches["event"]["sigma"].push_back(sigma_);             // Provided in the configuration file
 //		cout << n_event << endl;
@@ -1266,9 +1284,9 @@ void JetTuplizer::analyze(
 		branches["event"]["lumi"].push_back(iEvent.id().luminosityBlock());
 		branches["event"]["run"].push_back(iEvent.id().run());
 		branches["event"]["npv"].push_back(npv);
-		branches["event"]["tnpv"].push_back(tnpv);
 		
 		// Process each object collection:
+		process_pileup(iEvent, lumi_weights, pileupInfo_);
 		process_triggers(iEvent, triggerResults_, triggerPrescales_);
 		process_jets_pf(iEvent, "ak4", "", ak4PFCollection_);
 		process_jets_pf(iEvent, "ak4", "Filtered", ak4PFFilteredCollection_);
@@ -1296,10 +1314,12 @@ void JetTuplizer::analyze(
 		process_photons_pf(iEvent, photonCollection_);
 		if (!is_data_) {process_quarks_gn(iEvent, genCollection_);}
 		match_bjets();
-		find_btagsf(btagsf_reader);		// Seg faults ... (170119)
+		find_btagsf(btagsf_reader);
 		
 		// Fill ntuple:
+		if (v_) cout << "Begin tuple fill." << endl;
 		ttrees["events"]->Fill();		// Fills all defined branches.
+		if (v_) cout << "End tuple fill." << endl;
 	}                 // :End in_type == 1
 	else {
 		cout << "You input an unknown \"in type\": " << in_type_ << endl;

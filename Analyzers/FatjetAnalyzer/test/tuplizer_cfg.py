@@ -37,7 +37,8 @@ def check_jec(jec_path, data=False, algorithm="ak8"):
 
 # SET UP:
 ## Very basic variables:
-out_dir_default = "~/temp"             # This is where output goes when it's not put into EOS by CRAB.
+#out_dir_default = "~/temp"             # This is where output goes when it's not put into EOS by CRAB.
+out_dir_default = "."             # This is where output goes when it's not put into EOS by CRAB.
 cmssw_version = cmssw.get_version()                   # The CMSSW version that this configuration file is using.
 
 ## Construct process:
@@ -304,12 +305,13 @@ if not check_jec(jec_path, data=options.data):
 
 ## Initialize the EDAnalyzer:
 process.tuplizer = cms.EDAnalyzer("JetTuplizer",
-	v=cms.bool(False),
+	v=cms.bool(True),
 	is_data=cms.bool(options.data),
 	in_type=cms.int32(1),                    # Input type (0: B2G, 1: fatjets)
 	sigma=cms.double(sigma),                 # The dataset's cross section
 	weight=cms.double(options.weight),       # The event weight
 	cut_pt=cms.double(options.cutPtTuplizer),
+	pileup_path=cms.string("pileup_data/"),
 	jec_version=cms.string(jec_path),
 	genInfo=cms.InputTag("generator"),
 	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
