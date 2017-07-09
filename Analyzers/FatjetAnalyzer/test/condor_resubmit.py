@@ -45,10 +45,10 @@ def main():
 		indate = "161118_062506"
 	
 	for miniaod in miniaods:
-		indir = "/uscms/home/tote/8_0_20/Analyzers/FatjetAnalyzer/test/condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
+		indir = "condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
 		print "\n[..] Remaking the CMSSW tarball."
 		if not condor.tar_cmssw(indir):
-			print "[!!] Something went wrong."
+			print "[!!] Something went wrong making the tarball."
 			continue
 		print "Resubmitting jobs for {}".format(miniaod.Name)
 		print "[..] Figuring out what jobs to resubmit."
