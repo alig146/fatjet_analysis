@@ -193,7 +193,7 @@ if not options.outFile:
 ## Process options:
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 if options.maxEvents > 1000 or options.maxEvents < 0:
-	process.MessageLogger.cerr.FwkReport.reportEvery = 100
+	process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet(
 	wantSummary=cms.untracked.bool(False),		# Turn off long summary after job.
 	allowUnscheduled=cms.untracked.bool(True),
@@ -305,7 +305,7 @@ if not check_jec(jec_path, data=options.data):
 
 ## Initialize the EDAnalyzer:
 process.tuplizer = cms.EDAnalyzer("JetTuplizer",
-	v=cms.bool(True),
+	v=cms.bool(False),
 	is_data=cms.bool(options.data),
 	in_type=cms.int32(1),                    # Input type (0: B2G, 1: fatjets)
 	sigma=cms.double(sigma),                 # The dataset's cross section
