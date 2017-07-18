@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Hadronizer_TuneCUETP8M1_13TeV_generic_LHE_pythia8_cff.py --step GEN,SIM,DIGI,L1,DIGI2RAW,HLT,RAW2DIGI,RECO --mc --eventcontent AODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --filein file:sg300to5j.lhe --filetype LHE --fileout file:aod.root --datatier AODSIM --no_exec -n 2 --python_filename aod_template_cfg.py
+# with command line options: Hadronizer_TuneCUETP8M1_13TeV_generic_LHE_pythia8_cff.py --step GEN,SIM,DIGI,L1,DIGI2RAW,HLT,RAW2DIGI,RECO --mc --eventcontent AODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --filein file:sg300to5j.lhe --filetype LHE --fileout file:aod.root --datatier AODSIM --no_exec -n 2 --python_filename aod_template_cfg.py --pileup 2016_25ns_Moriond17MC_PoissonOOTPU
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -14,7 +14,7 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
-process.load('SimGeneral.MixingModule.mixNoPU_cfi')
+process.load('SimGeneral.MixingModule.mix_2016_25ns_Moriond17MC_PoissonOOTPU_cfi')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.Geometry.GeometrySimDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
