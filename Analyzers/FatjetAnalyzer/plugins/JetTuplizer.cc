@@ -327,6 +327,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"w",          // Event weight
 		"rho",
 		"npv",        // Number of primary vertices
+		"tnpv",       // True number of primary vertices
 		"event",
 		"lumi",
 		"run",
@@ -510,6 +511,7 @@ void JetTuplizer::process_pileup(const edm::Event& iEvent, LumiReWeighting weigh
 	}
 	if (v_) cout << "wpu = " << wpu << endl;
 	branches["event"]["wpu"].push_back(wpu);
+	branches["event"]["tnpv"].push_back(tnpv);
 	if (v_) cout << "End process_pileup." << endl;
 }
 
