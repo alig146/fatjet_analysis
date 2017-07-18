@@ -23,9 +23,13 @@ def main():
 	a = variables.arguments()
 	args = a.args
 	tuples = dataset.fetch_entries("tuple", a.query)
-	tuples = dataset.sort_datasets(tuples)
+	tuples = dataset.sort_datasets(tuples, collapse=True)
 	tuples = {key.split("_")[0]: value for key, value in tuples.items()}		# Kludge to keep only "process" as the key.
 	
+	if not tuples:
+		print "ERROR: Your query resulted in no tuples:"
+		print a.query
+		sys.exit()
 	
 	## Print an introduction:
 	print "Making anatuplizer jobs for the following tuples:"

@@ -49,6 +49,16 @@ variables:
       dimension: 1
       type: event
       description: TTbar pT reweight, sqrt(sf0*sf1)
+      
+    - name: wpu
+      dimension: 1
+      type: event
+      description: Pileup re-weighting factor (for MC)
+      
+    - name: W
+      dimension: 1
+      type: event
+      description: Total weight, the product of all weights
     
 # Jet variables:
     - name: m

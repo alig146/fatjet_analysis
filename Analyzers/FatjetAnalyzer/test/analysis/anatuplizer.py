@@ -135,6 +135,10 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 				if var_type == "jet":
 					groomer = pieces[1] if len(pieces) > 1 else ""
 					for i in range(var_dim): branches[var_name][i] = getattr(event, "{}_pf{}_{}".format(alg, groomer, var_stem))[i]
+		
+		# Calculate total weight:
+		branches["W"][0] = branches["w"][0]*branches["wtt"][0]
+		if branches["wpu"][0]: branches["W"][0] *= branches["wpu"][0]
 	
 #	match_leptons(loop)
 	
@@ -153,7 +157,7 @@ def main():
 	tuples = a.input
 	if not tuples:
 		tuples = dataset.fetch_entries("tuple", a.query)
-		tuples = dataset.sort_datasets(tuples)
+		tuples = dataset.sort_datasets(tuples, collapse=True)		# This combines "extension" datasets in addition to other things.
 	else:
 		tuples = {args.process: tuples}
 	
@@ -174,7 +178,6 @@ def main():
 				print "\t\t* {}".format(tup)
 	else:
 		print "\t{}".format(tuples)
-	
 	out_dir = None
 	out_file = None
 	if args.output:
