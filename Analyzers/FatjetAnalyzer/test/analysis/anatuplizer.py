@@ -138,7 +138,7 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		
 		# Calculate total weight:
 		branches["W"][0] = branches["w"][0]*branches["wtt"][0]
-		if branches["wpu"][0]: branches["W"][0] *= branches["wpu"][0]
+		if branches["wpu"][0] > 0: branches["W"][0] *= branches["wpu"][0]
 	
 #	match_leptons(loop)
 	

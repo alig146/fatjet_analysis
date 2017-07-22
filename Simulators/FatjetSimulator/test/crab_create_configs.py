@@ -5,7 +5,7 @@ from truculence import lhe
 # :Imports
 
 # Variables:
-generation = "0706"
+generation = "moriond17"
 lhe_cut = "pt200"
 # :Variables
 
