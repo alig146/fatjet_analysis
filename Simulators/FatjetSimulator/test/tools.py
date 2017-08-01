@@ -69,6 +69,12 @@ def get_options():
 		VarParsing.varType.string,
 		"What is the dataset's generation (spring15, 0706, etc.)?"
 	)
+	options.register ('crab',
+		False,
+		VarParsing.multiplicity.singleton,
+		VarParsing.varType.bool,
+		"Crab flag"
+	)
 	options.maxEvents = 2
 	options.parseArguments()
 	return options
