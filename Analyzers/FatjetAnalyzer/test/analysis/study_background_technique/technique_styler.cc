@@ -1,0 +1,134 @@
+#include "/home/tote/decortication/macros/common.cc"
+
+void draw_first(TH1* fj) {
+	TString name = "technique_first";
+	TCanvas* tc = new TCanvas(name, name);
+	
+	fj->GetXaxis()->SetTitle("Jet fatjet mass [GeV]");
+	
+	fj->Draw("hist");
+	
+	TLegend* leg = new TLegend(0.47, 0.70, 0.77, 0.75);
+	leg->AddEntry(fj, "Tagged fatjets", "f");
+	leg->Draw();
+	
+	style_info();
+	txt_ds = style_write(name_proper["qcdmg"],  0.63, 0.78);
+//	txt_norm = style_write("#splitline{#bf{Normalization:}}{jet pair selection}",  0.55, 0.65);
+	txt_norm = style_write("Normalized to analysis region",  0.18, 0.94, 0.025);
+	
+	tc->SaveAs(name + ".pdf");
+}
+
+void draw_second(TH1* fj, TH1* tempp) {
+	TString name = "technique_second";
+	TCanvas* tc = new TCanvas(name, name);
+	TH1* temp = (TH1*) tempp->Clone("t");
+	
+	fj->GetXaxis()->SetTitle("(Average) fatjet mass [GeV]");
+	
+	temp->Rebin(50);
+	temp->Scale(fj->Integral()/temp->Integral());
+//	temp->SetMaximum(130);
+	
+	fj->Draw("hist");
+	temp->Draw("same hist");
+	
+	TLegend* leg = new TLegend(0.47, 0.65, 0.77, 0.75);
+	leg->AddEntry(fj, "Tagged fatjets", "f");
+	leg->AddEntry(temp, "QCD template", "f");
+	leg->Draw();
+	
+	style_info();
+	txt_ds = style_write(name_proper["qcdmg"],  0.63, 0.78);
+//	txt_norm = style_write("#splitline{#bf{Normalization:}}{jet pair selection}",  0.55, 0.60);
+	txt_norm = style_write("Normalized to analysis region",  0.18, 0.94, 0.025);
+	
+	tc->SaveAs(name + ".pdf");
+}
+
+void draw_third(TH1* temp, TH1* fjp) {
+	TString name = "technique_third";
+	TCanvas* tc = new TCanvas(name, name);
+	TH1 *cdf = make_cdf(temp);
+	
+	double newAmp = 1.5e-6;
+	double newShift = -10;
+	double newStretch = 1.0;
+	double newAmpe, newShifte, newStretche;
+	vector<double> bins {0, 50, 100, 150, 200, 250, 300, 400, 500, 600, 800};
+	perform_fit(fjp, cdf, bins, newAmp, newAmpe, newShift, newShifte, newStretch, newStretche);
+	std::cout << "Amp=" << newAmp << " +/- " << newAmpe << std::endl;
+	std::cout << "Shift=" << newShift << " +/- " << newShifte << std::endl;
+	std::cout << "Stretch=" << newStretch << " +/- " << newStretche << std::endl;
+	TH1* fit = (TH1*) temp->Clone("fit");
+	differentiate_cdf(cdf, fit, median_from_cdf(cdf), newAmp, newShift, newStretch);
+	
+	temp->GetXaxis()->SetTitle("Average fatjet mass [GeV]");
+	temp->Scale(fjp->Integral()/temp->Integral());
+	temp->Rebin(50);
+	style_ylabel(temp);
+	
+	fit->SetLineColor(kBlack);
+	fit->Rebin(50);
+	fit->SetFillStyle(0);
+	fit->SetLineStyle(0);
+	
+	fjp->Rebin(50);
+	
+	temp->SetMaximum(fjp->GetMaximum()*1.2);
+	temp->GetXaxis()->SetRangeUser(0, 1000);
+	temp->Draw("hist");
+	fit->Draw("same hist");
+	fjp->Draw("same e");
+	
+	TLegend* leg = new TLegend(0.49, 0.60, 0.79, 0.75);
+	leg->AddEntry(fjp, "Fatjet pairs", "lpe");
+	leg->AddEntry(temp, "QCD template", "f");
+	leg->AddEntry(fit, "Post-fit QCD template", "f");
+	leg->Draw();
+	
+	style_info();
+	txt_ds = style_write(name_proper["qcdmg"], 0.63, 0.78);
+//	txt_norm = style_write("#splitline{#bf{Normalization:}}{jet pair selection}",  0.55, 0.60);
+	txt_norm = style_write("Normalized to analysis region",  0.18, 0.94, 0.025);
+	
+	cout << temp->Integral() << endl;
+	cout << fit->Integral() << endl;
+	cout << fjp->Integral() << endl;
+	
+	tc->SaveAs(name + ".pdf");
+}
+
+void technique_styler(TString cut_sig="sigl") {
+	tf_in = TFile::Open(TString("technique_plots_") + cut_sig + ".root");
+	TH1* fjp = (TH1*) tf_in->Get("fjp");
+	TH1* fj = (TH1*) tf_in->Get("fj");
+//	TH1* temp_xht = fetch_template("qcdmg", cut_sig, "", 1, false);
+	TH1* temp = fetch_template("qcdmg", cut_sig);
+	gStyle->SetOptStat(0);
+	
+	TH1* fjpp = (TH1*) fjp->Clone("throwaway");
+	fjpp->Rebin(50);
+	
+	fj->SetTitle("");
+	fj->SetFillColor(kRed);
+	fj->SetFillStyle(3003);
+	fj->Rebin(50);
+	fj->Scale(fjp->Integral()/fj->Integral());
+	fj->SetMaximum(fjpp->GetMaximum()*1.2);
+	fj->GetXaxis()->SetRangeUser(0, 1000);
+	fj->GetXaxis()->SetNdivisions(405);
+	style_ylabel(fj);
+	
+	temp->SetTitle("");
+	temp->SetFillColorAlpha(kBlue-7, 0.2);
+	temp->SetLineStyle(2);
+	temp->SetMaximum(fjpp->GetMaximum()*1.2);
+	temp->GetXaxis()->SetRangeUser(0, 1000);
+	temp->GetXaxis()->SetNdivisions(405);
+	
+	draw_first(fj);
+	draw_second(fj, temp);
+	draw_third(temp, fjp);
+}

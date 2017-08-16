@@ -1,0 +1,393 @@
+variables:
+# Event variables:
+    - name: run
+      dimension: 1
+      type: event
+      description: run number
+    
+    - name: lumi
+      dimension: 1
+      type: event
+      description: lumisection number
+    
+    - name: event
+      dimension: 1
+      type: event
+      description: event number
+    
+    - name: w
+      dimension: 1
+      type: event
+      description: event weight
+    
+    - name: htak8
+      dimension: 1
+      type: event
+      description: HT of the event calculated from AK8 PF jets with pT > 150
+    
+    - name: wtt
+      dimension: 1
+      type: event
+      description: TTbar pT reweight, sqrt(sf0*sf1)
+    
+# Jet variables:
+    - name: m
+      dimension: 2
+      type: jet
+      description: ungroomed jet mass
+    
+    - name: m_p
+      dimension: 2
+      type: jet
+      description: pruned jet mass
+    
+    - name: m_t
+      dimension: 2
+      type: jet
+      description: trimmed jet mass
+    
+    - name: mavg
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair mass average
+    
+    - name: mavg_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair mass average
+    
+    - name: masy
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair mass asymmetry
+    
+    - name: masy_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair mass asymmetry
+    
+    - name: px
+      dimension: 2
+      type: jet
+      description: x-component of the ungroomed jet momentum
+    
+    - name: px_p
+      dimension: 2
+      type: jet
+      description: x-component of the pruned jet momentum
+    
+    - name: py
+      dimension: 2
+      type: jet
+      description: y-component of the ungroomed jet momentum
+    
+    - name: py_p
+      dimension: 2
+      type: jet
+      description: y-component of the pruned jet momentum
+    
+    - name: pz
+      dimension: 2
+      type: jet
+      description: z-component of the ungroomed jet momentum
+    
+    - name: pz_p
+      dimension: 2
+      type: jet
+      description: z-component of the pruned jet momentum
+    
+    - name: pt
+      dimension: 2
+      type: jet
+      description: ungroomed jet transverse momentum
+    
+    - name: pt_p
+      dimension: 2
+      type: jet
+      description: pruned jet transverse momentum
+    
+    - name: e
+      dimension: 2
+      type: jet
+      description: ungroomed jet energy
+    
+    - name: e_p
+      dimension: 2
+      type: jet
+      description: pruned jet energy
+    
+    - name: eta
+      dimension: 2
+      type: jet
+      description: ungroomed jet pseudorapidity
+    
+    - name: eta_p
+      dimension: 2
+      type: jet
+      description: pruned jet pseudorapidity
+    
+    - name: deta
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair pseudorapidity difference
+    
+    - name: deta_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair pseudorapidity difference
+    
+    - name: phi
+      dimension: 2
+      type: jet
+      description: ungroomed jet phi
+    
+    - name: phi_p
+      dimension: 2
+      type: jet
+      description: pruned jet phi
+    
+    - name: dr
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair pseudoangular separation
+    
+    - name: dr_p
+      dimension: 1
+      type: jet
+      description: pruned jet pair pseudoangular separation
+    
+    - name: tau43
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau42
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau21
+      dimension: 2
+      type: jet
+      description: ungroomed jet 2-subjettiness over 1-subjettiness
+    
+    - name: bd
+      dimension: 2
+      type: jet
+      description: ungroomed jet b-tag CSV discriminator
+    
+    - name: jec
+      dimension: 2
+      type: jet
+      description: ungroomed jet energy correction
+    
+    - name: jmc
+      dimension: 2
+      type: jet
+      description: ungroomed jet mass correction
+    
+# Subjet variables:
+    - name: spx0
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's leading subjet
+    
+    - name: spy0
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's leading subjet
+    
+    - name: spz0
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's leading subjet
+    
+    - name: se0
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's leading subjet
+    
+    - name: spt0
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's leading subjet
+    
+    - name: sm0
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's leading subjet
+    
+    - name: seta0
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's leading subjet
+    
+    - name: sphi0
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's leading subjet
+    
+    - name: spx1
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: spy1
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: spz1
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's second-leading subjet
+    
+    - name: se1
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's second-leading subjet
+    
+    - name: spt1
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's second-leading subjet
+    
+    - name: sm1
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's second-leading subjet
+    
+    - name: seta1
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's second-leading subjet
+    
+    - name: sphi1
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's second-leading subjet
+    
+    - name: spx2
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: spy2
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: spz2
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's third-leading subjet
+    
+    - name: se2
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's third-leading subjet
+    
+    - name: spt2
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's third-leading subjet
+    
+    - name: sm2
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's third-leading subjet
+    
+    - name: seta2
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's third-leading subjet
+    
+    - name: sphi2
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's third-leading subjet
+    
+    - name: spx3
+      dimension: 2
+      type: jet
+      description: x-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: spy3
+      dimension: 2
+      type: jet
+      description: y-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: spz3
+      dimension: 2
+      type: jet
+      description: z-component of momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: se3
+      dimension: 2
+      type: jet
+      description: energy of ungroomed jet's fourth-leading subjet
+    
+    - name: spt3
+      dimension: 2
+      type: jet
+      description: transverse momentum of ungroomed jet's fourth-leading subjet
+    
+    - name: sm3
+      dimension: 2
+      type: jet
+      description: mass of ungroomed jet's fourth-leading subjet
+    
+    - name: seta3
+      dimension: 2
+      type: jet
+      description: pseudorapidity of ungroomed jet's fourth-leading subjet
+    
+    - name: sphi3
+      dimension: 2
+      type: jet
+      description: phi of ungroomed jet's fourth-leading subjet
+    
+    - name: sm0hat
+      dimension: 2
+      type: jet
+    
+    - name: sm1hat
+      dimension: 2
+      type: jet
+    
+    - name: sm2hat
+      dimension: 2
+      type: jet
+    
+    - name: sm3hat
+      dimension: 2
+      type: jet
+    
+    - name: sm4hat
+      dimension: 2
+      type: jet
+    
+    - name: sm5hat
+      dimension: 2
+      type: jet
+    
+    - name: sd
+      dimension: 2
+      type: jet
+    
+    - name: smm0hat
+      dimension: 2
+      type: jet
+    
+    - name: smm1hat
+      dimension: 2
+      type: jet
+    
+    - name: smm2hat
+      dimension: 2
+      type: jet
+    
+    - name: smd
+      dimension: 2
+      type: jet
+    

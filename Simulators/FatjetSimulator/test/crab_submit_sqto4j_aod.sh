@@ -1,0 +1,14 @@
+crab submit crab_configs/sq100to4j_moriond17_aod.py
+crab submit crab_configs/sq100to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq150to4j_moriond17_aod.py
+crab submit crab_configs/sq150to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq200to4j_moriond17_aod.py
+crab submit crab_configs/sq200to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq250to4j_moriond17_aod.py
+crab submit crab_configs/sq250to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq300to4j_moriond17_aod.py
+crab submit crab_configs/sq300to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq400to4j_moriond17_aod.py
+crab submit crab_configs/sq400to4j_cutht700_moriond17_aod.py
+crab submit crab_configs/sq500to4j_moriond17_aod.py
+crab submit crab_configs/sq500to4j_cutht700_moriond17_aod.py
