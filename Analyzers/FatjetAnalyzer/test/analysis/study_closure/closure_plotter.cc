@@ -1,11 +1,13 @@
 #include "/home/tote/decortication/macros/common.cc"
 
-void draw_plot(TString name, TString ds, TH1* data, TH1* temp, TH1* fit, TH1* params, int logy=0) {
+void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1* fit, TH1* params, vector<Double_t> stats, int logy=0) {
+	// Make pull:
 	TCanvas* tc = draw_pull(name, data, fit, 0, 1200);
 	TPad* pad = (TPad*) tc->GetPad(1);
 	pad->cd();
 	tc->SetLogy(logy);
 	
+	// Draw upper pad:
 	temp->Draw("hist");
 	fit->Draw("same");
 	data->Draw("same e");
@@ -15,20 +17,38 @@ void draw_plot(TString name, TString ds, TH1* data, TH1* temp, TH1* fit, TH1* pa
 	}
 	else if (logy == 1) {
 		temp->SetMinimum(0.1);
-		temp->SetMaximum(data->GetMaximum()*4);
+		temp->SetMaximum(data->GetMaximum()*10);
 	}
+	temp->GetXaxis()->SetLabelOffset(100);
 	pad->SetLogy(logy);
 	
 	TLegend* leg;
-	if (logy == 0) leg = new TLegend(0.55, 0.42, 0.80, 0.57);
+	if (logy == 0) leg = new TLegend(0.55, 0.57, 0.80, 0.72);
 	else if (logy == 1) leg = new TLegend(0.22, 0.1, 0.48, 0.25);
 	leg->AddEntry(data, "Jet pair selection", "ple");
 	leg->AddEntry(temp, "Derived template", "f");
 	leg->AddEntry(fit, "Post-fit template", "f");
 	leg->Draw();
 	style_info(false, lum_string["all"], 1, true);
+	style_write(TString("Selection: #bf{") + cut_proper[cut] + "}",  0.18, 0.94, 0.032);
 	
 	style_write(name_proper[ds], 0.61, 0.74, 0.04);
+	
+	// Statistical text:
+	TFile* tf_stats = TFile::Open(name + ".root");
+	TH1* hstats = (TH1*) tf_stats->Get("stats");
+//	cout << "Pull Chi2/ndf = " << stats->GetBinContent(3) << endl;
+//	cout << "KS probability = " << data->KolmogorovTest(fit) << endl;
+	vector<TString> texts_stats;
+	texts_stats.push_back("#bf{Statistics:}");
+	std::ostringstream oss_stats1;
+	oss_stats1 << "KS prob. = " << std::fixed << std::setprecision(3) << stats[0];
+	std::ostringstream oss_stats2;
+	oss_stats2 << "pull #chi^{2}/NDF = " << std::fixed << std::setprecision(2) << hstats->GetBinContent(3);
+	texts_stats.push_back(oss_stats2.str());
+	texts_stats.push_back(oss_stats1.str());
+	if (logy == 1) style_write(texts_stats, 0.21, 0.87, 0.035);
+	else if (logy == 0) style_write(texts_stats, 0.55, 0.35, 0.035);
 	
 	// Write params:
 	std::ostringstream oss1;
@@ -41,12 +61,14 @@ void draw_plot(TString name, TString ds, TH1* data, TH1* temp, TH1* fit, TH1* pa
 	texts_par.push_back("#bf{Fit parameters:}");
 	texts_par.push_back(oss1.str());
 	texts_par.push_back(oss2.str());
-	style_write(texts_par, 0.55, 0.67, 0.035);
+	if (logy == 1) style_write(texts_par, 0.55, 0.67, 0.035);
+	else if (logy == 0) style_write(texts_par, 0.55, 0.50, 0.035);
 	
 	tc->SaveAs(name + ".pdf");
+	tc->SaveAs(name + ".png");
 }
 
-void closure_plotter(TString cut_name="sb", TString ds="jetht", int nrebin=30, bool ht=true, TString dir="", int f=1) {
+void closure_plotter(TString cut_name="sb", TString ds="qcdmg", int nrebin=30, bool ht=true, TString dir="", int f=1) {
 //	TFile* tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
 	TFile* tf_in = get_ana();
 	
@@ -56,6 +78,9 @@ void closure_plotter(TString cut_name="sb", TString ds="jetht", int nrebin=30, b
 	TH1 *h_fjp = (TH1*) gDirectory->Get(ds + "_fjp");
 	TH1* h_temp = fetch_template(ds, cut_name, dir, f, ht);
 	TH1 *h_cdf = make_cdf(h_temp, ds + "_cdf");
+	
+	/// Save untouched plots for use later:
+	TH1* h_fjp_original = (TH1*) h_fjp->Clone("fjp");
 	
 	/// best guesses for the amplitude, shift, and stretch:
 	double amp = h_fjp->Integral(1, h_fjp->GetNbinsX())/h_temp->Integral(1, h_temp->GetNbinsX());
@@ -181,6 +206,10 @@ void closure_plotter(TString cut_name="sb", TString ds="jetht", int nrebin=30, b
 	// Normalize unfitted stuff: (Don't normalize it before fitting!)
 	h_temp->Scale(h_fjp->Integral(1, h_fjp->GetNbinsX())/h_temp->Integral(1, h_temp->GetNbinsX()));
 	
+	// Calculate some stats:
+	vector<Double_t> stats;
+	stats.push_back(h_fjp->KolmogorovTest(h_fit));
+	
 	// Histogram styling:
 	gStyle->SetOptStat(0);
 	
@@ -196,9 +225,6 @@ void closure_plotter(TString cut_name="sb", TString ds="jetht", int nrebin=30, b
 	h_temp->SetMaximum(200);
 	h_temp->SetMinimum(0.01);
 	h_temp->GetXaxis()->SetNdivisions(406);
-//		h_fj->Rebin(50);
-//		h_fj->SetFillColor(kRed-4);
-//		h_fj->SetFillStyle(3003);
 	h_fit->Rebin(nrebin);
 	h_fit->SetLineWidth(2);
 	h_fit->SetFillStyle(0);
@@ -211,8 +237,9 @@ void closure_plotter(TString cut_name="sb", TString ds="jetht", int nrebin=30, b
 		if (!ht) name = name + "_xht";
 		if (dir != "") name + "_" + dir;
 		if (i == 1) name = name + "_logy";
-		draw_plot(name, ds, h_fjp, h_temp, h_fit, params, i);
+		draw_plot(name, ds, cut_name, h_fjp, h_temp, h_fit, params, stats, i);
 	}
+	
 }
 
 

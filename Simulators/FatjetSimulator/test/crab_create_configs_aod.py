@@ -51,20 +51,21 @@ if __name__ == "__main__":
 		)
 		with open(path + "/{}_{}_aod.py".format(lhe_file.replace(".lhe", ""), generation), "w") as out:
 			out.write(config)
-		# Make MiniAOD CRAB config file:
-		config = production.get_crab_config(
-			sample=sample,
-			kind="miniaod",
-			generation=generation,
-			dataset_out=dataset_name,
-			instance="phys03",
-			cmssw_config='aod_to_miniaod_cfg.py',
-#			cmssw_params={
-#				"inFile": "root://cmseos.fnal.gov//store/user/tote/lhe/{}".format(lhe_file),
-#			},
-			units=lhe_n,
-			unitsper=100
-		)
-		with open(path + "/{}_{}_miniaod.py".format(sample.subprocess, generation), "w") as out:
-			out.write(config)
+#		# Make MiniAOD CRAB config file:
+#		config = production.get_crab_config(
+#			sample=sample,
+#			kind="miniaod",
+#			dataset_in="",
+#			generation=generation,
+#			dataset_out=dataset_name,
+#			instance="phys03",
+#			cmssw_config='aod_to_miniaod_cfg.py',
+##			cmssw_params={
+##				"inFile": "root://cmseos.fnal.gov//store/user/tote/lhe/{}".format(lhe_file),
+##			},
+#			units=lhe_n,
+#			unitsper=100
+#		)
+#		with open(path + "/{}_{}_miniaod.py".format(sample.subprocess, generation), "w") as out:
+#			out.write(config)
 

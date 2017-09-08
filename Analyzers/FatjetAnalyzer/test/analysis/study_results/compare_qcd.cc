@@ -52,6 +52,7 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 //	style_write(name_proper[ds], 0.61, 0.74, 0.04);
 	
 	tc->SaveAs(name + ".pdf");
+	tc->SaveAs(name + ".png");
 }
 
 void compare_qcd() {

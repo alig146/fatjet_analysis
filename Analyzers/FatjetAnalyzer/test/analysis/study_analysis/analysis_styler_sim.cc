@@ -8,7 +8,8 @@ bool VERBOSE = true;
 void analysis_styler_sim(TString cut_name="sb", int f=1, int nrebin=30, double xmax=900) {
 //	if (cut_name == "sbtb") assert(nrebin == 50);
 //	if (cut_name == "sbtb" || cut_name == "sbideb") assert(nrebin == 30);
-	assert(nrebin == 30);
+	if (cut_name != "sig15") assert(nrebin == 30);
+	else assert(nrebin == 50);
 	
 	// Define input and output:
 	TString name = cut_name + "_f" + to_string(f);
@@ -237,7 +238,27 @@ void analysis_styler_sim(TString cut_name="sb", int f=1, int nrebin=30, double x
 		newShift2 = -10.0;
 		newStretch2 = 1.0;
 	}
-	if (cut_name != "sbtb" && cut_name != "sbideb" && cut_name != "sbl43b") perform_stacked_fit(h_fjp_jetht, h_cdf_jetht, h_cdf_ttbar, bins, newAmp1, newAmpe1, newShift1, newShifte1, newStretch1, newStretche1, newAmp2, newAmpe2, newShift2, newShifte2, newStretch2, newStretche2);
+	else if (cut_name == "sig") {
+//		bins = {60, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570};
+		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 390, 510, 540, 570, 600, 630};
+		newAmp1 = 1.2;
+		newShift1 = -20;
+		newStretch1 = 1.00;
+		newAmp2 = 1.0;
+		newShift2 = -10.0;
+		newStretch2 = 1.0;
+	}
+	else if (cut_name == "sig15") {
+//		bins = {60, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570};
+		bins = {0, 50, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600};
+		newAmp1 = 1.0;
+		newShift1 = 0.0;
+		newStretch1 = 1.00;
+		newAmp2 = 1.0;
+		newShift2 = -10.0;
+		newStretch2 = 1.0;
+	}
+	if (cut_name != "sbtb" && cut_name != "sbideb" && cut_name != "sbl43b" && cut_name != "sig15") perform_stacked_fit(h_fjp_jetht, h_cdf_jetht, h_cdf_ttbar, bins, newAmp1, newAmpe1, newShift1, newShifte1, newStretch1, newStretche1, newAmp2, newAmpe2, newShift2, newShifte2, newStretch2, newStretche2);
 	else perform_stacked_fit_chi(h_fjp_jetht, h_cdf_jetht, h_cdf_ttbar, bins, newAmp1, newAmpe1, newShift1, newShifte1, newStretch1, newStretche1, newAmp2, newAmpe2, newShift2, newShifte2, newStretch2, newStretche2);
 	
 	if (VERBOSE) {

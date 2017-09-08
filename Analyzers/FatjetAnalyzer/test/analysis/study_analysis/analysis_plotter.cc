@@ -50,7 +50,8 @@ void analysis_plotter(TString cut="sbb", int f=1, TString groom_name="p") {
 	
 	// Make CDFs:
 //	if (cut == "sbl" || cut == "sbb") h_fjp_ttbar->Rebin(10);
-	if (cut == "sig15" || cut == "sig") h_fjp_ttbar->Rebin(1);
+	if (cut == "sig") h_fjp_ttbar->Rebin(30);
+	else if (cut == "sig15") h_fjp_ttbar->Rebin(50);
 	else if (cut == "sbl") h_fjp_ttbar->Rebin(5);
 	else {
 		h_fjp_ttbar->Rebin(30);
