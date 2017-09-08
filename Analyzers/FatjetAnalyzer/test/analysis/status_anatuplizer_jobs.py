@@ -33,6 +33,7 @@ def main():
 #	queue_results = check_queue(miniaod)
 	if 0 in log_results: print "{}/{} jobs completed successfully.".format(len(log_results[0]), njobs)
 	if -1 in log_results: print "{}/{} jobs are unsubmitted or running.".format(len(log_results[-1]), njobs)
+#	print log_results
 #	for key, nlist in queue_results.items(): print "\t{}/{} jobs are {}.".format(len(nlist), len(log_results[-1]), queue_codes[key] if key in queue_codes else "?")
 	for code, jobs in {key: value for key, value in log_results. items() if key > 0}.items():
 		print "{}/{} jobs have error code {}: {}".format(len(log_results[code]), njobs, code, condor.error_codes[code])
@@ -42,9 +43,10 @@ def main():
 	if args.json:
 		jobs_resubmit = jobs_error #+ jobs_unsub
 		print "[..] Resubmitting {} jobs:".format(len(jobs_resubmit))
-		print jobs_resubmit
+		job_files = ["analyzer_job{}_{}.jdl".format(n, tstring) for n in jobs_resubmit]
+#		print job_files
 		condor.tar_cmssw(args.dir)
-		condor.submit_jobs(args.dir, jobs_resubmit, prefix="analyzer_{}".format(tstring))
+		condor.submit_jobs_by_name(args.dir, job_files)
 # /FUNCTIONS
 
 # MAIN:
