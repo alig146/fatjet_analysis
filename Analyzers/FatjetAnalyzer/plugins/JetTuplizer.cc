@@ -261,7 +261,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	jet_types = {"pf", "pff", "pfp", "pfs", "pft", "gn", "maod"};
 	jet_collections = {
 		"ak4_maod", "ak4_gn", "ak4_pf",
-		"ak8_maod", "ak8_gn", "ak8_pf",
+		"ak8_maod", "ak8_gn", "ak8_pf", "ak8_pfp",
 		"ca12_gn", "ca12_pf", "ca12_pff", "ca12_pfp", "ca12_pfs", "ca12_pft"
 	};
 	jet_variables = {		// List of event branch variables for each collection.

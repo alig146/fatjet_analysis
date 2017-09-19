@@ -57,11 +57,13 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 	n_events_tc = loop.n                      # The total number of events in the TChain
 	n_events = loop.n_run                     # The number of events to anatuplize
 	
-	groomers = ["", "f", "p", "s", "t"]
+#	groomers = ["", "f", "p", "s", "t"]
+	groomers = ["", "p"]
 	if all([len(getattr(event, "{}_pf{}_pt".format(alg, groomer))) > 1 for groomer in groomers]):   # Sometimes there might not be two jets?
 		vars_calc = {};
 		for groomer in groomers:
 			suffix = groomer if not groomer else "_" + groomer
+#			print suffix
 			
 			vars_calc["jec" + suffix] = [getattr(event, "{}_pf{}_jec".format(alg, groomer))[i] for i in range(2)]
 			vars_calc["jmc" + suffix] = [getattr(event, "{}_pf{}_jmc".format(alg, groomer))[i] for i in range(2)]
@@ -120,9 +122,9 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 			elif var_name == "htak8": branches[var_name][0] = getattr(event, "ak8_pf_ht")[0]
 			elif var_name == "wtt": branches[var_name][0] = (getattr(event, "q_gn_sf")[0]*getattr(event, "q_gn_sf")[1])**0.5 if len(getattr(event, "q_gn_sf")) == 2 else 1
 			elif var_name == "bd":
-				for i in range(var_dim): branches[var_name][i] = getattr(event, "ca12_pf_bd_csv")[i]
+				for i in range(var_dim): branches[var_name][i] = getattr(event, alg + "_pf_bd_csv")[i]
 			elif var_name == "jetid":
-				for i in range(var_dim): branches[var_name][i] = getattr(event, "ca12_pf_jetid_l")[i]
+				for i in range(var_dim): branches[var_name][i] = getattr(event, alg + "_pf_jetid_l")[i]
 			elif var_name in vars_calc:
 				for i in range(var_dim): branches[var_name][i] = vars_calc[var_name][i]
 			else:

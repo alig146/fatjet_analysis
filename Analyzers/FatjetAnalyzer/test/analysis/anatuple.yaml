@@ -251,6 +251,11 @@ variables:
       type: jet
       description: pruned jet phi
     
+    - name: dphi
+      dimension: 1
+      type: jet
+      description: ungroomed jet pair phi difference
+    
     - name: dr
       dimension: 1
       type: jet
