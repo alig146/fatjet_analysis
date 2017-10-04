@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void style_plot(TH1* h) {
 	h->SetTitle("");

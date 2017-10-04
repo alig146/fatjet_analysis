@@ -1,17 +1,17 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void draw_set(TString name, int mass) {
-	TString suffix = name + "_" + to_string(mass);
+void draw_set(TString cut, int mass) {
+	TString suffix = cut + "_" + to_string(mass);
 	TString newname = "contamination_" + suffix;
 	TString signame = "sq" + to_string(mass) + "to4j";
 	TCanvas* tc = new TCanvas(newname, newname);
 	THStack* hs = new THStack(TString("hs_") + suffix, "");
 	
-	TH1* h_qcdmg = (TH1*) gDirectory->Get(TString("qcdmg_") + name);
+	TH1* h_qcdmg = (TH1*) gDirectory->Get(TString("qcdmg_") + cut);
 	h_qcdmg->SetName("qcdmg_" + suffix);
-	TH1* h_ttbar = (TH1*) gDirectory->Get(TString("ttbar_") + name);
+	TH1* h_ttbar = (TH1*) gDirectory->Get(TString("ttbar_") + cut);
 	h_ttbar->SetName("ttbar_" + suffix);
-	TH1* h_sqto4j = (TH1*) gDirectory->Get(signame + "_" + name);
+	TH1* h_sqto4j = (TH1*) gDirectory->Get(signame + "_" + cut);
 	h_qcdmg->Rebin(50);
 	h_ttbar->Rebin(50);
 	h_sqto4j->Rebin(50);
@@ -59,30 +59,35 @@ void draw_set(TString name, int mass) {
 	
 	
 	/// Legend:
-	TLegend* leg = new TLegend(0.47, 0.60, 0.77, 0.75);
+//	TLegend* leg = new TLegend(0.47, 0.60, 0.77, 0.75);
+	leg = get_legend(1, 4);
 	leg->AddEntry(h_qcdmg, "QCD (2 #rightarrow 4)", "f");
 	leg->AddEntry(h_ttbar, "t#bar{t}", "f");
 	leg->AddEntry(h_bkge, "Total background", "lf");
 	leg->AddEntry(h_sqto4j, TString("#it{m}_{#tilde{q}} = ") + to_string(mass) + " GeV", "lfe");
 	leg->Draw();
 	/// Axes:
-	hs->GetXaxis()->SetTitle("Average jet mass [GeV]");
+	hs->GetXaxis()->SetTitle(get_xtitle("mavg"));
 	style_ylabel(hs);
 	
 	// Write info:
 	style_info();
+	style_cut(cut);
 	
+	vector<TString> texts;
+	texts.push_back("#bf{Contamination:}");
 	double sb = h_sqto4j->Integral()/(h_ttbar->Integral() + h_qcdmg->Integral());
 	std::ostringstream oss;
 	oss << "s/b = " << std::fixed << std::setprecision(1) << sb * 100 << " %";
-	style_write(oss.str().c_str(), 0.6, 0.50);
+	texts.push_back(oss.str());
+	style_write(texts, 0.59, 0.58);
 	
 	tc->SaveAs(newname + ".pdf");
 	
 	cout << "bkg integral = " << h_qcdmg->Integral() + h_ttbar->Integral() << endl;
 }
 
-void contamination_styler(TString sb_name="sbl", TString cut_name="sig") {
+void contamination_styler(TString cut_sb="sbl", TString cut_sig="sig") {
 	gROOT->SetBatch();
 	gStyle->SetOptStat(0);
 	
@@ -90,8 +95,8 @@ void contamination_styler(TString sb_name="sbl", TString cut_name="sig") {
 	
 	vector<int> masses = {100, 150, 200, 250, 300, 400, 500};
 	for (int i = 0; i < masses.size(); ++ i) {
-		draw_set(cut_name, masses[i]);
-		draw_set(sb_name, masses[i]);
-		draw_set(sb_name + "b", masses[i]);
+		draw_set(cut_sig, masses[i]);
+		draw_set(cut_sb, masses[i]);
+		draw_set(cut_sb + "b", masses[i]);
 	}
 }

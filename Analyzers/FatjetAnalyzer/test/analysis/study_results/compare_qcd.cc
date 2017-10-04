@@ -9,6 +9,7 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 	TString yunit = "Events";
 	if (norm != 0) yunit = "Normalized events";
 	style_ylabel(post_clone, "GeV", yunit);
+	post_clone->GetXaxis()->SetTitle("Average fatjet mass [GeV]");
 	
 	if (norm != 0) {
 		normalize_th1(post_clone);
@@ -20,6 +21,8 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 	TPad* pad = (TPad*) tc->GetPad(1);
 	pad->cd();
 	tc->SetLogy(logy);
+	
+	post_clone->GetXaxis()->SetLabelOffset(100);
 	
 	post_clone->Draw("e");
 	mc_clone->Draw("same hist");
@@ -52,7 +55,7 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 //	style_write(name_proper[ds], 0.61, 0.74, 0.04);
 	
 	tc->SaveAs(name + ".pdf");
-	tc->SaveAs(name + ".png");
+//	tc->SaveAs(name + ".png");
 }
 
 void compare_qcd() {

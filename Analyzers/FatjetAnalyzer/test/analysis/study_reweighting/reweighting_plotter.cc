@@ -19,11 +19,31 @@ TF1* fit_function(TH1* h, int f=0) {
 }
 
 
-void get_reweighting_functions(TTree* tt, TString cut, TFile* tf_out) {
-	TString ds = tt->GetName();
+void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out) {
 	TString name = ds + "_" + cut;
-	tt->Draw("htak8>>" + name + "(24, 800, 3200)", get_cut("fjp_" + cut, get_weight(ds)));
+	vector<TTree*> tts;
+	TString era = "";
+	if (ds == "inj") {
+		if (cut == "sig" || cut == "sigl") era = "15";
+		tts.push_back((TTree*) tf->Get("jetht"));
+		tts.push_back((TTree*) tf->Get("sq150to4j"));
+	} 
+	else if (ds == "all") {
+		tts.push_back((TTree*) tf->Get("qcdmg"));
+		tts.push_back((TTree*) tf->Get("ttbar"));
+		tts.push_back((TTree*) tf->Get("sq150to4j"));
+	}
+	else tts.push_back((TTree*) tf->Get(ds));
+	tts[0]->Draw("htak8>>" + name + "(24, 800, 3200)", get_cut("fjp_" + cut, era, get_weight(tts[0]->GetName(), era)));
 	TH1* h = (TH1*) gDirectory->Get(name);
+	if (ds == "all" || ds == "inj") {
+		for (unsigned i = 1; i < tts.size() ; ++i) {
+			TTree* tt = tts[i];
+			tt->Draw("htak8>>h(24, 800, 3200)", get_cut("fjp_" + cut, "", get_weight(tt->GetName(), era)));
+			TH1* h_temp = (TH1*) gDirectory->Get("h");
+			h->Add(h_temp);
+		}
+	}
 	if (ds == "qcdp" && cut == "sig") h->Rebin(2);
 	
 	for (int i=0; i < function_defs.size(); ++i) {
@@ -137,68 +157,64 @@ void reweighting_plotter() {
 	tf_in = get_ana();
 	TFile* tf_out = new TFile("reweight_functions.root", "RECREATE");
 	
-	TTree* tt_qcdmg = (TTree*) tf_in->Get("qcdmg");
-	TTree* tt_qcdp = (TTree*) tf_in->Get("qcdp");
-	TTree* tt_ttbar = (TTree*) tf_in->Get("ttbar");
-	TTree* tt_jetht = (TTree*) tf_in->Get("jetht");
+	get_reweighting_functions(tf_in, "inj", "sig", tf_out);
+	get_reweighting_functions(tf_in, "inj", "sigl", tf_out);
+	get_reweighting_functions(tf_in, "inj", "sb", tf_out);
+	get_reweighting_functions(tf_in, "inj", "sbb", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sigl", tf_out);
-	get_reweighting_functions(tt_qcdp, "sigl", tf_out);
-	get_reweighting_functions(tt_jetht, "sigl", tf_out);
+	get_reweighting_functions(tf_in, "all", "sig", tf_out);
+	get_reweighting_functions(tf_in, "all", "sigl", tf_out);
+	get_reweighting_functions(tf_in, "all", "sb", tf_out);
+	get_reweighting_functions(tf_in, "all", "sbb", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sig", tf_out);
-	get_reweighting_functions(tt_qcdp, "sig", tf_out);
-	get_reweighting_functions(tt_jetht, "sig", tf_out);
-//	get_reweighting_functions(tt_jetht, "sig15", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sigl", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sigl", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sigl", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sb", tf_out);
-	get_reweighting_functions(tt_qcdp, "sb", tf_out);
-	get_reweighting_functions(tt_jetht, "sb", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sbb", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbb", tf_out);
-	get_reweighting_functions(tt_jetht, "sbb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sig", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sig", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sig", tf_out);
+//	get_reweighting_functions(tf_in, "jetht", "sig15", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sbt", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbt", tf_out);
-	get_reweighting_functions(tt_jetht, "sbt", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sbtb", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbtb", tf_out);
-	get_reweighting_functions(tt_jetht, "sbtb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sb", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sb", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbb", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbb", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbb", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sbl", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbl", tf_out);
-	get_reweighting_functions(tt_jetht, "sbl", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sblb", tf_out);
-	get_reweighting_functions(tt_qcdp, "sblb", tf_out);
-	get_reweighting_functions(tt_jetht, "sblb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbt", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbt", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbt", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbtb", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbtb", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbtb", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sbl42", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbl42", tf_out);
-	get_reweighting_functions(tt_jetht, "sbl42", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sbl42b", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbl42b", tf_out);
-	get_reweighting_functions(tt_jetht, "sbl42b", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbl", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbl", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbl", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sblb", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sblb", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sblb", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sbl43", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbl43", tf_out);
-	get_reweighting_functions(tt_jetht, "sbl43", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sbl43b", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbl43b", tf_out);
-	get_reweighting_functions(tt_jetht, "sbl43b", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbl42", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbl42", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbl42", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbl42b", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbl42b", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbl42b", tf_out);
 	
-	get_reweighting_functions(tt_qcdmg, "sbide", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbide", tf_out);
-	get_reweighting_functions(tt_jetht, "sbide", tf_out);
-	get_reweighting_functions(tt_qcdmg, "sbideb", tf_out);
-	get_reweighting_functions(tt_qcdp, "sbideb", tf_out);
-	get_reweighting_functions(tt_jetht, "sbideb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbl43", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbl43", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbl43", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbl43b", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbl43b", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbl43b", tf_out);
 	
-////	get_reweighting_functions(tt_qcdmg, "sigs", tf_out);
-////	get_reweighting_functions(tt_qcdp, "sigs", tf_out);
-////	
-////	get_reweighting_functions(tt_qcdmg, "sbs", tf_out);
-////	get_reweighting_functions(tt_qcdp, "sbs", tf_out);
-////	
-////	get_reweighting_functions(tt_qcdmg, "sbsb", tf_out);
-////	get_reweighting_functions(tt_qcdp, "sbsb", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbide", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbide", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbide", tf_out);
+	get_reweighting_functions(tf_in, "qcdmg", "sbideb", tf_out);
+	get_reweighting_functions(tf_in, "qcdp", "sbideb", tf_out);
+	get_reweighting_functions(tf_in, "jetht", "sbideb", tf_out);
 }

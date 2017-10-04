@@ -21,11 +21,16 @@ vector<TH1*> make_plot_set(TString cut, int nbins=1200) {
 		TString suffix = ds + "_" + cut;
 		TTree* tt = (TTree*) tf_in->Get(ds);
 		
+		plots.push_back(make_plot(tt, "htak8", cut, "ht_" + suffix, to_string(nbins), "0", "2400"));
+		plots.push_back(make_plot(tt, "m_p", cut, "mp_" + suffix, to_string(nbins), "0", "1200"));
 		plots.push_back(make_plot(tt, "mavg_p", cut, "mavg_" + suffix, to_string(nbins), "0", "1200"));
 		plots.push_back(make_plot(tt, "masy_p", cut, "masy_" + suffix, to_string(nbins), "0", "0.1"));
+		plots.push_back(make_plot(tt, "eta", cut, "eta_" + suffix, to_string(nbins), "-3", "3"));
+		plots.push_back(make_plot(tt, "eta[0]", cut, "eta0_" + suffix, to_string(nbins), "-3", "3"));
+		plots.push_back(make_plot(tt, "eta[1]", cut, "eta1_" + suffix, to_string(nbins), "-3", "3"));
 		plots.push_back(make_plot(tt, "deta", cut, "deta_" + suffix, to_string(nbins), "0", "1"));
 		plots.push_back(make_plot(tt, "Max$(tau21)", cut, "tau21_" + suffix, to_string(nbins), "0", "1"));
-		plots.push_back(make_plot(tt, "Max$(tau42)", cut, "tau42_" + suffix, to_string(nbins), "0", "0.8"));
+		plots.push_back(make_plot(tt, "Max$(tau42)", cut, "tau42_" + suffix, to_string(nbins), "0.2", "0.6"));
 		plots.push_back(make_plot(tt, "Max$(tau43)", cut, "tau43_" + suffix, to_string(nbins), "0.4", "1"));
 	}
 	return plots;
@@ -37,7 +42,7 @@ void basic_plotter() {
 	
 	// Options:
 	gROOT->SetBatch();
-	vector<TString> cuts = {"sig", "sb", "sbb", "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
+	vector<TString> cuts = {"sig", "sb", "sbb", "sbide", "sbideb"};//, "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
 	
 	// Output:
 	TFile* tf_out = new TFile("basic_plots.root", "RECREATE");

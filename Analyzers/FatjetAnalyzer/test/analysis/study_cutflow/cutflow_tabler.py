@@ -92,8 +92,8 @@ def make_table(results, name, caption="", norm_qcd=True):
 				else:
 					if values_dict["p"] >= 10: percent = "{:.1f}".format(values_dict["p"])
 					elif 10 > values_dict["p"] >= 0.1: percent = "{:.2f}".format(values_dict["p"])
-					elif 0.1 > values_dict["p"] >= 0.01: percent = "{:.3f}".format(values_dict["p"])
-					elif 0.01 > values_dict["p"]: percent = "$<$ 0.001".format(values_dict["p"])
+					elif 0.1 > values_dict["p"] >= 0.001: percent = "{:.3f}".format(values_dict["p"])
+					elif 0.001 > values_dict["p"]: percent = "$<$ 0.001".format(values_dict["p"])
 					percent += " \%"
 				if not values_dict["w"]: N = "-"
 				else:

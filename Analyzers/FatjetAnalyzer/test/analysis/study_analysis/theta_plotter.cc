@@ -7,6 +7,7 @@ bool VERBOSE = true;
 
 void make_plots(TString name, TFile* tf_out, TH1* h_fjp, TH1* h_cdf, TH1* params, int first_param, int nrebin, TH1* params_out, int params_out_offset, bool signal=false) {
 //	h->SetName(name);
+	cout << name << endl;
 	
 	TString fullname = "mAvgPSel__" + name;
 	if (signal) name = "TTbar";
@@ -35,14 +36,14 @@ void make_plots(TString name, TFile* tf_out, TH1* h_fjp, TH1* h_cdf, TH1* params
 	double stretch = 1.0;
 	double ampe, shifte, stretche;
 	if (name == "TTbar") {
-		ampe = 0.2;
-		shifte = 5.0;
-		stretche = 0.09;
+		ampe = 0.20;
+		shifte = 5.0;		// v2
+		stretche = 0.09;		// v2
 	}
 	else if (name == "QCD") {
 		ampe = 5.0;
-		shifte = 20.0;
-		stretche = 0.08;
+		shifte = 20.0;		// v2
+		stretche = 0.08;		// v2
 	}
 	
 	TH1F* h_null = (TH1F*) h_fjp->Clone(fullname);
@@ -120,7 +121,7 @@ void theta_plotter(TString cut_sig="sig15", TString cut_sb="sb") {
 		(TH1*) tf_sig->Get("cdf_ttbar"),
 		params_sbb,
 		4,
-		50,
+		1,
 		params_out,
 		4
 	);

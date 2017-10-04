@@ -7,9 +7,31 @@ bool VERBOSE = true;
 
 TH3* make_fj_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TString groomer="p") {
 	TString name = "fj_" + ds + "_" + cut + "_" + groomer;
-	TTree *tt = (TTree*) tf_in->Get(ds);
-	tt->Draw("htak8:eta[0]:m_" + groomer + "[0]>>" + name + "(1200,0,1200,20,-2.5,2.5,25,900,3200)", get_cut("fj_" + cut, get_weight(ds)));
+	
+	vector<TTree*> tts;
+	TString era = "";
+	if (ds == "inj") {
+		if (cut == "sig" || cut == "sigl") era = "15";
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq150to4j"));
+	} 
+	else if (ds == "all") {
+		tts.push_back((TTree*) tf_in->Get("qcdmg"));
+		tts.push_back((TTree*) tf_in->Get("ttbar"));
+		tts.push_back((TTree*) tf_in->Get("sq150to4j"));
+	}
+	else tts.push_back((TTree*) tf_in->Get(ds));
+	
+	tts[0]->Draw("htak8:eta[0]:m_" + groomer + "[0]>>" + name + "(1200,0,1200,20,-2.5,2.5,25,900,3200)", get_cut("fj_" + cut, era, get_weight(tts[0]->GetName(), era)));
 	TH3* h = (TH3*) gDirectory->Get(name);
+	if (ds == "all") {
+		for (unsigned i = 1; i < tts.size() ; ++i) {
+			TTree* tt = tts[i];
+			tt->Draw("htak8:eta[0]:m_" + groomer + "[0]>>h(1200,0,1200,20,-2.5,2.5,25,900,3200)", get_cut("fj_" + cut, "", get_weight(tts[0]->GetName(), era)));
+			TH1* h_temp = (TH3*) gDirectory->Get("h");
+			h->Add(h_temp);
+		}
+	}
 	
 	// Write out plot:
 	tf_out->cd();
@@ -47,6 +69,18 @@ void template_plotter() {
 	
 	// Make plots:
 
+//	make_temp_plot(tf_in, tf_out, "inj", "sig");
+//	make_temp_plot(tf_in, tf_out, "inj", "sigl");
+//	make_temp_plot(tf_in, tf_out, "inj", "sb");
+//	make_temp_plot(tf_in, tf_out, "inj", "sbb");
+//	make_temp_plot(tf_in, tf_out, "jetht", "sig");
+//	make_temp_plot(tf_in, tf_out, "jetht", "sigl");
+//	make_temp_plot(tf_in, tf_out, "jetht", "sb");
+//	make_temp_plot(tf_in, tf_out, "jetht", "sbb");
+	
+//	make_temp_plot(tf_in, tf_out, "all", "sig");
+//	make_temp_plot(tf_in, tf_out, "all", "sb");
+//	make_temp_plot(tf_in, tf_out, "all", "sbb");
 ////	make_temp_plot(tf_in, tf_out, "jetht", "sbide", "fix");
 ////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbide", "fix");
 ////	make_temp_plot(tf_in, tf_out, "qcdp", "sbide", "fix");
@@ -86,12 +120,12 @@ void template_plotter() {
 ////	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "");
 ////	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "");
 ////	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "");
-	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "", 1, "p", false);
-	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "", 1, "p", false);
-	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "", 1, "p", false);
-	make_temp_plot(tf_in, tf_out, "jetht", "sigl");
-	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl");
-	make_temp_plot(tf_in, tf_out, "qcdp", "sigl");
+//	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "", 1, "p", false);
+//	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "", 1, "p", false);
+//	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "", 1, "p", false);
+//	make_temp_plot(tf_in, tf_out, "jetht", "sigl");
+//	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl");
+//	make_temp_plot(tf_in, tf_out, "qcdp", "sigl");
 ////	
 ////	make_temp_plot(tf_in, tf_out, "jetht", "sb", "fix");
 ////	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "fix");
@@ -100,7 +134,8 @@ void template_plotter() {
 ////	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "");
 ////	make_temp_plot(tf_in, tf_out, "qcdp", "sb", "");
 //	make_temp_plot(tf_in, tf_out, "jetht", "sb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "", 1);
+	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "", 1);
+	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "", 1, "p", false);
 //	make_temp_plot(tf_in, tf_out, "qcdp", "sb", "", 1);
 ////	
 ////	make_temp_plot(tf_in, tf_out, "jetht", "sbb", "fix");

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 bool VERBOSE = true;
 
@@ -310,7 +310,7 @@ void analysis_styler_sim(TString cut_name="sb", int f=1, int nrebin=30, double x
 	h_fjp_jetht->SetMarkerSize(1.2);
 	h_fjp_jetht->GetXaxis()->SetRangeUser(0, xmax);
 	h_fjp_jetht->GetXaxis()->SetNdivisions(406);
-	h_fjp_jetht->GetXaxis()->SetTitle("Average jet mass [GeV]");
+	h_fjp_jetht->GetXaxis()->SetTitle(get_xtitle("mavg"));
 	TH1* h_fjp_draw = (TH1*) h_fjp_jetht->Clone("fjp_draw");
 	h_fjp_draw->GetXaxis()->SetLabelSize(0);
 	h_fjp_draw->GetXaxis()->SetTitle("");
@@ -347,6 +347,7 @@ void analysis_styler_sim(TString cut_name="sb", int f=1, int nrebin=30, double x
 		// Draw:
 		THStack* hs = (THStack*) ths->Clone(TString("hs") + to_string(i));
 		hs->Draw("hist e");
+		hs->GetXaxis()->SetLabelOffset(1000);
 		h_bkg->Draw("same hist");
 		h_fjp_draw->Draw("same e");
 //		h_bkg->SetLineColor(kRed);
@@ -375,6 +376,7 @@ void analysis_styler_sim(TString cut_name="sb", int f=1, int nrebin=30, double x
 		
 		// Info:
 		style_info(false, lum_string["all"], 1, true);
+		style_cut(cut_name, true);
 		
 		
 		std::ostringstream oss1;

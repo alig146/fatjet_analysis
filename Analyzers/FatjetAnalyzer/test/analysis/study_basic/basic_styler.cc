@@ -8,7 +8,7 @@ void basic_styler() {
 	vector<TCanvas*> canvases;
 	
 	vector<TString> cuts = {"sig", "sb", "sbb"};
-	vector<TString> variables = {"mavg", "masy", "deta", "tau21", "tau42", "tau43"};
+	vector<TString> variables = {"mavg", "masy", "deta", "tau21", "tau42", "tau43", "ht"};
 	
 	for (int icut = 0; icut < cuts.size(); ++icut) {
 		for (int ivar = 0; ivar < variables.size(); ++ivar) {
@@ -103,7 +103,7 @@ void basic_styler() {
 		//	leg->AddEntry(sq400to4j, name_proper["sq400to4j"], "le");
 	
 			canvases = same_set(hs, "basic_" + variable + "_" + cut);
-			for (int i = 0; i < 3; ++i) {		// Order: nom, norm, logy
+			for (int i = 0; i < 4; ++i) {		// Order: nom, norm, logy, norm-logy
 				canvases[i]->cd();
 				style_info();
 				leg->Draw();

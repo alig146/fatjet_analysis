@@ -9,6 +9,7 @@ void nminusone_plotter() {
 	TFile* tf_out = TFile::Open("nminusone_plots.root", "recreate");
 	TTree* qcdp = (TTree*) tf_in->Get("qcdp");
 	TTree* qcdmg = (TTree*) tf_in->Get("qcdmg");
+	TTree* ttbar = (TTree*) tf_in->Get("ttbar");
 	TTree* sq200to4j = (TTree*) tf_in->Get("sq200to4j");
 	TTree* sq400to4j = (TTree*) tf_in->Get("sq400to4j");
 	
@@ -17,87 +18,107 @@ void nminusone_plotter() {
 //	for (int i = 0; i < nminusone.size(); ++i) {
 	
 	// deta:
-	qcdp->Draw("deta>>qcdp_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
-	TH1* qcdp_sigxdeta = (TH1*) gDirectory->Get("qcdp_sigxdeta");
+	qcdp->Draw("deta>>deta_qcdp_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
+	TH1* qcdp_sigxdeta = (TH1*) gDirectory->Get("deta_qcdp_sigxdeta");
 	qcdp_sigxdeta->Write();
 	
-	qcdmg->Draw("deta>>qcdmg_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
-	TH1* qcdmg_sigxdeta = (TH1*) gDirectory->Get("qcdmg_sigxdeta");
+	qcdmg->Draw("deta>>deta_qcdmg_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
+	TH1* qcdmg_sigxdeta = (TH1*) gDirectory->Get("deta_qcdmg_sigxdeta");
 	qcdmg_sigxdeta->Write();
 	
-	sq200to4j->Draw("deta>>sq200to4j_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
-	TH1* sq200to4j_sigxdeta = (TH1*) gDirectory->Get("sq200to4j_sigxdeta");
+	ttbar->Draw("deta>>deta_ttbar_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
+	TH1* ttbar_sigxdeta = (TH1*) gDirectory->Get("deta_ttbar_sigxdeta");
+	ttbar_sigxdeta->Write();
+	
+	sq200to4j->Draw("deta>>deta_sq200to4j_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
+	TH1* sq200to4j_sigxdeta = (TH1*) gDirectory->Get("deta_sq200to4j_sigxdeta");
 	sq200to4j_sigxdeta->Write();
 	
-	sq400to4j->Draw("deta>>sq400to4j_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
-	TH1* sq400to4j_sigxdeta = (TH1*) gDirectory->Get("sq400to4j_sigxdeta");
+	sq400to4j->Draw("deta>>deta_sq400to4j_sigxdeta(1200,0,4)", get_cut("fjp_sigxdeta"));
+	TH1* sq400to4j_sigxdeta = (TH1*) gDirectory->Get("deta_sq400to4j_sigxdeta");
 	sq400to4j_sigxdeta->Write();
 	
 	// masy_p:
-	qcdp->Draw("masy_p>>qcdp_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
-	TH1* qcdp_sigxmasyp = (TH1*) gDirectory->Get("qcdp_sigxmasyp");
+	qcdp->Draw("masy_p>>masyp_qcdp_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
+	TH1* qcdp_sigxmasyp = (TH1*) gDirectory->Get("masyp_qcdp_sigxmasyp");
 	qcdp_sigxmasyp->Write();
 	
-	qcdmg->Draw("masy_p>>qcdmg_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
-	TH1* qcdmg_sigxmasyp = (TH1*) gDirectory->Get("qcdmg_sigxmasyp");
+	qcdmg->Draw("masy_p>>masyp_qcdmg_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
+	TH1* qcdmg_sigxmasyp = (TH1*) gDirectory->Get("masyp_qcdmg_sigxmasyp");
 	qcdmg_sigxmasyp->Write();
 	
-	sq200to4j->Draw("masy_p>>sq200to4j_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
-	TH1* sq200to4j_sigxmasyp = (TH1*) gDirectory->Get("sq200to4j_sigxmasyp");
+	ttbar->Draw("masy_p>>masyp_ttbar_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
+	TH1* ttbar_sigxmasyp = (TH1*) gDirectory->Get("masyp_ttbar_sigxmasyp");
+	ttbar_sigxmasyp->Write();
+	
+	sq200to4j->Draw("masy_p>>masyp_sq200to4j_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
+	TH1* sq200to4j_sigxmasyp = (TH1*) gDirectory->Get("masyp_sq200to4j_sigxmasyp");
 	sq200to4j_sigxmasyp->Write();
 	
-	sq400to4j->Draw("masy_p>>sq400to4j_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
-	TH1* sq400to4j_sigxmasyp = (TH1*) gDirectory->Get("sq400to4j_sigxmasyp");
+	sq400to4j->Draw("masy_p>>masyp_sq400to4j_sigxmasyp(1200,0,1)", get_cut("fjp_sigxmasyp"));
+	TH1* sq400to4j_sigxmasyp = (TH1*) gDirectory->Get("masyp_sq400to4j_sigxmasyp");
 	sq400to4j_sigxmasyp->Write();
 	
 	// tau21:
-	qcdp->Draw("Max$(tau21)>>qcdp_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
-	TH1* qcdp_sigxtau21 = (TH1*) gDirectory->Get("qcdp_sigxtau21");
+	qcdp->Draw("Max$(tau21)>>tau21_qcdp_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
+	TH1* qcdp_sigxtau21 = (TH1*) gDirectory->Get("tau21_qcdp_sigxtau21");
 	qcdp_sigxtau21->Write();
 	
-	qcdmg->Draw("Max$(tau21)>>qcdmg_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
-	TH1* qcdmg_sigxtau21 = (TH1*) gDirectory->Get("qcdmg_sigxtau21");
+	qcdmg->Draw("Max$(tau21)>>tau21_qcdmg_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
+	TH1* qcdmg_sigxtau21 = (TH1*) gDirectory->Get("tau21_qcdmg_sigxtau21");
 	qcdmg_sigxtau21->Write();
 	
-	sq200to4j->Draw("Max$(tau21)>>sq200to4j_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
-	TH1* sq200to4j_sigxtau21 = (TH1*) gDirectory->Get("sq200to4j_sigxtau21");
+	ttbar->Draw("Max$(tau21)>>tau21_ttbar_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
+	TH1* ttbar_sigxtau21 = (TH1*) gDirectory->Get("tau21_ttbar_sigxtau21");
+	ttbar_sigxtau21->Write();
+	
+	sq200to4j->Draw("Max$(tau21)>>tau21_sq200to4j_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
+	TH1* sq200to4j_sigxtau21 = (TH1*) gDirectory->Get("tau21_sq200to4j_sigxtau21");
 	sq200to4j_sigxtau21->Write();
 	
-	sq400to4j->Draw("Max$(tau21)>>sq400to4j_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
-	TH1* sq400to4j_sigxtau21 = (TH1*) gDirectory->Get("sq400to4j_sigxtau21");
+	sq400to4j->Draw("Max$(tau21)>>tau21_sq400to4j_sigxtau21(1200,0,1)", get_cut("fjp_sigxtau21"));
+	TH1* sq400to4j_sigxtau21 = (TH1*) gDirectory->Get("tau21_sq400to4j_sigxtau21");
 	sq400to4j_sigxtau21->Write();
 	
 	// tau42:
-	qcdp->Draw("Max$(tau42)>>qcdp_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
-	TH1* qcdp_sigxtau42 = (TH1*) gDirectory->Get("qcdp_sigxtau42");
+	qcdp->Draw("Max$(tau42)>>tau42_qcdp_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
+	TH1* qcdp_sigxtau42 = (TH1*) gDirectory->Get("tau42_qcdp_sigxtau42");
 	qcdp_sigxtau42->Write();
 	
-	qcdmg->Draw("Max$(tau42)>>qcdmg_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
-	TH1* qcdmg_sigxtau42 = (TH1*) gDirectory->Get("qcdmg_sigxtau42");
+	qcdmg->Draw("Max$(tau42)>>tau42_qcdmg_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
+	TH1* qcdmg_sigxtau42 = (TH1*) gDirectory->Get("tau42_qcdmg_sigxtau42");
 	qcdmg_sigxtau42->Write();
 	
-	sq200to4j->Draw("Max$(tau42)>>sq200to4j_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
-	TH1* sq200to4j_sigxtau42 = (TH1*) gDirectory->Get("sq200to4j_sigxtau42");
+	ttbar->Draw("Max$(tau42)>>tau42_ttbar_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
+	TH1* ttbar_sigxtau42 = (TH1*) gDirectory->Get("tau42_ttbar_sigxtau42");
+	ttbar_sigxtau42->Write();
+	
+	sq200to4j->Draw("Max$(tau42)>>tau42_sq200to4j_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
+	TH1* sq200to4j_sigxtau42 = (TH1*) gDirectory->Get("tau42_sq200to4j_sigxtau42");
 	sq200to4j_sigxtau42->Write();
 	
-	sq400to4j->Draw("Max$(tau42)>>sq400to4j_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
-	TH1* sq400to4j_sigxtau42 = (TH1*) gDirectory->Get("sq400to4j_sigxtau42");
+	sq400to4j->Draw("Max$(tau42)>>tau42_sq400to4j_sigxtau42(1200,0,1)", get_cut("fjp_sigxtau42"));
+	TH1* sq400to4j_sigxtau42 = (TH1*) gDirectory->Get("tau42_sq400to4j_sigxtau42");
 	sq400to4j_sigxtau42->Write();
 	
 	// tau43:
-	qcdp->Draw("Max$(tau43)>>qcdp_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
-	TH1* qcdp_sigxtau43 = (TH1*) gDirectory->Get("qcdp_sigxtau43");
+	qcdp->Draw("Max$(tau43)>>tau43_qcdp_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
+	TH1* qcdp_sigxtau43 = (TH1*) gDirectory->Get("tau43_qcdp_sigxtau43");
 	qcdp_sigxtau43->Write();
 	
-	qcdmg->Draw("Max$(tau43)>>qcdmg_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
-	TH1* qcdmg_sigxtau43 = (TH1*) gDirectory->Get("qcdmg_sigxtau43");
+	qcdmg->Draw("Max$(tau43)>>tau43_qcdmg_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
+	TH1* qcdmg_sigxtau43 = (TH1*) gDirectory->Get("tau43_qcdmg_sigxtau43");
 	qcdmg_sigxtau43->Write();
 	
-	sq200to4j->Draw("Max$(tau43)>>sq200to4j_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
-	TH1* sq200to4j_sigxtau43 = (TH1*) gDirectory->Get("sq200to4j_sigxtau43");
+	ttbar->Draw("Max$(tau43)>>tau43_ttbar_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
+	TH1* ttbar_sigxtau43 = (TH1*) gDirectory->Get("tau43_ttbar_sigxtau43");
+	ttbar_sigxtau43->Write();
+	
+	sq200to4j->Draw("Max$(tau43)>>tau43_sq200to4j_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
+	TH1* sq200to4j_sigxtau43 = (TH1*) gDirectory->Get("tau43_sq200to4j_sigxtau43");
 	sq200to4j_sigxtau43->Write();
 	
-	sq400to4j->Draw("Max$(tau43)>>sq400to4j_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
-	TH1* sq400to4j_sigxtau43 = (TH1*) gDirectory->Get("sq400to4j_sigxtau43");
+	sq400to4j->Draw("Max$(tau43)>>tau43_sq400to4j_sigxtau43(1200,0,1)", get_cut("fjp_sigxtau43"));
+	TH1* sq400to4j_sigxtau43 = (TH1*) gDirectory->Get("tau43_sq400to4j_sigxtau43");
 	sq400to4j_sigxtau43->Write();
 }

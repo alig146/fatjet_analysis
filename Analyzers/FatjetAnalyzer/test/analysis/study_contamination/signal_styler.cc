@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void draw_set(TString cut, bool norm=false) {
 //	vector<int> masses = {100, 150, 200, 300, 400, 500};
@@ -9,12 +9,13 @@ void draw_set(TString cut, bool norm=false) {
 	if (norm) suffix = suffix + "_norm";
 	TString fullname = "signals_mavg" + suffix;
 	TCanvas* tc = new TCanvas(fullname, fullname);
-	TLegend* leg = new TLegend(0.60, 0.58, 0.80, 0.80);
+//	TLegend* leg = new TLegend(0.60, 0.58, 0.80, 0.80);
+	TLegend* leg = get_legend(1, masses.size());
 	
 	for (int i = 0; i < masses.size(); ++ i) {
 		TString signame = "sq" + to_string(masses[i]) + "to4j";
 		TH1* h_sqto4j = (TH1*) gDirectory->Get(signame + suffix);
-		h_sqto4j->Rebin(20);
+		h_sqto4j->Rebin(30);
 		TH1* h_sqto4je = (TH1*) h_sqto4j->Clone(signame + suffix + "_e");
 		h_sqto4j->SetLineColor(colors[i]);
 		h_sqto4j->SetMarkerSize(0);
@@ -29,7 +30,7 @@ void draw_set(TString cut, bool norm=false) {
 			h_sqto4j->SetMinimum(1);
 		}
 		h_sqto4j->SetTitle("");
-		h_sqto4j->GetXaxis()->SetTitle("Average jet mass [GeV]");
+		h_sqto4j->GetXaxis()->SetTitle(get_xtitle("mavg"));
 		h_sqto4j->GetXaxis()->SetRangeUser(0, 700);
 		
 		if (norm) h_sqto4je->Scale(1.0/h_sqto4je->Integral());
