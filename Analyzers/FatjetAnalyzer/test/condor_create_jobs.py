@@ -15,8 +15,8 @@ from truculence import utilities, cmssw, condor
 # /CLASSES
 
 # VARIABLES:
-cut_pt_filter = 400
-cut_eta_filter = 2.5
+cut_pt_filter = 300
+cut_eta_filter = 2.0
 #cut_pt_filter = 0
 #cut_eta_filter = -1
 n_per = 5000

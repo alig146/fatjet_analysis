@@ -104,16 +104,16 @@ options.register ('inFile',
 options.maxEvents = -1
 ### Filter options:
 options.register ('cutPtFilter',
-	175,
+	300,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"Cut on the pT of the leading jets. The default is 175 GeV."
+	"Cut on the pT of the leading jets. The default is 300 GeV."
 )
 options.register ('cutEtaFilter',
-	2.5,
+	2.0,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"Cut on the abs(eta) of the leading jets. The default is 2.5 GeV."
+	"Cut on the abs(eta) of the leading jets. The default is 2.0 GeV."
 )
 ### Tuplizer options:
 options.register ('cutPtTuplizer',
