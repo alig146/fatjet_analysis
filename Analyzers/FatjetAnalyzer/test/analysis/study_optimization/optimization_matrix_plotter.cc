@@ -1,15 +1,18 @@
-#include "/home/tote/decortication/macros/optimization_tools/optimization_tools.cc"
+#include <Deracination/Straphanger/test/decortication/macros/optimization_tools/optimization_tools.cc>
 
-vector<double> get_significances(int m, TH1* signal, TH1* qcd, TH1* ttbar) {
-	int ibin_low = qcd->GetXaxis()->FindBin(m - 25);
-	int ibin_high = qcd->GetXaxis()->FindBin(m + 25);
+vector<double> get_significances(int m, TH1* signal, TH1* qcd, TH1* ttbar, int window=50) {
+	int ibin_low = qcd->GetXaxis()->FindBin(m - window/2);
+	int ibin_high = qcd->GetXaxis()->FindBin(m + window/2);
 	double s = signal->Integral(ibin_low, ibin_high);
 	double b = qcd->Integral(ibin_low, ibin_high) + ttbar->Integral(ibin_low, ibin_high);
+	if (qcd->Integral(ibin_low, ibin_high) == 0 && ttbar->Integral(ibin_low, ibin_high) < 15) b = 0;
+//	if (qcd->Integral(ibin_low, ibin_high) == 0) b = 0;
+	cout << s << "  " << b << endl;
 	
 	vector<double> significances;
 	for (int kind = 1; kind < 5; ++ kind) {
 		if (s > 0 && b > 0) {
-			significances.push_back(significance(kind, s, b));
+			significances.push_back(significance(kind, s, b, false));
 		}
 		else {
 			significances.push_back(0);
@@ -23,8 +26,9 @@ void optimization_matrix_plotter() {
 	gROOT->SetBatch();
 	vector<int> ms = {100, 150, 200, 250, 300, 400, 500};
 	
-	TFile *tf_in = TFile::Open("optimization_plots_21tau750.root");
-	TFile* tf_out = new TFile("optimization_matrices_21tau750.root", "RECREATE");
+	TFile *tf_in = TFile::Open("optimization_plots.root");
+	TFile* tf_out = new TFile("optimization_matrices.root", "RECREATE");
+//	TFile* tf_out = new TFile("optimization_matrices_window100.root", "RECREATE");
 	
 	TH2* bins = (TH2*) tf_in->Get("bins");
 	
@@ -59,7 +63,8 @@ void optimization_matrix_plotter() {
 			for (int k = 0; k < ms.size(); ++ k) {
 				int m = ms[k];
 				TH1* h_s = (TH1*) tf_in->Get("sq" + to_string(m) + "to4j" + suffix);
-				vector<double> significances = get_significances(m, h_s, h_qcdmg, h_ttbar);
+				vector<double> significances = get_significances(m, h_s, h_qcdmg, h_ttbar, 50);
+				cout << value_tau42 << "   " << value_tau43 << "   " << significances[0] << endl;
 				for (int kind = 1; kind < 5; ++ kind) {
 					TString name_matrix = "sq" + to_string(m) + "to4j_s" + to_string(kind);
 					matrices[name_matrix]->SetBinContent(i, j, significances[kind - 1]);

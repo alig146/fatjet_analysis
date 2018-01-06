@@ -1,25 +1,29 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 vector<TString> function_defs = {"[0]*x^[1]", "exp([0]*x + [1])"};
 vector<TString> function_pretty = {"#it{p}_{0}#it{x}^{#it{p}_{1}}", "exp(#it{p}_{0}#it{x} + #it{p}_{1})"};
 // Third one: actual points
 
-TF1* fit_function(TH1* h, int f=0) {
+TF1* fit_function(TH1* h, int f=0, double htmin=900) {
 	TString name = h->GetName();
 	TH1* hclone = (TH1*) h->Clone(name + "_clone" + to_string(f));
 	TString fname = "f_" + name + "_f" + to_string(f);
 	
-	TF1* f1 = new TF1(fname, function_defs[f], 900, 3200);
+	TF1* f1 = new TF1(fname, function_defs[f], htmin, 3200);
 	if (f == 0) f1->SetParameters(4e17, -5);
+	else if (f == 1) f1->SetParameters(-4e-3, 10);
 //	if (ds == "qcdp" && cut == "sbb") f1->SetParameters(6e17, -5);
 //	if (ds == "qcdp" && cut == "sbtb") f1->SetParameters(7e08, -2);
 //	if (ds == "qcdmg" && cut == "sbtb") f1->SetParameters(5e08, -3);
 //	hclone->Draw("e");
-	hclone->Fit(fname, "", "", 900, 3200);
+	hclone->Fit(fname, "", "", htmin, 3200);
 	return f1;
 }
 
 
-void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out) {
+void get_reweighting_functions(TString ds, TString cut, TFile* tf_out, TString ana_option="") {
+	cout << "[..] Getting the HT re-weighting function for " << ds << " and " << cut << endl;
+	
+	tf = get_ana(ana_option);
 	TString name = ds + "_" + cut;
 	vector<TTree*> tts;
 	TString era = "";
@@ -50,7 +54,10 @@ void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out
 		TString cname = name + "_f" + to_string(i);
 		TCanvas* tc = new TCanvas(cname, cname);
 		
-		TF1* f1 = fit_function(h, i);
+		double htmin = 900;
+//		if (cut == "pretsbl" || cut == "pretsblb") htmin = 1100;
+		
+		TF1* f1 = fit_function(h, i, htmin);
 		TF1* f1_plus = new TF1(TString(f1->GetName()) + "_plus", function_defs[i]);
 		TF1* f1_minus = new TF1(TString(f1->GetName()) + "_minus", function_defs[i]);
 //		f1_plus->SetParameters(f1->GetParameter(0), f1->GetParameter(1) + f1->GetParError(1));
@@ -91,10 +98,10 @@ void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out
 		f1->SetLineColorAlpha(kRed, 0.5);
 		
 		style_ylabel_th1(h);
-		f1_plus->SetRange(900,3200);
+		f1_plus->SetRange(htmin, 3200);
 		f1_plus->SetLineStyle(2);
 		f1_plus->SetLineColorAlpha(kRed, 0.5);
-		f1_minus->SetRange(900,3200);
+		f1_minus->SetRange(htmin, 3200);
 		f1_minus->SetLineStyle(2);
 		f1_minus->SetLineColorAlpha(kRed, 0.5);
 //		f1_fix->SetRange(900,3200);
@@ -108,13 +115,15 @@ void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out
 		f1_minus->Draw("same");
 	//	f1_fixup->Draw("same");
 	
-		TLegend* leg = new TLegend(0.52, 0.67, 0.80, 0.80);
+//		TLegend* leg = new TLegend(0.52, 0.67, 0.80, 0.80);
+		TLegend* leg = get_legend(1, 3, 1.0, 0.9);
 		leg->AddEntry(h, name_proper[ds], "ple");
 		leg->AddEntry(f1, "Fit function", "l");
 		leg->AddEntry(f1_plus, "Fit function #pm 1#sigma", "l");
 	//	leg->AddEntry(f1_fix, "Adjusted function", "l");
 		leg->Draw();
 		style_info(true, lum_string["all"]);
+		style_cut(cut);
 	
 		std::ostringstream oss1;
 		oss1 << "#it{p}_{0} = " << std::scientific << std::setprecision(1) << f1->GetParameter(0) << " #pm " << std::setprecision(0) << f1->GetParError(0);
@@ -136,8 +145,7 @@ void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out
 		style_write(texts_par, 0.21, 0.42);
 	
 		tc->SetLogy();
-		tc->SaveAs(cname + ".pdf");
-		tc->SaveAs(cname + ".png");
+		save(tc);
 	
 		tf_out->WriteTObject(f1);
 		tf_out->WriteTObject(f1_plus);
@@ -150,71 +158,12 @@ void get_reweighting_functions(TFile* tf, TString ds, TString cut, TFile* tf_out
 	tf_out->WriteTObject(h);
 }
 
-void reweighting_plotter() {
+void reweighting_plotter(TString cut="sb") {
 	gROOT->SetBatch();
 	
 //	TFile* tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
-	tf_in = get_ana();
-	TFile* tf_out = new TFile("reweight_functions.root", "RECREATE");
+	TFile* tf_out = new TFile("reweight_functions_" + cut + ".root", "RECREATE");
+	vector<TString> dss = {"jetht", "inj", "qcdmg", "qcdp"};
 	
-	get_reweighting_functions(tf_in, "inj", "sig", tf_out);
-	get_reweighting_functions(tf_in, "inj", "sigl", tf_out);
-	get_reweighting_functions(tf_in, "inj", "sb", tf_out);
-	get_reweighting_functions(tf_in, "inj", "sbb", tf_out);
-	
-	get_reweighting_functions(tf_in, "all", "sig", tf_out);
-	get_reweighting_functions(tf_in, "all", "sigl", tf_out);
-	get_reweighting_functions(tf_in, "all", "sb", tf_out);
-	get_reweighting_functions(tf_in, "all", "sbb", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sigl", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sigl", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sigl", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sig", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sig", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sig", tf_out);
-//	get_reweighting_functions(tf_in, "jetht", "sig15", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sb", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sb", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sb", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sbb", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbb", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbb", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sbt", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbt", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbt", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sbtb", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbtb", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbtb", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sbl", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbl", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbl", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sblb", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sblb", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sblb", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sbl42", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbl42", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbl42", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sbl42b", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbl42b", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbl42b", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sbl43", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbl43", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbl43", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sbl43b", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbl43b", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbl43b", tf_out);
-	
-	get_reweighting_functions(tf_in, "qcdmg", "sbide", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbide", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbide", tf_out);
-	get_reweighting_functions(tf_in, "qcdmg", "sbideb", tf_out);
-	get_reweighting_functions(tf_in, "qcdp", "sbideb", tf_out);
-	get_reweighting_functions(tf_in, "jetht", "sbideb", tf_out);
+	for (unsigned i = 0; i < dss.size(); ++ i) get_reweighting_functions(dss[i], cut, tf_out);
 }

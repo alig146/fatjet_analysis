@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void htreweight_compare(TString ds="qcdmg", TString cut="sigl") {
 	TFile* tf_in = get_ana();
@@ -13,7 +13,7 @@ void htreweight_compare(TString ds="qcdmg", TString cut="sigl") {
 	
 	h_fjp->Rebin(30);
 	h_fjp->SetTitle("");
-	h_fjp->GetXaxis()->SetTitle("Average fatjet mass [GeV]");
+	set_xtitle(h_fjp, "mavg");
 	style_ylabel(h_fjp);
 	h_temp->Scale(h_fjp->Integral()/h_temp->Integral());
 	h_temp->Rebin(30);
@@ -31,7 +31,7 @@ void htreweight_compare(TString ds="qcdmg", TString cut="sigl") {
 		if (logy == 1) name += "_logy";
 		TCanvas* tc = new TCanvas(name, name);
 		
-		if (logy == 1) h_fjp->SetMinimum(0.1);
+		if (logy == 1) h_fjp->SetMinimum(0.0001);
 		else h_fjp->SetMinimum(0.0);
 		
 		h_fjp->Draw("e");
@@ -43,8 +43,8 @@ void htreweight_compare(TString ds="qcdmg", TString cut="sigl") {
 		tc->SetLogy(logy);
 		
 		TLegend* leg;
-		if (logy == 0) leg = new TLegend(0.48, 0.71, 0.80, 0.83);
-		else if (logy == 1) leg = new TLegend(0.48, 0.71, 0.80, 0.83);
+		if (logy == 0) leg = get_legend(1, 3, 1.0, 0.8);
+		else if (logy == 1) leg = get_legend(3, 3, 1.0, 1.2);
 		leg->AddEntry(h_fjp, "Fatjet pair selection", "ple");
 		leg->AddEntry(h_temp, "Derived template", "f");
 		leg->AddEntry(h_temp_xht, "Template w/out #it{H}_{T} re-weight", "f");
@@ -52,9 +52,9 @@ void htreweight_compare(TString ds="qcdmg", TString cut="sigl") {
 		bool mc = true;
 		if (ds == "jetht") mc = false;
 		style_info(mc, lum_string["all"], 1);
+		style_cut(cut);
 		
-		tc->SaveAs(TString(tc->GetName()) + ".pdf");
-		tc->SaveAs(TString(tc->GetName()) + ".png");
+		save(tc);
 	}
 }
 

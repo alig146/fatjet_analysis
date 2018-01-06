@@ -51,6 +51,8 @@
 ///// JEC:
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+///// JER:
+#include "JetMETCorrections/Modules/interface/JetResolution.h"
 ///// b-tag scale factors:
 #include "CondFormats/BTauObjects/interface/BTagCalibration.h"
 #include "CondTools/BTau/interface/BTagCalibrationReader.h"
@@ -126,7 +128,8 @@ class JetTuplizer : public edm::EDAnalyzer {
 	double sigma_, weight_, cut_pt_;
 	bool make_gen_, make_pf_;		// Controls to make gen fatjets or pf fatjets
 	string pileup_path_;
-	string jec_version_;
+	string jec_version_mc_;
+	string jec_version_data_;
 	// Basic fatjet variables
 	// Algorithm variables
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
@@ -143,6 +146,10 @@ class JetTuplizer : public edm::EDAnalyzer {
 	string jec_prefix;
 	vector<string> jec_ak4_files, jmc_ak4_files, jec_ak8_files, jmc_ak8_files;
 	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
+	
+	// JER info:
+	JME::JetResolutionScaleFactor jer_calculator_ak4;
+	JME::JetResolutionScaleFactor jer_calculator_ak8;
 	
 	// b-tag scale factor things:
 	BTagCalibration btagsf_calib;
@@ -217,7 +224,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	weight_(iConfig.getParameter<double>("weight")),
 	cut_pt_(iConfig.getParameter<double>("cut_pt")),
 	pileup_path_(iConfig.getParameter<string>("pileup_path")),
-	jec_version_(iConfig.getParameter<string>("jec_version")),
+	jec_version_mc_(iConfig.getParameter<string>("jec_version_mc")),
+	jec_version_data_(iConfig.getParameter<string>("jec_version_data")),
 	// Consume statements:
 	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
 	rhoInfo_(consumes<double>(iConfig.getParameter<InputTag>("rhoInfo"))),
@@ -281,6 +289,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"bd_csv",
 		"bd_cisv",
 		"jec",        // Jet energy correction
+		"jer",        // Jet energy resolution correction
 		"jmc",        // Jet mass correction
 		"bsf",        // b-tag scale factor
 		"bsf_u",      // b-tag scale factor uncertainty up (?)
@@ -403,8 +412,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	lumi_weights = LumiReWeighting(pileup_path_ + "pileup_distribution_moriond17.root", pileup_path_ + "pileup_distribution_data16.root", "pileup", "pileup");
 	
 	// JEC setup:
-	if (is_data_) jec_prefix = jec_version_ + "_DATA";
-	else jec_prefix = jec_version_ + "_MC";
+	jec_prefix = jec_version_mc_;
+	if (is_data_) jec_prefix = jec_version_data_;
 	
 	/// AK4 JEC setup:
 	jec_ak4_files.push_back(jec_prefix + "_L1FastJet_AK4PFchs.txt");
@@ -428,7 +437,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		jmc_parameters_ak4.push_back(*(new JetCorrectorParameters(*jmc_file)));
 	}
 	jmc_corrector_ak4 = new FactorizedJetCorrector(jmc_parameters_ak4);
-//	
+
 	/// AK8 JEC setup:
 	jec_ak8_files.push_back(jec_prefix + "_L1FastJet_AK8PFchs.txt");
 	jec_ak8_files.push_back(jec_prefix + "_L2Relative_AK8PFchs.txt");
@@ -627,8 +636,8 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			}
 			else {jetid_t = 1;}
 		}
-		// Get JECs:
-		double jec = -1, jmc = -1;
+		// Get JEC, JMC, JER:
+		double jec = -1, jmc = -1, jer = -1;
 		if (algo == "ak4") {
 			jec_corrector_ak4->setJetPt(pt);
 			jec_corrector_ak4->setJetEta(eta);
@@ -647,6 +656,15 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			jmc_corrector_ak4->setRho(rho);
 			jmc_corrector_ak4->setNPV(npv);
 			jmc = jmc_corrector_ak4->getCorrection();
+			
+			if (is_data_) jer = 1;
+			else {
+				JME::JetParameters jer_params;
+	//			jer_params.setJetPt(pt);
+				jer_params.setJetEta(eta);
+				jer_params.setRho(rho);
+				jer = jer_calculator_ak4.getScaleFactor(jer_params);
+			}
 		}
 		else {
 			jec_corrector_ak8->setJetPt(pt);
@@ -666,6 +684,15 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			jmc_corrector_ak8->setRho(rho);
 			jmc_corrector_ak8->setNPV(npv);
 			jmc = jmc_corrector_ak8->getCorrection();
+			
+			if (is_data_) jer = 1;
+			else {
+				JME::JetParameters jer_params;
+	//			jer_params.setJetPt(pt);
+				jer_params.setJetEta(eta);
+				jer_params.setRho(rho);
+				jer = jer_calculator_ak8.getScaleFactor(jer_params);
+			}
 		}
 		// Subjet variables:
 		double spx0 = 0, spy0 = 0, spz0 = 0, se0 = 0, spt0 = 0, sm0 = 0, seta0 = 0, sphi0 = 0;
@@ -726,6 +753,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			branches[algo_type]["tau5"].push_back(tau5);
 			branches[algo_type]["jec"].push_back(jec);
 			branches[algo_type]["jmc"].push_back(jmc);
+			branches[algo_type]["jer"].push_back(jer);
 			branches[algo_type]["neef"].push_back(neef);
 			branches[algo_type]["ceef"].push_back(ceef);
 			branches[algo_type]["nhef"].push_back(nhef);
@@ -1286,6 +1314,10 @@ void JetTuplizer::analyze(
 		branches["event"]["lumi"].push_back(iEvent.id().luminosityBlock());
 		branches["event"]["run"].push_back(iEvent.id().run());
 		branches["event"]["npv"].push_back(npv);
+		
+		/// JER setup:
+		jer_calculator_ak4 = JME::JetResolutionScaleFactor::get(iSetup, "AK4PFchs");
+		jer_calculator_ak8 = JME::JetResolutionScaleFactor::get(iSetup, "AK8PFchs");
 		
 		// Process each object collection:
 		process_pileup(iEvent, lumi_weights, pileupInfo_);

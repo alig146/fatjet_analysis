@@ -36,6 +36,7 @@ def read_cutflow(name):
 	tt_names = tt_names["sig"] + tt_names["bkg"]
 	results = OrderedDict()
 	for tt_name in tt_names:
+		print tt_name
 		results[tt_name] = []
 		for icut, cut in enumerate(info[name]):
 			cut_info = {"label": cut}

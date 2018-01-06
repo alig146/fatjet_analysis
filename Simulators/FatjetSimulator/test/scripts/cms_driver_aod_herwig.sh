@@ -1,0 +1,3 @@
+cmsDriver.py Hadronizer_TuneEE5C_13TeV_madgraph_differentPDF_herwigpp_cff.py --step GEN,SIM,DIGI,L1,DIGI2RAW,HLT,RAW2DIGI,RECO --mc --eventcontent AODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --filein file:sg300to5j.lhe --filetype LHE --fileout file:aod_herwig.root --datatier AODSIM --no_exec -n 2 --python_filename aod_herwig_template_cfg.py
+
+#cmsDriver.py Hadronizer_TuneEE5C_13TeV_madgraphamcatnlo_herwigpp_cff.py --step GEN,SIM,DIGI,L1,DIGI2RAW,HLT,RAW2DIGI,RECO --mc --eventcontent AODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --filein file:sg300to5j.lhe --filetype LHE --fileout file:aod_herwig.root --datatier AODSIM --no_exec -n 2 --python_filename aod_herwig_template_cfg.py

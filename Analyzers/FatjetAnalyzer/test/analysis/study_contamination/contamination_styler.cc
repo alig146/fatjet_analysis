@@ -87,11 +87,13 @@ void draw_set(TString cut, int mass) {
 	cout << "bkg integral = " << h_qcdmg->Integral() + h_ttbar->Integral() << endl;
 }
 
-void contamination_styler(TString cut_sb="sbl", TString cut_sig="sig") {
+void contamination_styler(TString cut_sb="sb", TString cut_sig="sig") {
 	gROOT->SetBatch();
 	gStyle->SetOptStat(0);
 	
-	TFile* tf = TFile::Open("contamination_plots.root");
+	TString fname = "contamination_plots.root";
+	if (cut_sb == "sblmasy") fname = "contamination_lmasy_plots.root";
+	TFile* tf = TFile::Open(fname);
 	
 	vector<int> masses = {100, 150, 200, 250, 300, 400, 500};
 	for (int i = 0; i < masses.size(); ++ i) {

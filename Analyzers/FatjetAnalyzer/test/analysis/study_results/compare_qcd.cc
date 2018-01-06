@@ -9,7 +9,7 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 	TString yunit = "Events";
 	if (norm != 0) yunit = "Normalized events";
 	style_ylabel(post_clone, "GeV", yunit);
-	post_clone->GetXaxis()->SetTitle("Average fatjet mass [GeV]");
+	set_xtitle(post_clone, "mavg");
 	
 	if (norm != 0) {
 		normalize_th1(post_clone);
@@ -51,6 +51,7 @@ void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=
 	leg->AddEntry(mce_clone, name_proper[ds] + " MC uncert.", "lf");
 	leg->Draw();
 	style_info(false, lum_string["15"], 1, true);
+	style_cut("sig");
 	
 //	style_write(name_proper[ds], 0.61, 0.74, 0.04);
 	

@@ -1,6 +1,12 @@
-# python:
 *.pyc
 *__init__.py
+*.lhe
+
+# Simulators:
+Simulators/FatjetSimulator/test/*.root
+
+# Analyzers:
+Analyzers/FatjetAnalyzer/test/*.root
 Analyzers/FatjetAnalyzer/test/jec_data/*.txt
 Analyzers/FatjetAnalyzer/test/condor_jobs
 Analyzers/FatjetAnalyzer/test/crab_projects

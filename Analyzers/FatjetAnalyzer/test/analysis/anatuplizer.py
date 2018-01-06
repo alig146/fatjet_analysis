@@ -57,8 +57,8 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 	n_events_tc = loop.n                      # The total number of events in the TChain
 	n_events = loop.n_run                     # The number of events to anatuplize
 	
-#	groomers = ["", "f", "p", "s", "t"]
-	groomers = ["", "p"]
+	groomers = ["", "f", "p", "s", "t"]
+#	groomers = ["", "p"]
 	if all([len(getattr(event, "{}_pf{}_pt".format(alg, groomer))) > 1 for groomer in groomers]):   # Sometimes there might not be two jets?
 		vars_calc = {};
 		for groomer in groomers:

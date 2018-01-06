@@ -22,6 +22,8 @@ from ROOT import TFile, TCut, TH1F, gROOT
 # VARIABLES:
 #anatuple_in = "~/anatuples/anatuple_cutpt400eta25.root"
 anatuple_in = "~/anatuples/anatuple_cutpt400eta25_pre.root"
+anatuple_in_sq100 = "~/anatuples/anatuple_sq100to4j_cutpt300eta20_pre.root"
+anatuple_in_bosons = "~/anatuples/anatuple_vbosons_moriond17_cutpt400eta25_pre.root"
 #weight_factor = 38.180/2.183
 # /VARIABLES
 
@@ -69,7 +71,17 @@ def apply_cut(cut, tt, v=False):
 def main():
 	gROOT.SetBatch()
 	rf = root.rfile(anatuple_in)
+	rf_sq100 = root.rfile(anatuple_in_sq100)
+	rf_bosons = root.rfile(anatuple_in_bosons)
 	ttrees = rf.get_ttrees()
+	ttrees_sq100 = rf_sq100.get_ttrees()
+	ttrees_bosons = rf_bosons.get_ttrees()
+	ttrees["sq100to4j"] = ttrees_sq100["sq100to4j"]
+	ttrees["wjets"] = ttrees_bosons["wjets"]
+	ttrees["zjets"] = ttrees_bosons["zjets"]
+	
+	print ttrees.keys()
+	
 	info = get_cutnames(style="root")
 #	with open("cutflow.yaml") as f:
 #		info = yaml.load(f)
@@ -88,7 +100,7 @@ def main():
 		wf = 1 # if "jetht" in tt_name else weight_factor
 		print "\tWill apply a weight factor of {:.2f}".format(wf)
 		generation = "moriond17"
-		if "sq" in tt_name: generation = "0706"
+		if "sq" in tt_name: generation = "moriond17cutht700"
 		miniaods = fetch_entries("miniaod", {"process": tt_name, "generation": generation})
 		original_w = sum([miniaod.n*miniaod.weight for miniaod in miniaods])
 		
@@ -115,7 +127,7 @@ def main():
 					if event.masy_p < 0.1:
 						ths[tt_name, "sig", "n"].Fill(3)
 						ths[tt_name, "sig", "w"].Fill(3, event.W*wf)
-						if max(event.tau43) < 0.80 and max(event.tau42) < 0.45 and max(event.tau21) < 0.75:
+						if max(event.tau43) < 0.80 and max(event.tau42) < 0.50 and max(event.tau21) < 0.75:
 							ths[tt_name, "sig", "n"].Fill(4)
 							ths[tt_name, "sig", "w"].Fill(4, event.W*wf)
 		for icut, cutname in enumerate(info["sig"]):

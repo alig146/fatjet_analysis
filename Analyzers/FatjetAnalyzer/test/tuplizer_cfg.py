@@ -21,16 +21,17 @@ from truculence import cmssw
 # /IMPORTS
 
 # FUNCTIONS:
-def check_jec(jec_path, data=False, algorithm="ak8"):
+def check_jec(jec_paths, data=False, algorithm="ak8"):
 	flavors = ["L1FastJet", "L2Relative", "L2L3Residual", "L3Absolute", "Uncertainty"]
-	d = "/".join(jec_path.split("/")[:-1])
-	prefix = jec_path.split("/")[-1]
-	if not os.path.exists(d):
-		return False
-	txts = [f for f in os.listdir(d) if ".txt" in f]
-	for flavor in flavors:
-		if not "{}_{}_{}_{}PFchs.txt".format(prefix, ("MC", "DATA")[data == True], flavor, algorithm.upper()) in txts:
+	for jec_path in jec_paths:
+		d = "/".join(jec_path.split("/")[:-1])
+		prefix = jec_path.split("/")[-1]
+		if not os.path.exists(d):
 			return False
+		txts = [f for f in os.listdir(d) if ".txt" in f]
+		for flavor in flavors:
+			if not "{}_{}_{}PFchs.txt".format(prefix, flavor, algorithm.upper()) in txts:
+				return False
 	return True
 # /FUNCTIONS:
 
@@ -298,8 +299,9 @@ process.TFileService = cms.Service("TFileService",
 )
 # Tuplizer:
 ## JEC data path:
-jec_path = "jec_data/Spring16_25nsV2"
-if not check_jec(jec_path, data=options.data):
+jec_path_mc = "jec_data/Summer16_23Sep2016V4_MC"
+jec_path_data = "jec_data/Summer16_23Sep2016AllV4_DATA"
+if not check_jec([jec_path_mc, jec_path_data], data=options.data):
 	print "ERROR: Can't find the JEC data that's supposed to be located in {}.".format(jec_path)
 	sys.exit()
 
@@ -312,7 +314,8 @@ process.tuplizer = cms.EDAnalyzer("JetTuplizer",
 	weight=cms.double(options.weight),       # The event weight
 	cut_pt=cms.double(options.cutPtTuplizer),
 	pileup_path=cms.string("pileup_data/"),
-	jec_version=cms.string(jec_path),
+	jec_version_mc=cms.string(jec_path_mc),
+	jec_version_data=cms.string(jec_path_data),
 	genInfo=cms.InputTag("generator"),
 	rhoInfo=cms.InputTag("fixedGridRhoFastjetAll"),
 	vertexCollection=cms.InputTag("offlineSlimmedPrimaryVertices"),

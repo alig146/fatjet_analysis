@@ -1,0 +1,1 @@
+cmsDriver.py --step PAT --mc --eventcontent MINIAODSIM --era Run2_25ns --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v8 --runUnscheduled --filein file:aod.root --fileout file:miniaod.root --datatier MINIAODSIM --no_exec -n 2 --python_filename aod_to_miniaod_template_cfg.py

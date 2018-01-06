@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void parameter_styler() {
 	TFile* tf_in = TFile::Open("parameter_plots.root");

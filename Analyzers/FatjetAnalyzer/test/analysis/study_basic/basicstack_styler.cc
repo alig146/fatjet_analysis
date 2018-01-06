@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int corner=1, double line=-1, TString line_label="Cut value") {
 	TString signame = "sq" + mass + "to4j";
@@ -63,13 +63,19 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		h_bkge->SetMarkerSize(0);
 		h_bkge->SetFillColorAlpha(kBlack, 0.2);
 		h_sige->SetMarkerSize(0);
-		h_sige->SetFillColorAlpha(kBlack, 0.2);
+		h_sige->SetFillColorAlpha(kBlack, 0.8);
+		h_sige->SetFillStyle(3013);
 	
 		h_bkg->SetFillStyle(0);
 
 
 		hs->Draw("hist");
 		if (variable == "mavg") hs->GetXaxis()->SetRangeUser(0, 900);
+		if (variable == "deta") hs->GetXaxis()->SetRangeUser(0, 1.0);
+		if (variable == "masy") hs->GetXaxis()->SetRangeUser(0, 0.1);
+		if (variable == "tau21") hs->GetXaxis()->SetRangeUser(0, 1.0);
+		if (variable == "tau42") hs->GetXaxis()->SetRangeUser(0.2, 0.6);
+		if (variable == "tau43") hs->GetXaxis()->SetRangeUser(0.4, 1.0);
 		if (logy == 0) hs->SetMaximum(hs->GetMaximum()*1.3);
 		else {
 			hs->SetMaximum(hs->GetMaximum()*10);
@@ -85,7 +91,7 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		if (line >=0) {
 //			double ymin = hs->GetMinimum();
 			double ymin = 0;
-			double ymax = hs->GetMaximum()/2;
+			double ymax = hs->GetMaximum();
 			if (logy) ymax = ymax/10;
 			tline = new TLine(line, ymin, line, ymax);
 			tline->SetLineColor(kRed-6);
@@ -121,21 +127,19 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		leg->AddEntry(h_qcdmg, "QCD (2 #rightarrow 4)", "f");
 		leg->AddEntry(h_ttbar, "t#bar{t}", "f");
 		leg->AddEntry(h_bkge, "Total background ", "lf");
-		leg->AddEntry(h_sqto4j, TString("#it{m}_{#tilde{q}} = ") + mass + " GeV", "lf");
+		leg->AddEntry(h_sqto4j, TString("#it{m}_{#tilde{q}} = ") + mass + " GeV", "f");
 		if (plot_jetht) leg->AddEntry(h_jetht, name_proper["jetht"], "lpe");
 		if (line >= 0) leg->AddEntry(tline, line_label, "l");
 		
 		leg->Draw();
 		/// Axes:
-		TString xtitle = variable_proper[variable];
-		if (unit_proper[variable] != "") xtitle += " [" + unit_proper[variable] + "]";
-		hs->GetXaxis()->SetTitle(xtitle);
-	//	style_ylabel(hs);
+		set_xtitle(hs, variable);
 		hs->GetYaxis()->SetTitle("Events");
+		if (variable == "mavg") style_ylabel(hs);
 	
 		// Write info:
 		style_info(!plot_jetht, lum_string["all"], corner_cms);
-		style_write(TString("Selection: #bf{") + cut_proper[cut] + "}",  0.172, 0.94, 0.020);
+		style_cut(cut);
 	
 		tc->SaveAs(name + ".pdf");
 	}
@@ -157,8 +161,8 @@ void basicstack_styler() {
 			TString variable = variables[ivar];
 			int nrebin = 30;
 			int corner = 1;
-			if (variable == "deta") nrebin = 60;
-			if (variable == "masy") nrebin = 60;
+			if (variable == "deta") nrebin = 20;
+			if (variable == "masy") nrebin = 10;
 			
 			if (variable == "deta" || variable == "masy") {
 				corner = 3;

@@ -51,7 +51,7 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 	vector<TString> texts_stats;
 	texts_stats.push_back("#bf{Statistics:}");
 	std::ostringstream oss_stats1;
-	oss_stats1 << "KS prob. = " << std::fixed << std::setprecision(3) << stats[0];
+//	oss_stats1 << "KS prob. = " << std::fixed << std::setprecision(3) << stats[0];
 	std::ostringstream oss_stats2;
 	oss_stats2 << "pull #chi^{2}/NDF = " << std::fixed << std::setprecision(2) << hstats->GetBinContent(3);
 	texts_stats.push_back(oss_stats2.str());
@@ -61,17 +61,17 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 	
 	// Write params:
 	std::ostringstream oss1;
-	oss1 << "#theta_{shift} = " << std::fixed << std::setprecision(1) << params->GetBinContent(2) << " #pm " << params->GetBinError(2) << " GeV";
+	oss1 << "shift = " << std::fixed << std::setprecision(1) << params->GetBinContent(2) << " #pm " << params->GetBinError(2) << " GeV";
 	std::ostringstream oss2;
-	oss2 << "#theta_{stretch} = (" << std::fixed << std::setprecision(1);
+	oss2 << "stretch = (" << std::fixed << std::setprecision(1);
 	if (params->GetBinContent(3) > 1) oss2 << "+";
 	oss2 << 100*(params->GetBinContent(3) - 1) << " #pm " << 100*params->GetBinError(3) << ")\%";
 	vector<TString> texts_par;
 	texts_par.push_back("#bf{Fit parameters:}");
 	texts_par.push_back(oss1.str());
 	texts_par.push_back(oss2.str());
-	if (logy == 1) style_write(texts_par, 0.55, 0.67, 0.035);
-	else if (logy == 0) style_write(texts_par, 0.55, 0.50, 0.035);
+	if (logy == 1) style_write(texts_par, 0.54, 0.67, 0.035);
+	else if (logy == 0) style_write(texts_par, 0.54, 0.50, 0.035);
 	
 	tc->SaveAs(name + ".pdf");
 	tc->SaveAs(name + ".png");
@@ -80,14 +80,17 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=30, bool ht=true, TString dir="", int f=1) {
 //	TFile* tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
 	TFile* tf_in = get_ana();
+	if (ds == "qcdmg") tf_in = get_ana("qcdmgext");
 	
 	TTree *tt = (TTree*) tf_in->Get(ds);
 	
 //	tt->Draw("mavg_p>>" + ds + "_fjp(1200,0,1200)", get_cut("fjp_" + cut_name, get_weight(ds)));
 //	TH1 *h_fjp = (TH1*) gDirectory->Get(ds + "_fjp");
 	TH1D* h_fjp = make_qcd_garwood(tf_in, ds, cut_name, nrebin);
+	cout << "here" << endl;
 	TH1* h_temp = fetch_template(ds, cut_name, dir, f, ht);
-	TH1 *h_cdf = make_cdf(h_temp, ds + "_cdf");
+	TH1* h_cdf = make_cdf(h_temp, ds + "_cdf");
+	
 	
 	/// Save untouched plots for use later:
 	TH1* h_fjp_original = (TH1*) h_fjp->Clone("fjp");
@@ -105,18 +108,19 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 		bins = {0, 50, 150, 200, 250, 300, 400, 500, 600};
 	}
 	else if (ds == "qcdmg" && cut_name == "sb") {
-		amp = 2e-6;
+		amp = 1.0;
 		shift = -10;
 		stretch = 0.90;
 //		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600, 650};
 		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
 	}
 	else if (ds == "qcdp" && cut_name == "sb") {
-		amp = 1e-6;
+		amp = 1.0;
 		shift = -20;
 		stretch = 0.90;
 //		bins = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800};
-		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600};
+//		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600};
+		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
 	}
 	else if (ds == "qcdmg" && cut_name == "sbb") {
 		amp = 5.0e-7;
@@ -131,22 +135,23 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 		bins = {0, 50, 100, 150, 200, 250, 300, 400, 500};
 	}
 	else if (ds == "qcdmg" && cut_name == "sig") {
-		amp = 2.0e-6;
-		shift = 1.0;
+		amp = 2.0;
+		shift = -20.0;
 		stretch = 1.0;
-		bins = {50, 100, 150, 200, 250, 300, 400, 500, 600, 800};
+		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570, 600};
 	}
 	else if (ds == "qcdp" && cut_name == "sig") {
-		amp = 2.0e-7;
-		shift = 0.0;
+		amp = 1.0;
+		shift = -20.0;
 		stretch = 1.0;
-		bins = {90, 120, 150, 180, 210, 270, 330, 390, 450, 510, 570, 630};
+		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 330, 390, 450, 510, 570, 630};
 	}
 	else if (ds == "qcdmg" && cut_name == "sigl" && ht) {		// This works
-		amp = 4.0e-7;
+		amp = 100.0;
 		shift = -10;
 		stretch = 1.0;
 //		bins = {50, 100, 150, 250, 300, 350, 400, 450, 500, 550, 600, 800};
+		bins = {60, 90, 120, 150, 180, 210, 240, 300, 360, 390, 450, 510, 540, 600, 810};
 		bins = {60, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600, 810};
 	}
 //	else if (ds == "qcdmg" && cut_name == "sigl" && ht) {		// Experimental
@@ -162,10 +167,14 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 		bins = {0, 50, 100, 150, 200, 250, 300, 400};
 	}
 	else if (ds == "qcdp" && cut_name == "sigl" && ht) {
-		amp = 4.0e-7;
+		amp = 1.0;
 		shift = -10.0;
 		stretch = 1.0;
-		bins = {0, 200, 300, 400, 500, 600, 700, 800, 900, 1100};
+//		bins = {0, 200, 300, 400, 500, 600, 700, 800, 900, 1100};
+//		bins = {0, 30, 60, 90, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600, 660, 720, 780, 840, 1200};
+//		bins = {0, 30, 60, 90, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600};
+//		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600};
+		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1200};
 	}
 	else if (cut_name == "sbt") {
 		amp = 2e-6;
@@ -207,7 +216,7 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 	params->SetBinError(3, stretche);
 	
 	/// Fit:
-	perform_fit(h_fjp, h_cdf, bins, params);
+	perform_fit_chi2(h_fjp, h_cdf, bins, params);
 	
 	print_params(params);
 	

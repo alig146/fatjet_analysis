@@ -1,20 +1,72 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 bool VERBOSE = true;
+
+TH3* fill_fj_plot(TTree* tt, TString name, TString cut, TString era, TString groomer="p") {
+	// Set up HT bins:
+//	vector<double> bins_ht = {900, 1000, 2000, 3000};
+//	vector<double> bins_ht = {900, 910, 920, 930, 940, 950, 970, 1000};
+//	for (double i = 1050; i <= 3200; i += 50) bins_ht.push_back(i);
+	vector<double> bins_ht;
+	for (double i = 900; i <= 3200; i += 92) bins_ht.push_back(i);
+	// Set up m bins:
+	vector<double> bins_m;
+	for (double i = 0; i <= 1200; i += 1) bins_m.push_back(i);
+	// Set up eta bins:
+	vector<double> bins_eta;
+//	for (double i = -2.0; i < 2.1; i += 0.1) bins_eta.push_back(i);
+	for (double i = -2.0; i < 2.1; i += 0.2) bins_eta.push_back(i);
+	// Fill histogram:
+	TH3D* h3 = new TH3D(name, "", bins_m.size()-1, &bins_m[0], bins_eta.size()-1, &bins_eta[0], bins_ht.size()-1, &bins_ht[0]);
+	tt->Draw("htak8:eta[0]:m_" + groomer + "[0]>>" + name, get_cut("fj_" + cut, era, get_weight(tt->GetName(), era)));
+	return h3;
+}
 
 TH3* make_fj_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TString groomer="p") {
 	TString name = "fj_" + ds + "_" + cut + "_" + groomer;
 	
-	vector<TTree*> tts;
 	TString era = "";
+	if (cut == "sig15") {
+		cut = "sig";
+		era = "15";
+	}
+	
+	vector<TTree*> tts;
 	if (ds == "inj") {
-		if (cut == "sig" || cut == "sigl") era = "15";
 		tts.push_back((TTree*) tf_in->Get("jetht"));
 		tts.push_back((TTree*) tf_in->Get("sq150to4j"));
-	} 
+	}
+	else if (ds == "inj100") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq100to4j"));
+	}
+	else if (ds == "inj150") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq150to4j"));
+	}
+	else if (ds == "inj200") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq200to4j"));
+	}
+	else if (ds == "inj250") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq250to4j"));
+	}
+	else if (ds == "inj300") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq300to4j"));
+	}
+	else if (ds == "inj400") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq400to4j"));
+	}
+	else if (ds == "inj500") {
+		tts.push_back((TTree*) tf_in->Get("jetht"));
+		tts.push_back((TTree*) tf_in->Get("sq500to4j"));
+	}
 	else if (ds == "all") {
 		tts.push_back((TTree*) tf_in->Get("qcdmg"));
 		tts.push_back((TTree*) tf_in->Get("ttbar"));
@@ -22,21 +74,15 @@ TH3* make_fj_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TString 
 	}
 	else tts.push_back((TTree*) tf_in->Get(ds));
 	
-	tts[0]->Draw("htak8:eta[0]:m_" + groomer + "[0]>>" + name + "(1200,0,1200,20,-2.5,2.5,25,900,3200)", get_cut("fj_" + cut, era, get_weight(tts[0]->GetName(), era)));
-	TH3* h = (TH3*) gDirectory->Get(name);
-	if (ds == "all") {
+	TH3* h = fill_fj_plot(tts[0], name, cut, era, groomer);
+	if (ds == "all" || ds == "inj") {
 		for (unsigned i = 1; i < tts.size() ; ++i) {
-			TTree* tt = tts[i];
-			tt->Draw("htak8:eta[0]:m_" + groomer + "[0]>>h(1200,0,1200,20,-2.5,2.5,25,900,3200)", get_cut("fj_" + cut, "", get_weight(tts[0]->GetName(), era)));
-			TH1* h_temp = (TH3*) gDirectory->Get("h");
+			TH3* h_temp = fill_fj_plot(tts[i], "h", cut, era, groomer);
 			h->Add(h_temp);
 		}
 	}
-	
 	// Write out plot:
-	tf_out->cd();
-	h->Write();
-	
+	tf_out->WriteTObject(h);
 	return h;
 }
 
@@ -46,18 +92,23 @@ TH1* make_temp_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TStrin
 	if (!ht) name = name + "_xht";
 	cout << "[..] Making template for " << name << "." << endl;
 	
+	cout << "[..] Making single jet distribution for " << ds << " with " << cut << "." << endl;
 	TH3* h = make_fj_plot(tf_in, tf_out, ds, cut, groomer);
-	TH1* temp = make_template(h, ds, cut, dir, f, 0.1, 1.0, ht);
+	cout << "[OK] Made the single jet distribution." << endl;
+//	cout << "[OK] The single jet distribution has the following binning:" << endl;
+//	cout << "HT: " << h->GetNbinsZ() << " bins." << endl;
+//	cout << "eta: " << h->GetNbinsY() << " bins." << endl;
+//	cout << "m: " << h->GetNbinsX() << " bins." << endl;
+	cout << "[..] Constructing template." << endl;
+	if (ds == "inj" || ds == "inj100" || ds == "inj150" || ds == "inj200" || ds == "inj250" || ds == "inj300" || ds == "inj400" || ds == "inj500") ds = "jetht";
+	TH1* temp = make_template(tf_out, name, h, ds, cut, dir, f, 0.1, 1.0, ht);
+//	cout << "here" << endl;
 	temp->SetName(name);
-	
-	// Write out plot:
-	tf_out->cd();
-	temp->Write();
-	
+	cout << "[OK] Template constructed." << endl;
 	return temp;
 }
 
-void template_plotter() {
+void template_plotter(TString cut="sb") {
 	// Options:
 	gROOT->SetBatch();
 	
@@ -65,161 +116,19 @@ void template_plotter() {
 	TFile *tf_in;
 //	tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
 	tf_in = get_ana();
-	TFile* tf_out = new TFile("template_plots.root", "RECREATE");
+	tf_in_ext = get_ana("qcdmgext");
+	TFile* tf_out = new TFile("template_plots_" + cut + ".root", "RECREATE");
+//	vector<TString> dss = {"jetht", "qcdmg", "qcdp", "inj"};
+	vector<TString> dss = {"jetht", "inj100", "inj150", "inj200", "inj250", "inj300", "inj400", "inj500"};
+//	vector<TString> dss = {"inj"};
 	
 	// Make plots:
-
-//	make_temp_plot(tf_in, tf_out, "inj", "sig");
-//	make_temp_plot(tf_in, tf_out, "inj", "sigl");
-//	make_temp_plot(tf_in, tf_out, "inj", "sb");
-//	make_temp_plot(tf_in, tf_out, "inj", "sbb");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sig");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sigl");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sb");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbb");
-	
-//	make_temp_plot(tf_in, tf_out, "all", "sig");
-//	make_temp_plot(tf_in, tf_out, "all", "sb");
-//	make_temp_plot(tf_in, tf_out, "all", "sbb");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbide", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbide", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbide", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbide", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbide", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbide", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbide", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbide", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbide", "", 1);
-//	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbideb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbideb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbideb", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbideb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbideb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbideb", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbideb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbideb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbideb", "", 1);
-//	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sig15", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sig", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sig", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sig", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sig15", "");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sig", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sig", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sig", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sig15", "", 1);
-//	make_temp_plot(tf_in, tf_out, "jetht", "sig", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sig", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sig", "", 1);
-
-////	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sigl", "", 1, "p", false);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl", "", 1, "p", false);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sigl", "", 1, "p", false);
-//	make_temp_plot(tf_in, tf_out, "jetht", "sigl");
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sigl");
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sigl");
-////	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sb", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sb", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sb", "", 1);
-	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "", 1);
-	make_temp_plot(tf_in, tf_out, "qcdmg", "sb", "", 1, "p", false);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sb", "", 1);
-////	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbb", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbb", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbb", "", 1);
-////	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbt", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbt", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbt", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbt", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbt", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbt", "");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbt", "", 1);
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbt", "", 1);
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbt", "", 1);
-////	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbtb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbtb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbtb", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbtb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbtb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbtb", "");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbtb", "", 1);
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbtb", "", 1);
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbtb", "", 1);
-
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbl", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbl", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sbl", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sbl", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbl", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbl", "", 1);
-////	
-////	make_temp_plot(tf_in, tf_out, "jetht", "sblb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sblb", "fix");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sblb", "fix");
-////	make_temp_plot(tf_in, tf_out, "jetht", "sblb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdmg", "sblb", "");
-////	make_temp_plot(tf_in, tf_out, "qcdp", "sblb", "");
-//	make_temp_plot(tf_in, tf_out, "jetht", "sblb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sblb", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sblb", "", 1);
-
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbl42", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl42", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbl42", "", 1);
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbl42b", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl42b", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbl42b", "", 1);
-
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbl43", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl43", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbl43", "", 1);
-//	make_temp_plot(tf_in, tf_out, "jetht", "sbl43b", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdmg", "sbl43b", "", 1);
-//	make_temp_plot(tf_in, tf_out, "qcdp", "sbl43b", "", 1);
-
-
-//////	make_temp_plot(tf_in, tf_out, "jetht", "sbls");
-//////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbls");
-//////	make_temp_plot(tf_in, tf_out, "qcdp", "sbls");
-//////	
-//////	make_temp_plot(tf_in, tf_out, "jetht", "sblsb");
-//////	make_temp_plot(tf_in, tf_out, "qcdmg", "sblsb");
-//////	make_temp_plot(tf_in, tf_out, "qcdp", "sblsb");
-//////	
-//////	make_temp_plot(tf_in, tf_out, "jetht", "sigs");
-//////	make_temp_plot(tf_in, tf_out, "qcdmg", "sigs");
-//////	make_temp_plot(tf_in, tf_out, "qcdp", "sigs");
-//////	
-//////	make_temp_plot(tf_in, tf_out, "jetht", "sbs");
-//////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbs");
-//////	make_temp_plot(tf_in, tf_out, "qcdp", "sbs");
-//////	
-//////	make_temp_plot(tf_in, tf_out, "jetht", "sbsb");
-//////	make_temp_plot(tf_in, tf_out, "qcdmg", "sbsb");
-//////	make_temp_plot(tf_in, tf_out, "qcdp", "sbsb");
+	for (unsigned i = 0; i < dss.size(); ++i) {
+		make_temp_plot(tf_in, tf_out, dss[i], cut);
+//		if (dss[i] != "inj") make_temp_plot(tf_in, tf_out, dss[i], cut, "", 1, "p", false);
+	}
+//	make_temp_plot(tf_in_ext, tf_out, "qcdmg", cut);
+//	make_temp_plot(tf_in_ext, tf_out, "qcdmg", cut, "", 1, "p", false);
 }
+
+

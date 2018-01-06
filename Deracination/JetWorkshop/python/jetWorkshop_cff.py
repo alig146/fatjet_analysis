@@ -170,7 +170,7 @@ def apply_chs(process, sequence, tags_dict):
 	return tag
 
 
-def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=False):
+def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=None):
 	# Make a PF jet collection:
 	tag_jets = "jetsPF" + algo.name.upper() + pum.title
 	if groom:
@@ -207,14 +207,58 @@ def make_pfjet_collection(process, sequence, pfcon_tag, algo, pum, groom=False):
 	setattr(process, tag_jets, jet_producer)
 	sequence += getattr(process, tag_jets)
 	
-#	# Recover constituents:
-#	tag_cons = "constituentsPF" + algo.name.upper() + pum.title
-#	con_producer = cms.EDFilter("MiniAODJetConstituentSelector",
-#		src=cms.InputTag(tag_jets),
-#		cut=cms.string("")
-#	)
-#	setattr(process, tag_cons, con_producer)
-#	sequence += getattr(process, tag_cons)
+	
+	# Recover constituents:
+	tag_cons = tag_jets.replace("jets", "constituents")
+	con_producer = cms.EDFilter("MiniAODJetConstituentSelector",
+		src=cms.InputTag(tag_jets),
+		cut=cms.string("")
+	)
+	setattr(process, tag_cons, con_producer)
+	sequence += getattr(process, tag_cons)
+	
+	return tag_jets
+
+
+def groom_pfjet_collection(process, sequence, pfjet_tag, patjet_tag, algo, groom):
+	# Make a groomed basicjet collection with the same ordering as the ungroomed pfjet collection.
+	# NOTES: You can only run this after you run "make_pfjet_collection"
+	
+	tag_jets = pfjet_tag.replace("jets", "jetsBasic") + groom.title
+	tag_mass = pfjet_tag.replace("jetsPF", "mass") + groom.title
+	tag_cons = pfjet_tag.replace("jets", "constituents")
+	
+	# Jet producer arguments:
+	arguments_jet = {
+		"src": cms.InputTag(tag_cons + ':constituents'),
+		"writeCompound": cms.bool(True),
+		"doAreaFastjet": cms.bool(True),
+		"jetCollInstanceName": cms.string('constituents'),
+		"useExplicitGhosts": cms.bool(True),
+	}
+	for key, value in groom.params.items(): arguments_jet[key] = value
+	if groom.name in ["s"]: arguments_jet["R0"] = cms.double(algo.r)
+	
+	# Make the groomed jet producer:
+	jet_producer_base = cms.EDProducer("FastjetJetProducer", 
+		PFJetParameters,
+		AnomalousCellParameters,
+		cms.PSet(jetAlgorithm=cms.string(algo.title), rParam=cms.double(algo.r)),
+	)
+	jet_producer = jet_producer_base.clone(**arguments_jet)
+	setattr(process, tag_jets, jet_producer)
+	sequence += getattr(process, tag_jets)
+	
+	# Make the groomed mass producer:
+	arguments_mass = {
+		"src": cms.InputTag(pfjet_tag),
+		"matched": cms.InputTag(tag_jets),
+		"distMax": cms.double(algo.r),
+	}
+	mass_producer = PFJets.ak8PFJetsCHSPrunedMass.clone(**arguments_mass)
+	setattr(process, tag_mass, mass_producer)
+	sequence += getattr(process, tag_mass)
+	getattr(process, patjet_tag).userData.userFloats.src += [tag_mass]
 	
 	return tag_jets
 
@@ -282,7 +326,8 @@ def make_patjet_collection(process, sequence, pfjet_tag, gnjet_tag, tags_dict, a
 	return tag
 
 def add_tau_variables(process, sequence, pfjet_tag, patjet_tag, algo, taus):
-	tag = "taus" + patjet_tag.replace("patJets", "")
+#	tag = "taus" + patjet_tag.replace("patJets", "")
+	tag = "taus" + pfjet_tag.replace("jetsPF", "")
 	tau_calculator = Njettiness.clone(
 		src=cms.InputTag(pfjet_tag),
 		Njets=cms.vuint32(taus),
@@ -304,6 +349,7 @@ def add_tau_variables(process, sequence, pfjet_tag, patjet_tag, algo, taus):
 	sequence += getattr(process, tag)
 	return tag
 
+
 def add_subjet_variables(process, sequence, pfjet_tag, patjet_tag, algo, nsubjets):
 	tag = "subjets" + patjet_tag.replace("patJets", "")
 	subjet_calculator = Subjetter.clone(
@@ -318,6 +364,7 @@ def add_subjet_variables(process, sequence, pfjet_tag, patjet_tag, algo, nsubjet
 	
 	sequence += getattr(process, tag)
 	return tag
+
 
 def add_jet_collection(
 	process,
@@ -352,8 +399,7 @@ def add_jet_collection(
 #		getSubjetMCFlavour = False
 	
 	# Filter constituents:
-	if not data:
-		remove_neutrinos(process, sequence, tags_dict)
+	if not data: remove_neutrinos(process, sequence, tags_dict)
 	
 	# Apply PUM (pileup mitigation):
 	if pum.name == "chs":
@@ -372,23 +418,31 @@ def add_jet_collection(
 	
 	if algo.name == "ca12": subjet_tag = add_subjet_variables(process, sequence, pfjet_tag, patjet_tag, algo, 4)
 	
+#	blah = make_groomed_jet_collection(process, sequence, pfjet_tag, algo, jet_groomer("p"))
+#	blah2 = make_patjet_collection(process, sequence, blah, gnjet_tag, tags_dict, algo, algo.name.upper() + pum.title + jet_groomer("p").title, matching=not data)
+	
 	# Make groomed collections:
+	basicjet_tags_groomed = {}
 	pfjet_tags_groomed = {}
 	patjet_tags_groomed = {}
 	tau_tags_groomed = {}
 	for groom in grooms:
+		basicjet_tags_groomed[groom.name] = groom_pfjet_collection(process, sequence, pfjet_tag, patjet_tag, algo, groom)
 		pfjet_tags_groomed[groom.name] = make_pfjet_collection(process, sequence, tags_dict["pf"], algo, pum, groom)
 		patjet_tags_groomed[groom.name] = make_patjet_collection(process, sequence, pfjet_tags_groomed[groom.name], gnjet_tag, tags_dict, algo, algo.name.upper() + pum.title + groom.title, matching=False)
 		## Nsubjettiness for groomed collections:
-		if taus: tau_tags_groomed[groom.name] = add_tau_variables(process, sequence, pfjet_tags_groomed[groom.name], patjet_tags_groomed[groom.name], algo, taus)
+		if taus: tau_tags_groomed[groom.name] = add_tau_variables(process, sequence, pfjet_tags_groomed[groom.name], patjet_tags_groomed[groom.name], algo, taus)		#patjet_tags_groomed[groom.name]
 
 	# Define output:
 	products_keep = [
 #		"*",
-#		"*_jets*_*_*",
+#		"*_jetsPF*_*_*",		# This is the pfjet collection corresponding to the ungroomed patjet collection.
+#		"*_jetsBasicPF*_*_*",		# This is a groomed basicjet (4-vector) collection with the same order as the ungroomed patjet collection.
+#		"*_constituentsPF*_*_*",
 #		"*_jets*_subjets_*",
 #		"*_patJets*_pfCandidates_*",
 		"*_selectedPatJets*_*_*",
+		"*_mass*_*_*",
 		"*_taus*_*_*",
 		"*_subjets*_*_*",
 #		"*_packedPFCandidatesCHS_*_*",
@@ -396,9 +450,17 @@ def add_jet_collection(
 #	if keep_all: products_keep.extend(["*_jets*_*_*", "*_patJets*_*_*"])
 	
 	products_drop = [
-		"*_jets*_*_*",
+#		"*_jets*_*_*",
 		"*_patJets*_calo*_*",
 		"*_patJets*_tagInfos_*",
+		"*_selectedPatJets*Filtered_genJets_*",
+		"*_selectedPatJets*Pruned_genJets_*",
+		"*_selectedPatJets*SoftDrop_genJets_*",
+		"*_selectedPatJets*Trimmed_genJets_*",
+		"*_selectedPatJets*Filtered_pfCandidates_*",
+		"*_selectedPatJets*Pruned_pfCandidates_*",
+		"*_selectedPatJets*SoftDrop_pfCandidates_*",
+		"*_selectedPatJets*Trimmed_pfCandidates_*",
 		"*_selectedPatJets*_calo*_*",
 		"*_selectedPatJets*_tagInfos_*",
 	]

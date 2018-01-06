@@ -1,1 +1,2 @@
 pre: "htak8>900&&Min$(pt)>400&&Max$(abs(eta))<2.0"
+sigxtau4: "htak8>900&&Min$(pt)>400&&Max$(abs(eta))<2.0&&deta<1.0&&Max$(tau21)<0.75&&masy_p<0.1"

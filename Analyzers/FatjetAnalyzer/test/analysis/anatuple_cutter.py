@@ -28,8 +28,9 @@ def main():
 	if len(sys.argv) > 2:
 		if sys.argv[2] in known_cuts:
 			cut_key = sys.argv[2]
-	tcut = TCut(known_cuts[cut_key])
+	tcut = TCut(cut_key, known_cuts[cut_key])
 	cut = tcut.GetTitle()
+	print "[..] Applying the following cut to {}:\n{}\n".format(f_in, cut)
 	f_out = f_in.replace(".root", "_{}.root".format(cut_key))
 	
 	# Apply the cut:
@@ -37,7 +38,7 @@ def main():
 	tts = rf.get_ttrees()
 	tf_out = TFile(f_out, "RECREATE")
 	for tt_name, tt in tts.items():
-		print "Cutting {} ...".format(tt.GetName())
+		print "[..] Cutting {}.".format(tt.GetName())
 		tt_out = tt.CopyTree(cut)
 		tf_out.WriteTObject(tt_out)
 	tf_out.Close()

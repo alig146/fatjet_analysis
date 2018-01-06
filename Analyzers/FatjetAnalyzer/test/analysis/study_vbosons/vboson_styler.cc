@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void style_and_save(TH1* H, int nrebin=50) {
 	TH1* h = (TH1*) H->Clone(TString(H->GetName()) + "temp");
@@ -54,13 +54,13 @@ void make_stack(TH1* hwjets, TH1* hzjets, TH1* hother, TString cut, int nrebin=1
 	sum->Draw("same hist");
 	sume->Draw("same e2");
 	stack->SetTitle("");
-	stack->GetXaxis()->SetTitle("Average pruned mass [GeV]");
+	set_xtitle(stack, "mavg");
 	style_ylabel(stack);
 	style_info(true);
-	
+	style_cut(cut);
 	
 	/// Legend:
-	TLegend* leg = new TLegend(0.60, 0.60, 0.80, 0.75);
+	TLegend* leg = get_legend(1, 4);
 	leg->AddEntry(hwjets, "W^{#pm}+jets", "f");
 	leg->AddEntry(hzjets, "Z+jets", "f");
 	leg->AddEntry(hother, "Diboson", "f");
@@ -71,7 +71,7 @@ void make_stack(TH1* hwjets, TH1* hzjets, TH1* hother, TString cut, int nrebin=1
 	double I = sum->IntegralAndError(0, sum->GetNbinsX() + 1, Ie);
 	std::ostringstream oss1;
 	oss1 << std::fixed << std::setprecision(1) << I << " #pm " << Ie << " events";
-	style_write(oss1.str(), 0.55, 0.78);
+	style_write(oss1.str(), 0.55, 0.58);
 	
 	for (int ilog = 0; ilog < 2; ++ilog) {
 		stack->SetMaximum(stack->GetMaximum()*1.4);
@@ -81,18 +81,17 @@ void make_stack(TH1* hwjets, TH1* hzjets, TH1* hother, TString cut, int nrebin=1
 		if (ilog == 1) fname += "_logy";
 		tc->SaveAs(fname + ".pdf");
 	}
-	style_and_save(sum, 1);
-//	cout << sum->GetName() << " = " << I << " +/- " << Ie << endl;
+//	style_and_save(sum, 1);
 }
 
-void contributions(TString cut="sb") {
-	vector<TString> cuts = {"sig", "sigl", "sb", "sbb"};
+void vboson_styler() {
+	vector<TString> cuts = {"sig", "sb", "sbb"};
 	vector<TString> names = {"wwto4q", "wwto2l2q", "zzto4q", "zzto2l2q", "zjets", "wjets"};
 	map<TString, TH1*> hs;
 	gROOT->SetBatch();
 	gStyle->SetOptStat(0);
 	
-	TFile* tf_in = TFile::Open("../study_contamination/contamination_plots.root");
+	TFile* tf_in = TFile::Open("vboson_plots.root");
 	
 	for(unsigned icut = 0; icut < cuts.size(); ++icut) {
 		TString cut = cuts[icut];
@@ -101,7 +100,6 @@ void contributions(TString cut="sb") {
 			TString name = names[iname];
 			TString hname = name + "_" + cut;
 			TH1* h = (TH1*) tf_in->Get(name + "_" + cut);
-			if (name == "wwto4q") h->Scale(51.1);
 			hs[hname] = h;
 			style_and_save(h);
 		}
