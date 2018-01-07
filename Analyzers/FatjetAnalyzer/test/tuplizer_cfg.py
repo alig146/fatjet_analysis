@@ -41,6 +41,7 @@ def check_jec(jec_paths, data=False, algorithm="ak8"):
 #out_dir_default = "~/temp"             # This is where output goes when it's not put into EOS by CRAB.
 out_dir_default = "."             # This is where output goes when it's not put into EOS by CRAB.
 cmssw_version = cmssw.get_version()                   # The CMSSW version that this configuration file is using.
+print
 
 ## Construct process:
 process = cms.Process("fatjets")
@@ -118,10 +119,10 @@ options.register ('cutEtaFilter',
 )
 ### Tuplizer options:
 options.register ('cutPtTuplizer',
-	10,
+	20,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
-	"The pT cut applied on jets to be included in the tuple. The default is 10 GeV."
+	"The pT cut applied on jets to be included in the tuple. The default is 20 GeV."
 )
 options.register ('weight',
 	-1,
@@ -217,7 +218,7 @@ if options.crab:
 	out_location = "{0}".format(options.outFile)
 else:
 	out_location = "{0}/{1}".format(options.outDir, options.outFile)
-print out_location
+print "Output path: {}".format(out_location)
 
 process.out = cms.OutputModule("PoolOutputModule",
 	fileName = cms.untracked.string(out_location),

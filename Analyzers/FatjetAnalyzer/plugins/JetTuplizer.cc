@@ -101,7 +101,14 @@ class JetTuplizer : public edm::EDAnalyzer {
 		virtual void beginJob();
 		virtual void process_triggers(const edm::Event&, EDGetTokenT<TriggerResults>, EDGetTokenT<pat::PackedTriggerPrescales>);
 		virtual void process_pileup(const edm::Event&, LumiReWeighting, EDGetTokenT<vector<PileupSummaryInfo>>);
-		virtual void process_jets_pf(const edm::Event&, string, string, EDGetTokenT<vector<pat::Jet>>);
+		virtual void process_jets_pf(const edm::Event&,
+			string,                            // Clustering algorithm name
+			EDGetTokenT<vector<pat::Jet>>,     // Ungroomed PAT jet collection
+			EDGetTokenT<vector<pat::Jet>>,     // Filtered PAT jet collection
+			EDGetTokenT<vector<pat::Jet>>,     // Pruned PAT jet collection
+			EDGetTokenT<vector<pat::Jet>>,     // SoftDrop PAT jet collection
+			EDGetTokenT<vector<pat::Jet>>      // Filtered PAT jet collection
+		);
 		virtual void process_jets_gn(const edm::Event&, string, EDGetTokenT<vector<reco::GenJet>>);
 		virtual void process_jets_maod(const edm::Event&, string, EDGetTokenT<vector<pat::Jet>>);
 		virtual void process_electrons_pf(const edm::Event&, EDGetTokenT<vector<pat::Electron>>);
@@ -135,7 +142,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
 	
 	// Input collections:
-	vector<string> jet_names, jet_types, jet_collections;
+	vector<string> jet_collections_maod, jet_collections_gn, jet_collections_pf;
 	vector<string> lep_names, lep_types;
 	vector<string> gen_names, gen_types;
 	
@@ -156,7 +163,7 @@ class JetTuplizer : public edm::EDAnalyzer {
 	BTagCalibrationReader btagsf_reader;
 	
 	// Ntuple information:
-	vector<string> jet_variables, lep_variables, gen_variables, event_variables;
+	vector<string> jet_variables, jet_variables_maod, jet_variables_gn, jet_variables_pf, lep_variables, gen_variables, event_variables;
 	map<string, map<string, vector<double>>> branches;
 	map<string, TTree*> ttrees;
 	map<string, map<string, TBranch*>> tbranches;
@@ -264,36 +271,39 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 {
 //do what ever initialization is needed
 	// Collections setup:
-	/// "jet"
-	jet_names = {"ak4", "ak8", "ca12"};
-	jet_types = {"pf", "pff", "pfp", "pfs", "pft", "gn", "maod"};
-	jet_collections = {
-		"ak4_maod", "ak4_gn", "ak4_pf",
-		"ak8_maod", "ak8_gn", "ak8_pf", "ak8_pfp",
-		"ca12_gn", "ca12_pf", "ca12_pff", "ca12_pfp", "ca12_pfs", "ca12_pft"
-	};
+	/// Jet collection setup:
+	jet_collections_maod = {"ak4", "ak8"};
+	jet_collections_gn = {"ak4", "ak8", "ca12"};
+	jet_collections_pf = {"ak4", "ak8", "ca12"};
+//	jet_collections = {
+//		"ak4_maod", "ak4_gn", "ak4_pf",
+//		"ak8_maod", "ak8_gn", "ak8_pf", //"ak8_pfp",
+//		"ca12_gn", "ca12_pf"//, "ca12_pff", "ca12_pfp", "ca12_pfs", "ca12_pft"
+//	};
 	jet_variables = {		// List of event branch variables for each collection.
 		// Jet collection variables:
 		"ht",         // Sum of jet pTs (with some minimum pT cutoff)
-		"njets",      // Total number of jets (with some minimum pT cutoff)
+//		"njets",      // Total number of jets (with some minimum pT cutoff)
 		// Individual jet variables
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt",
 		"m",          // Ungroomed mass
+		// Nsubjettiness:
 		"tau1",       // Nsubjettiness 1
 		"tau2",       // Nsubjettiness 2
 		"tau3",       // Nsubjettiness 3
 		"tau4",       // Nsubjettiness 4
 		"tau5",       // Nsubjettiness 5
-		"bd_te",
-		"bd_tp",
-		"bd_csv",
-		"bd_cisv",
-		"jec",        // Jet energy correction
-		"jer",        // Jet energy resolution correction
-		"jmc",        // Jet mass correction
-		"bsf",        // b-tag scale factor
-		"bsf_u",      // b-tag scale factor uncertainty up (?)
-		"bsf_d",      // b-tag scale factor uncertainty down (?)
+		"tau21",      // Nsubjettiness 21 (tau2/tau1))
+		"tau31",      // Nsubjettiness 31
+		"tau32",      // Nsubjettiness 32
+		"tau41",      // Nsubjettiness 41
+		"tau42",      // Nsubjettiness 42
+		"tau43",      // Nsubjettiness 43
+		"tau51",      // Nsubjettiness 51
+		"tau52",      // Nsubjettiness 52
+		"tau53",      // Nsubjettiness 53
+		"tau54",      // Nsubjettiness 54
+		// Jet contents:
 		"neef",       // Neutral EM energy fraction
 		"ceef",       // Charged EM energy fraction
 		"nhef",       // Neutral hadron energy fraction
@@ -304,15 +314,66 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"n",          // Number of constituents
 		"f",          // Hadron flavor
 		"jetid_l",    // Loose jetID flag
-		"jetid_t",     // Tight jetID flag
-		// Subjet variables:
-		"spx0", "spy0", "spz0", "se0", "spt0", "sm0", "seta0", "sphi0",
-		"spx1", "spy1", "spz1", "se1", "spt1", "sm1", "seta1", "sphi1",
-		"spx2", "spy2", "spz2", "se2", "spt2", "sm2", "seta2", "sphi2",
-		"spx3", "spy3", "spz3", "se3", "spt3", "sm3", "seta3", "sphi3"
+		"jetid_t",    // Tight jetID flag
+	};
+	//// Variables specific to miniAOD jets:
+	jet_variables_maod = {
+		// b-tagging discriminators:
+		"bd_te",
+		"bd_tp",
+		"bd_csv",
+		"bd_cisv"
+	};
+	//// Variables specific to GN jets:
+	jet_variables_gn = {};
+	//// Variables specific to PF jets:
+	jet_variables_pf = {
+		// b-tagging discriminators:
+		"bd_te",
+		"bd_tp",
+		"bd_csv",
+		"bd_cisv",
+		// Jet corrections:
+		"jec",        // Jet energy correction
+		"jer",        // Jet energy resolution correction
+		"jmc",        // Jet mass correction
+		"bsf",        // b-tag scale factor
+		"bsf_u",      // b-tag scale factor uncertainty up (?)
+		"bsf_d",      // b-tag scale factor uncertainty down (?)
+		// Groomed mass:
+		"mf",         // Filtered mass
+		"mp",         // Pruned mass
+		"ms",         // SoftDrop mass
+		"mt",         // Trimmed mass
+		// Groomed nsubjettiness:
+		"tau1f",       // Filtered nsubjettiness 1
+		"tau2f",       // Filtered nsubjettiness 2
+		"tau3f",       // Filtered nsubjettiness 3
+		"tau4f",       // Filtered nsubjettiness 4
+		"tau5f",       // Filtered nsubjettiness 5
+		"tau1p",       // Pruned nsubjettiness 1
+		"tau2p",       // Pruned nsubjettiness 2
+		"tau3p",       // Pruned nsubjettiness 3
+		"tau4p",       // Pruned nsubjettiness 4
+		"tau5p",       // Pruned nsubjettiness 5
+		"tau1s",       // SoftDrop nsubjettiness 1
+		"tau2s",       // SoftDrop nsubjettiness 2
+		"tau3s",       // SoftDrop nsubjettiness 3
+		"tau4s",       // SoftDrop nsubjettiness 4
+		"tau5s",       // SoftDrop nsubjettiness 5
+		"tau1t",       // Trimmed nsubjettiness 1
+		"tau2t",       // Trimmed nsubjettiness 2
+		"tau3t",       // Trimmed nsubjettiness 3
+		"tau4t",       // Trimmed nsubjettiness 4
+		"tau5t",       // Trimmed nsubjettiness 5
+		// Subjet variables (ungroomed):
+		"spx0", "spy0", "spz0", "se0", "spt0", "sm0", "seta0", "sphi0",		// Subjet 1
+		"spx1", "spy1", "spz1", "se1", "spt1", "sm1", "seta1", "sphi1",		// Subjet 2
+		"spx2", "spy2", "spz2", "se2", "spt2", "sm2", "seta2", "sphi2",		// Subjet 3
+		"spx3", "spy3", "spz3", "se3", "spt3", "sm3", "seta3", "sphi3"		// Subjet 4
 	};
 	
-	/// "lep"
+	/// Lepton (and photon) collection variables:
 	lep_names = {"le", "lm", "lt", "lp"};
 	lep_types = {"pf"};
 	lep_variables = {		// List of event branch variables for each collection.
@@ -361,22 +422,53 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	ttrees["events"] = fs->make<TTree>();
 	ttrees["events"]->SetName("events");
 	
-	//// "jet":
-//	for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
-//		string name = *i;
-//		for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
-//			string type = *j;
-//			string name_type = name + "_" + type;
-
-	for (vector<string>::const_iterator i = jet_collections.begin(); i != jet_collections.end(); i++) {
+	//// Build jet branches:
+	///// miniAOD jet branches:
+	for (vector<string>::const_iterator i = jet_collections_maod.begin(); i != jet_collections_maod.end(); i++) {
+		string name_type = *i + "_maod";
 		for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
-			string name_type = *i;
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+		}
+		// Add special branches for miniAOD jets:
+		for (vector<string>::const_iterator k = jet_variables_maod.begin(); k != jet_variables_maod.end(); k++) {
 			string variable = *k;
 			string branch_name = name_type + "_" + variable;
 			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
 		}
 	}
-	//// "lep":
+	///// GN jet branches:
+	for (vector<string>::const_iterator i = jet_collections_gn.begin(); i != jet_collections_gn.end(); i++) {
+		string name_type = *i + "_gn";
+		for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+		}
+		// Add special branches for GN jets:
+		for (vector<string>::const_iterator k = jet_variables_gn.begin(); k != jet_variables_gn.end(); k++) {
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+		}
+	}
+	///// PF jet branches:
+	for (vector<string>::const_iterator i = jet_collections_pf.begin(); i != jet_collections_pf.end(); i++) {
+		string name_type = *i + "_pf";
+		for (vector<string>::const_iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+		}
+		// Add special branches for PF jets:
+		for (vector<string>::const_iterator k = jet_variables_pf.begin(); k != jet_variables_pf.end(); k++) {
+			string variable = *k;
+			string branch_name = name_type + "_" + variable;
+			tbranches[name_type][variable] = ttrees["events"]->Branch(branch_name.c_str(), &(branches[name_type][variable]), 64000, 0);
+		}
+	}
+	//// Build lepton (and photon) branches:
 	for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
 		string name = *i;
 		for (vector<string>::const_iterator j = lep_types.begin(); j != lep_types.end(); j++) {
@@ -569,43 +661,71 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 }
 
 /// PF jets method:
-void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string groom, EDGetTokenT<vector<pat::Jet>> token) {
+void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
+	string algo,
+	EDGetTokenT<vector<pat::Jet>> token_u,
+	EDGetTokenT<vector<pat::Jet>> token_f,
+	EDGetTokenT<vector<pat::Jet>> token_p,
+	EDGetTokenT<vector<pat::Jet>> token_s,
+	EDGetTokenT<vector<pat::Jet>> token_t
+) {
+	// Debug:
 	if (v_) cout << "Begin process_jets_pf." << endl;
+	
 	// Arguments:
 	string type = "pf";
-	if (!groom.empty()) {
-		stringstream ss;
-		string s;
-		ss << groom.at(0);
-		ss >> s;
-		type += boost::to_lower_copy<string>(s);
-	}
 	string algo_type = algo + "_" + type;
 	
-	Handle<vector<pat::Jet>> jets;
-	iEvent.getByToken(token, jets);
+	// Extract jet collections from event:
+	Handle<vector<pat::Jet>> jets_u;           // Ungroomed PAT jet collection
+	Handle<vector<pat::Jet>> jets_f;           // Filtered PAT jet collection
+	Handle<vector<pat::Jet>> jets_p;           // Pruned PAT jet collection
+	Handle<vector<pat::Jet>> jets_s;           // SoftDrop PAT jet collection
+	Handle<vector<pat::Jet>> jets_t;           // Trimmed PAT jet collection
+	iEvent.getByToken(token_u, jets_u);
+	iEvent.getByToken(token_f, jets_f);
+	iEvent.getByToken(token_p, jets_p);
+	iEvent.getByToken(token_s, jets_s);
+	iEvent.getByToken(token_t, jets_t);
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
 	
-	// Loop over the collection:
+	// Loop over the ungroomed jet collection:
 	int njet = 0;
-	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
-		njet ++;
-		if (njet > 4) break;
-		// Define some useful event variables:
+	for (vector<pat::Jet>::const_iterator jet = jets_u->begin(); jet != jets_u->end(); ++ jet) {
+		
+//		if (njet > 4) break;		// Only save top 4 jets.
+
+		// Define basic event variables:
 		double m = jet->mass();
-		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + groom + string(":tau");
+		string mass_tag = string("mass") + boost::to_upper_copy<string>(algo) + string("CHS");
+		double mf = jet->userFloat(mass_tag + string("Filtered"));
+		double mp = jet->userFloat(mass_tag + string("Pruned"));
+		double ms = jet->userFloat(mass_tag + string("SoftDrop"));
+		double mt = jet->userFloat(mass_tag + string("Trimmed"));
+		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + string(":tau");
 		double tau1 = jet->userFloat(tau_tag + string("1"));
 		double tau2 = jet->userFloat(tau_tag + string("2"));
 		double tau3 = jet->userFloat(tau_tag + string("3"));
 		double tau4 = jet->userFloat(tau_tag + string("4"));
 		double tau5 = jet->userFloat(tau_tag + string("5"));
+		double tau21 = 100, tau31 = 100, tau32 = 100, tau41 = 100, tau42 = 100, tau43 = 100, tau51 = 100, tau52 = 100, tau53 = 100, tau54 = 100;
+		if (tau1 > 0) tau21 = tau2/tau1;
+		if (tau1 > 0) tau31 = tau3/tau1;
+		if (tau2 > 0) tau32 = tau3/tau2;
+		if (tau1 > 0) tau41 = tau4/tau1;
+		if (tau2 > 0) tau42 = tau4/tau2;
+		if (tau3 > 0) tau43 = tau4/tau3;
+		if (tau1 > 0) tau51 = tau5/tau1;
+		if (tau2 > 0) tau52 = tau5/tau2;
+		if (tau3 > 0) tau53 = tau5/tau3;
+		if (tau4 > 0) tau54 = tau5/tau4;
 		double px = jet->px();
 		double py = jet->py();
 		double pz = jet->pz();
-		double e = jet->energy();
 		double pt = jet->pt();
+		double e = jet->energy();
 		double phi = jet->phi();
 		double eta = jet->eta();
 		double y = jet->y();
@@ -694,13 +814,29 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 				jer = jer_calculator_ak8.getScaleFactor(jer_params);
 			}
 		}
+		// Apply jet corrections to event variables:
+		m = m*jmc;
+		mf = mf*jmc;
+		mp = mp*jmc;
+		ms = ms*jmc;
+		mt = mt*jmc;
+		px = px*jec;
+		py = py*jec;
+		pz = pz*jec;
+		pt = pt*jec;
+		e = e*jec;
+		
+		// Apply pT threshold:
+		if (pt < cut_pt_) continue;		// Only save jets with pT greater than the cutoff.
+		njet ++;
+		
 		// Subjet variables:
 		double spx0 = 0, spy0 = 0, spz0 = 0, se0 = 0, spt0 = 0, sm0 = 0, seta0 = 0, sphi0 = 0;
 		double spx1 = 0, spy1 = 0, spz1 = 0, se1 = 0, spt1 = 0, sm1 = 0, seta1 = 0, sphi1 = 0;
 		double spx2 = 0, spy2 = 0, spz2 = 0, se2 = 0, spt2 = 0, sm2 = 0, seta2 = 0, sphi2 = 0;
 		double spx3 = 0, spy3 = 0, spz3 = 0, se3 = 0, spt3 = 0, sm3 = 0, seta3 = 0, sphi3 = 0;
-		if (algo == "ca12" && groom.empty()) {		// Only get subjet variables for ungroomed CA12 jets.
-			string subjet_tag = string("subjets") + boost::to_upper_copy<string>(algo) + string("CHS") + groom + string(":");
+		if (algo == "ca12") {		// Only get subjet variables for ungroomed CA12 jets.
+			string subjet_tag = string("subjets") + boost::to_upper_copy<string>(algo) + string("CHS:");
 			spx0 = jet->userFloat(subjet_tag + string("px0"));
 			spx1 = jet->userFloat(subjet_tag + string("px1"));
 			spx2 = jet->userFloat(subjet_tag + string("px2"));
@@ -735,91 +871,184 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent, string algo, string 
 			sphi3 = jet->userFloat(subjet_tag + string("phi3"));
 		}
 		
-		// Fill branches:
-		if (pt > cut_pt_) {
-			branches[algo_type]["phi"].push_back(phi);
-			branches[algo_type]["eta"].push_back(eta);
-			branches[algo_type]["y"].push_back(y);
-			branches[algo_type]["px"].push_back(px);
-			branches[algo_type]["py"].push_back(py);
-			branches[algo_type]["pz"].push_back(pz);
-			branches[algo_type]["e"].push_back(e);
-			branches[algo_type]["pt"].push_back(pt);
-			branches[algo_type]["m"].push_back(m);
-			branches[algo_type]["tau1"].push_back(tau1);
-			branches[algo_type]["tau2"].push_back(tau2);
-			branches[algo_type]["tau3"].push_back(tau3);
-			branches[algo_type]["tau4"].push_back(tau4);
-			branches[algo_type]["tau5"].push_back(tau5);
-			branches[algo_type]["jec"].push_back(jec);
-			branches[algo_type]["jmc"].push_back(jmc);
-			branches[algo_type]["jer"].push_back(jer);
-			branches[algo_type]["neef"].push_back(neef);
-			branches[algo_type]["ceef"].push_back(ceef);
-			branches[algo_type]["nhef"].push_back(nhef);
-			branches[algo_type]["chef"].push_back(chef);
-			branches[algo_type]["mef"].push_back(mef);
-			branches[algo_type]["nm"].push_back(nm);
-			branches[algo_type]["cm"].push_back(cm);
-			branches[algo_type]["n"].push_back(n);
-			branches[algo_type]["f"].push_back(f);
-			branches[algo_type]["jetid_l"].push_back(jetid_l);
-			branches[algo_type]["jetid_t"].push_back(jetid_t);
-			// Subjet branches:
-			branches[algo_type]["spx0"].push_back(spx0);
-			branches[algo_type]["spy0"].push_back(spy0);
-			branches[algo_type]["spz0"].push_back(spz0);
-			branches[algo_type]["se0"].push_back(se0);
-			branches[algo_type]["spt0"].push_back(spt0);
-			branches[algo_type]["sm0"].push_back(sm0);
-			branches[algo_type]["seta0"].push_back(seta0);
-			branches[algo_type]["sphi0"].push_back(sphi0);
-			branches[algo_type]["spx1"].push_back(spx1);
-			branches[algo_type]["spy1"].push_back(spy1);
-			branches[algo_type]["spz1"].push_back(spz1);
-			branches[algo_type]["se1"].push_back(se1);
-			branches[algo_type]["spt1"].push_back(spt1);
-			branches[algo_type]["sm1"].push_back(sm1);
-			branches[algo_type]["seta1"].push_back(seta1);
-			branches[algo_type]["sphi1"].push_back(sphi1);
-			branches[algo_type]["spx2"].push_back(spx2);
-			branches[algo_type]["spy2"].push_back(spy2);
-			branches[algo_type]["spz2"].push_back(spz2);
-			branches[algo_type]["se2"].push_back(se2);
-			branches[algo_type]["spt2"].push_back(spt2);
-			branches[algo_type]["sm2"].push_back(sm2);
-			branches[algo_type]["seta2"].push_back(seta2);
-			branches[algo_type]["sphi2"].push_back(sphi2);
-			branches[algo_type]["spx3"].push_back(spx3);
-			branches[algo_type]["spy3"].push_back(spy3);
-			branches[algo_type]["spz3"].push_back(spz3);
-			branches[algo_type]["se3"].push_back(se3);
-			branches[algo_type]["spt3"].push_back(spt3);
-			branches[algo_type]["sm3"].push_back(sm3);
-			branches[algo_type]["seta3"].push_back(seta3);
-			branches[algo_type]["sphi3"].push_back(sphi3);
+		// Groomed taus:
+		/// The groomed PAT jets might be in a different order than the ungroomed ones, since the PAT code orders by pT.
+		/// Therefore, I match them, by comparing groomed masses, using this really dumb algorithm:
+		double tau1f = -1, tau2f = -1, tau3f = -1, tau4f = -1, tau5f = -1;
+		double tau1p = -1, tau2p = -1, tau3p = -1, tau4p = -1, tau5p = -1;
+		double tau1s = -1, tau2s = -1, tau3s = -1, tau4s = -1, tau5s = -1;
+		double tau1t = -1, tau2t = -1, tau3t = -1, tau4t = -1, tau5t = -1;
+		if (njet < 5) {		// Only save for the first four saved jets.
+			double epsilon = 0.000001;
+			string taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSFiltered") + string(":tau");
+			for (vector<pat::Jet>::const_iterator jetg = jets_f->begin(); jetg != jets_f->end(); ++ jetg) {
+				double mg = jetg->mass();
+//				cout << njet << "   " << mf/jmc << "   " << mg << endl;
+				if (fabs(mg - mf/jmc) <= epsilon*fabs(mg)) {
+					tau1f = jetg->userFloat(taug_tag + string("1"));
+					tau2f = jetg->userFloat(taug_tag + string("2"));
+					tau3f = jetg->userFloat(taug_tag + string("3"));
+					tau4f = jetg->userFloat(taug_tag + string("4"));
+					tau5f = jetg->userFloat(taug_tag + string("5"));
+					break;
+				}
+			}
+			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSPruned") + string(":tau");
+			for (vector<pat::Jet>::const_iterator jetg = jets_p->begin(); jetg != jets_p->end(); ++ jetg) {
+				double mg = jetg->mass();
+				if (fabs(mg - mp/jmc) <= epsilon*fabs(mg)) {
+					tau1p = jetg->userFloat(taug_tag + string("1"));
+					tau2p = jetg->userFloat(taug_tag + string("2"));
+					tau3p = jetg->userFloat(taug_tag + string("3"));
+					tau4p = jetg->userFloat(taug_tag + string("4"));
+					tau5p = jetg->userFloat(taug_tag + string("5"));
+					break;
+				}
+			}
+			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSSoftDrop") + string(":tau");
+			for (vector<pat::Jet>::const_iterator jetg = jets_s->begin(); jetg != jets_s->end(); ++ jetg) {
+				double mg = jetg->mass();
+				if (fabs(mg - ms/jmc) <= epsilon*fabs(mg)) {
+					tau1s = jetg->userFloat(taug_tag + string("1"));
+					tau2s = jetg->userFloat(taug_tag + string("2"));
+					tau3s = jetg->userFloat(taug_tag + string("3"));
+					tau4s = jetg->userFloat(taug_tag + string("4"));
+					tau5s = jetg->userFloat(taug_tag + string("5"));
+					break;
+				}
+			}
+			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSTrimmed") + string(":tau");
+			for (vector<pat::Jet>::const_iterator jetg = jets_t->begin(); jetg != jets_t->end(); ++ jetg) {
+				double mg = jetg->mass();
+				if (fabs(mg - mt/jmc) <= epsilon*fabs(mg)) {
+					tau1t = jetg->userFloat(taug_tag + string("1"));
+					tau2t = jetg->userFloat(taug_tag + string("2"));
+					tau3t = jetg->userFloat(taug_tag + string("3"));
+					tau4t = jetg->userFloat(taug_tag + string("4"));
+					tau5t = jetg->userFloat(taug_tag + string("5"));
+					break;
+				}
+			}
 		}
+		
+		// Fill branches:
+		branches[algo_type]["phi"].push_back(phi);
+		branches[algo_type]["eta"].push_back(eta);
+		branches[algo_type]["y"].push_back(y);
+		branches[algo_type]["px"].push_back(px);
+		branches[algo_type]["py"].push_back(py);
+		branches[algo_type]["pz"].push_back(pz);
+		branches[algo_type]["e"].push_back(e);
+		branches[algo_type]["pt"].push_back(pt);
+		branches[algo_type]["m"].push_back(m);
+		branches[algo_type]["mf"].push_back(mf);
+		branches[algo_type]["mp"].push_back(mp);
+		branches[algo_type]["ms"].push_back(ms);
+		branches[algo_type]["mt"].push_back(mt);
+		branches[algo_type]["tau1"].push_back(tau1);
+		branches[algo_type]["tau2"].push_back(tau2);
+		branches[algo_type]["tau3"].push_back(tau3);
+		branches[algo_type]["tau4"].push_back(tau4);
+		branches[algo_type]["tau5"].push_back(tau5);
+		branches[algo_type]["tau21"].push_back(tau21);
+		branches[algo_type]["tau31"].push_back(tau31);
+		branches[algo_type]["tau32"].push_back(tau32);
+		branches[algo_type]["tau41"].push_back(tau41);
+		branches[algo_type]["tau42"].push_back(tau42);
+		branches[algo_type]["tau43"].push_back(tau43);
+		branches[algo_type]["tau51"].push_back(tau51);
+		branches[algo_type]["tau52"].push_back(tau52);
+		branches[algo_type]["tau53"].push_back(tau53);
+		branches[algo_type]["tau54"].push_back(tau54);
+		if (njet < 5) {
+			branches[algo_type]["tau1f"].push_back(tau1f);
+			branches[algo_type]["tau2f"].push_back(tau2f);
+			branches[algo_type]["tau3f"].push_back(tau3f);
+			branches[algo_type]["tau4f"].push_back(tau4f);
+			branches[algo_type]["tau5f"].push_back(tau5f);
+			branches[algo_type]["tau1p"].push_back(tau1p);
+			branches[algo_type]["tau2p"].push_back(tau2p);
+			branches[algo_type]["tau3p"].push_back(tau3p);
+			branches[algo_type]["tau4p"].push_back(tau4p);
+			branches[algo_type]["tau5p"].push_back(tau5p);
+			branches[algo_type]["tau1s"].push_back(tau1s);
+			branches[algo_type]["tau2s"].push_back(tau2s);
+			branches[algo_type]["tau3s"].push_back(tau3s);
+			branches[algo_type]["tau4s"].push_back(tau4s);
+			branches[algo_type]["tau5s"].push_back(tau5s);
+			branches[algo_type]["tau1t"].push_back(tau1t);
+			branches[algo_type]["tau2t"].push_back(tau2t);
+			branches[algo_type]["tau3t"].push_back(tau3t);
+			branches[algo_type]["tau4t"].push_back(tau4t);
+			branches[algo_type]["tau5t"].push_back(tau5t);
+		}
+		branches[algo_type]["jec"].push_back(jec);
+		branches[algo_type]["jmc"].push_back(jmc);
+		branches[algo_type]["jer"].push_back(jer);
+		branches[algo_type]["neef"].push_back(neef);
+		branches[algo_type]["ceef"].push_back(ceef);
+		branches[algo_type]["nhef"].push_back(nhef);
+		branches[algo_type]["chef"].push_back(chef);
+		branches[algo_type]["mef"].push_back(mef);
+		branches[algo_type]["nm"].push_back(nm);
+		branches[algo_type]["cm"].push_back(cm);
+		branches[algo_type]["n"].push_back(n);
+		branches[algo_type]["f"].push_back(f);
+		branches[algo_type]["jetid_l"].push_back(jetid_l);
+		branches[algo_type]["jetid_t"].push_back(jetid_t);
+		// Subjet branches:
+		branches[algo_type]["spx0"].push_back(spx0);
+		branches[algo_type]["spy0"].push_back(spy0);
+		branches[algo_type]["spz0"].push_back(spz0);
+		branches[algo_type]["se0"].push_back(se0);
+		branches[algo_type]["spt0"].push_back(spt0);
+		branches[algo_type]["sm0"].push_back(sm0);
+		branches[algo_type]["seta0"].push_back(seta0);
+		branches[algo_type]["sphi0"].push_back(sphi0);
+		branches[algo_type]["spx1"].push_back(spx1);
+		branches[algo_type]["spy1"].push_back(spy1);
+		branches[algo_type]["spz1"].push_back(spz1);
+		branches[algo_type]["se1"].push_back(se1);
+		branches[algo_type]["spt1"].push_back(spt1);
+		branches[algo_type]["sm1"].push_back(sm1);
+		branches[algo_type]["seta1"].push_back(seta1);
+		branches[algo_type]["sphi1"].push_back(sphi1);
+		branches[algo_type]["spx2"].push_back(spx2);
+		branches[algo_type]["spy2"].push_back(spy2);
+		branches[algo_type]["spz2"].push_back(spz2);
+		branches[algo_type]["se2"].push_back(se2);
+		branches[algo_type]["spt2"].push_back(spt2);
+		branches[algo_type]["sm2"].push_back(sm2);
+		branches[algo_type]["seta2"].push_back(seta2);
+		branches[algo_type]["sphi2"].push_back(sphi2);
+		branches[algo_type]["spx3"].push_back(spx3);
+		branches[algo_type]["spy3"].push_back(spy3);
+		branches[algo_type]["spz3"].push_back(spz3);
+		branches[algo_type]["se3"].push_back(se3);
+		branches[algo_type]["spt3"].push_back(spt3);
+		branches[algo_type]["sm3"].push_back(sm3);
+		branches[algo_type]["seta3"].push_back(seta3);
+		branches[algo_type]["sphi3"].push_back(sphi3);
 	}		// :End collection loop
 	
 	// Loop through all jets to calculate HT:
 	double ht = 0;
-	int njets = 0;
-	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
-		double pt = jet->pt();
-		
-		if (pt > 10) {njets ++;}
+	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
+		double pt = branches[algo_type]["pt"][i];
+		double eta = branches[algo_type]["eta"][i];
 		
 		if (algo == "ak8") {
-			if (pt > 150) {ht += pt;}
+			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
 		else if (algo == "ak4") {
-			if (pt > 30) {ht += pt;}
+			if (pt > 30) ht += pt;
 		}
-		else {ht += pt;}
+		else ht += pt;
 	}
 	branches[algo_type]["ht"].push_back(ht);
-	branches[algo_type]["njets"].push_back(njets);
+//	branches[algo_type]["njets"].push_back(njets);
 	
+	// Debug:
 	if (v_) cout << "End process_jets_pf." << endl;
 }
 
@@ -868,22 +1097,22 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 	
 	// Loop through all jets to calculate HT:
 	double ht = 0;
-	int njets = 0;
-	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
-		double pt = jet->pt();
-		
-		if (pt > 10) {njets ++;}
+	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
+		double pt = branches[algo_type]["pt"][i];
+		double eta = branches[algo_type]["eta"][i];
 		
 		if (algo == "ak8") {
-			if (pt > 150) {ht += pt;}
+			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
 		else if (algo == "ak4") {
-			if (pt > 30) {ht += pt;}
+			if (pt > 30) ht += pt;
 		}
-		else {ht += pt;}
+		else ht += pt;
 	}
 	branches[algo_type]["ht"].push_back(ht);
-	branches[algo_type]["njets"].push_back(njets);
+//	branches[algo_type]["njets"].push_back(njets);
+	
+	// Debug:
 	if (v_) cout << "End process_jets_gn." << endl;
 }
 
@@ -935,22 +1164,20 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 	
 	// Loop through all jets to calculate HT:
 	double ht = 0;
-	int njets = 0;
-	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
-		double pt = jet->pt();
-		
-		if (pt > 10) {njets ++;}
+	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
+		double pt = branches[algo_type]["pt"][i];
+		double eta = branches[algo_type]["eta"][i];
 		
 		if (algo == "ak8") {
-			if (pt > 150) {ht += pt;}
+			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
 		else if (algo == "ak4") {
-			if (pt > 30) {ht += pt;}
+			if (pt > 30) ht += pt;
 		}
-		else {ht += pt;}
+		else ht += pt;
 	}
 	branches[algo_type]["ht"].push_back(ht);
-	branches[algo_type]["njets"].push_back(njets);
+//	branches[algo_type]["njets"].push_back(njets);
 }
 
 /// Electrons method:
@@ -1240,16 +1467,21 @@ void JetTuplizer::analyze(
 		if (v_) {cout << "Running over JetWorkshop collections ..." << endl;}
 		
 		// Clear branches:
-		/// "jet":
-//		for (vector<string>::const_iterator i = jet_names.begin(); i != jet_names.end(); i++) {
-//			string name = *i;
-//			for (vector<string>::const_iterator j = jet_types.begin(); j != jet_types.end(); j++) {
-//				string type = *j;
-//				string name_type = name + "_" + type;
-		for (vector<string>::const_iterator i = jet_collections.begin(); i != jet_collections.end(); i++) {
-			for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) {
-				branches[*i][*k].clear();
-			}
+		/// Clear jet collection branches:
+		for (vector<string>::const_iterator i = jet_collections_maod.begin(); i != jet_collections_maod.end(); i++) {
+			string algo_type = *i + "_maod";
+			for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) branches[algo_type][*k].clear();
+			for (vector<string>::iterator k = jet_variables_maod.begin(); k != jet_variables_maod.end(); k++) branches[algo_type][*k].clear();
+		}
+		for (vector<string>::const_iterator i = jet_collections_gn.begin(); i != jet_collections_gn.end(); i++) {
+			string algo_type = *i + "_gn";
+			for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) branches[algo_type][*k].clear();
+			for (vector<string>::iterator k = jet_variables_gn.begin(); k != jet_variables_gn.end(); k++) branches[algo_type][*k].clear();
+		}
+		for (vector<string>::const_iterator i = jet_collections_pf.begin(); i != jet_collections_pf.end(); i++) {
+			string algo_type = *i + "_pf";
+			for (vector<string>::iterator k = jet_variables.begin(); k != jet_variables.end(); k++) branches[algo_type][*k].clear();
+			for (vector<string>::iterator k = jet_variables_pf.begin(); k != jet_variables_pf.end(); k++) branches[algo_type][*k].clear();
 		}
 		/// "lep":
 		for (vector<string>::const_iterator i = lep_names.begin(); i != lep_names.end(); i++) {
@@ -1322,21 +1554,9 @@ void JetTuplizer::analyze(
 		// Process each object collection:
 		process_pileup(iEvent, lumi_weights, pileupInfo_);
 		process_triggers(iEvent, triggerResults_, triggerPrescales_);
-		process_jets_pf(iEvent, "ak4", "", ak4PFCollection_);
-		process_jets_pf(iEvent, "ak4", "Filtered", ak4PFFilteredCollection_);
-		process_jets_pf(iEvent, "ak4", "Pruned", ak4PFPrunedCollection_);
-		process_jets_pf(iEvent, "ak4", "SoftDrop", ak4PFSoftDropCollection_);
-		process_jets_pf(iEvent, "ak4", "Trimmed", ak4PFTrimmedCollection_);
-		process_jets_pf(iEvent, "ak8", "", ak8PFCollection_);
-		process_jets_pf(iEvent, "ak8", "Filtered", ak8PFFilteredCollection_);
-		process_jets_pf(iEvent, "ak8", "Pruned", ak8PFPrunedCollection_);
-		process_jets_pf(iEvent, "ak8", "SoftDrop", ak8PFSoftDropCollection_);
-		process_jets_pf(iEvent, "ak8", "Trimmed", ak8PFTrimmedCollection_);
-		process_jets_pf(iEvent, "ca12", "", ca12PFCollection_);
-		process_jets_pf(iEvent, "ca12", "Filtered", ca12PFFilteredCollection_);
-		process_jets_pf(iEvent, "ca12", "Pruned", ca12PFPrunedCollection_);
-		process_jets_pf(iEvent, "ca12", "SoftDrop", ca12PFSoftDropCollection_);
-		process_jets_pf(iEvent, "ca12", "Trimmed", ca12PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ak4", ak4PFCollection_, ak4PFFilteredCollection_, ak4PFPrunedCollection_, ak4PFSoftDropCollection_, ak4PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ak8", ak8PFCollection_, ak8PFFilteredCollection_, ak8PFPrunedCollection_, ak8PFSoftDropCollection_, ak8PFTrimmedCollection_);
+		process_jets_pf(iEvent, "ca12", ca12PFCollection_, ca12PFFilteredCollection_, ca12PFPrunedCollection_, ca12PFSoftDropCollection_, ca12PFTrimmedCollection_);
 		process_jets_gn(iEvent, "ak4", ak4GNCollection_);
 		process_jets_gn(iEvent, "ak8", ak8GNCollection_);
 		process_jets_gn(iEvent, "ca12", ca12GNCollection_);

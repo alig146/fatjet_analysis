@@ -26,8 +26,8 @@ for ievent, event in enumerate(events):
 		print ievent, "\t".join(["{:.2f}".format(jet.userFloat("massCA12CHSTrimmed")) for jet in jets])
 		print ievent, "\t".join(["{:.5f}".format(jet.userFloat("tausCA12CHS:tau2")) for jet in jets])
 #		print ievent, "\t".join(["{:.5f}".format(jet.userFloat("tausCA12CHSPruned:tau2")) for jet in jets])
-		print
-#		print ievent, "\t".join(["{:.2f}".format(jet.pt()) for jet in jets_pruned2])
+#		print
+##		print ievent, "\t".join(["{:.2f}".format(jet.pt()) for jet in jets_pruned2])
 #		print ievent, "\t".join(["{:.2f}".format(jet.mass()) for jet in jets_pruned2])
 		print
 		print ievent, "\t".join(["{:.2f}".format(jet.pt()) for jet in jets_pruned])
