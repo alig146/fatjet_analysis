@@ -412,7 +412,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"trig_pfht750pt50x4",		// probably not needed
 		"trig_pfht750pt70x4",		// probably not needed
 		"trig_pfht800pt50x4",		// probably not needed
-		"trig_mupt50"		// probably not needed
+		"trig_mupt50"
 	};
 	
 	// Ntuple setup:
@@ -637,7 +637,7 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 		{"trig_pfht750pt50x4", "HLT_PFHT750_4JetPt50", ""},
 		{"trig_pfht750pt70x4", "HLT_PFHT750_4JetPt70", ""},
 		{"trig_pfht800pt50x4", "HLT_PFHT800_4JetPt50", ""},
-		{"trig_mupt50", "HLT_Mu50", ""}
+		{"trig_mupt50", "HLT_Mu50_v", ""}
 	};
 	
 	for (unsigned int i=0; i < results->size(); ++i) {

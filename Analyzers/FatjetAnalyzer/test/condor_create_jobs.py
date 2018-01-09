@@ -19,6 +19,7 @@ cut_pt_filter = 300
 cut_eta_filter = 2.0
 #cut_pt_filter = 0
 #cut_eta_filter = -1
+cut_smu_filter = False
 n_per = 5000
 Site = site.get_site()
 Dir = Site.get_dir("data")
@@ -88,7 +89,7 @@ def main():
 			job_script += "# Run CMSSW:\n"
 			list_str = ",".join(['"{}"'.format(g) for g in group])
 			out_file = "tuple_{}_{}_{}_{}.root".format(miniaod.subprocess, miniaod.generation, suffix, i + 1)
-			job_script += 'cmsRun tuplizer_cfg.py subprocess="{}" generation="{}" cutPtFilter={} cutEtaFilter={} outDir="." outFile="{}" inFile={}'.format(miniaod.subprocess, miniaod.generation, cut_pt_filter, cut_eta_filter, out_file, list_str)
+			job_script += 'cmsRun tuplizer_cfg.py subprocess="{}" generation="{}" cutPtFilter={} cutEtaFilter={} cutSmuFilter={} outDir="." outFile="{}" inFile={}'.format(miniaod.subprocess, miniaod.generation, cut_pt_filter, cut_eta_filter, cut_smu_filter, out_file, list_str)
 			if sample.data:
 				job_script += ' data=True'.format(sample.data)
 			if miniaod.mask:

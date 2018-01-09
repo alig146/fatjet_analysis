@@ -23,6 +23,9 @@
 /// Custom includes:
 #include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
 
 // NAMESPACES:
@@ -53,10 +56,13 @@ class JetFilter : public edm::EDFilter {
 
       // ----------member data ---------------------------
       double cut_pt_, cut_eta_;
+      bool cut_smu_;
       int nevents, nevents_passed;
       
-      // ?
-      EDGetTokenT<vector<pat::Jet>> jetCollection_;
+	// ?
+	EDGetTokenT<vector<pat::Jet>> jetCollection_;
+	EDGetTokenT<TriggerResults> triggerResults_;
+	EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 };
 
 //
@@ -73,9 +79,12 @@ class JetFilter : public edm::EDFilter {
 JetFilter::JetFilter(const edm::ParameterSet& iConfig):
 	cut_pt_(iConfig.getParameter<double>("cut_pt")),
 	cut_eta_(iConfig.getParameter<double>("cut_eta")),
+	cut_smu_(iConfig.getParameter<bool>("cut_smu")),
 	
 	//?
-	jetCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("jetCollection")))
+	jetCollection_(consumes<vector<pat::Jet>>(iConfig.getParameter<InputTag>("jetCollection"))),
+	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
+	triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<InputTag>("triggerPrescales")))
 {
 //	cout << "=================================" << endl;
 //	cout << "FILTER START" << endl;
@@ -104,6 +113,36 @@ JetFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 //	cout << "here 97" << endl;
 	nevents ++;
+	
+	// Optional single-muon trigger cut:
+	Handle<TriggerResults> results;
+	iEvent.getByToken(triggerResults_, results);
+	Handle<pat::PackedTriggerPrescales> prescales;
+	iEvent.getByToken(triggerPrescales_, prescales);
+	
+	const TriggerNames& names = iEvent.triggerNames(*results);
+	string trigger_name;
+	for (unsigned int i=0; i < results->size(); ++i) {
+		string full_name = names.triggerName(i);
+		size_t found = full_name.find("HLT_Mu50_v");
+		if (found != string::npos) {		// If contains
+			trigger_name = full_name;
+//			cout << trigger_name << endl;
+			break;
+		}
+	}
+	bool smu_result = results->accept(names.triggerIndex(trigger_name));
+//	cout << trigger_name << "   " << smu_result << endl;
+	
+	if (cut_smu_){
+		if (smu_result) {
+			nevents_passed ++;
+			return true;
+		}
+		else return false;
+	}
+	
+	
 	// Get CA12 jets:
 	Handle<vector<pat::Jet>> jets_edm;
 	iEvent.getByToken(jetCollection_, jets_edm);

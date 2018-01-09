@@ -2,7 +2,8 @@
 
 #cmsRun tuplizer_cfg.py maxEvents=100 cutPtFilter=0 cutEtaFilter=-1 inFile="file:/cms/tote/store/examples/maod_mc_qcdmg2000_fall15_10000.root" subprocess="qcdmg2000" generation="fall15" suffix="cutpt0etax" data=False crab=False outFile="tuple.root"
 
-cmsRun tuplizer_cfg.py maxEvents=1000 subprocess="sq300to4j" generation="moriond17cutht700" suffix="cutpt300eta20" data=False crab=False
+#cmsRun tuplizer_cfg.py maxEvents=1000 subprocess="sq300to4j" generation="moriond17cutht700" suffix="cutpt300eta20" data=False crab=False
+cmsRun tuplizer_cfg.py maxEvents=100 cutPtFilter=0 cutEtaFilter=-1 cutSmuFilter=false subprocess="smu16f" generation="feb17" suffix="cutpt0etax" data=True crab=False mask=https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt
 
 
 #cmsRun jetanalyzer_cfg.py maxEvents=2 dataset="QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8"

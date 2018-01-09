@@ -117,6 +117,12 @@ options.register ('cutEtaFilter',
 	VarParsing.varType.float,
 	"Cut on the abs(eta) of the leading jets. The default is 2.0 GeV."
 )
+options.register ('cutSmuFilter',
+	False,
+	VarParsing.multiplicity.singleton,
+	VarParsing.varType.bool,
+	"Cut based on the single-muon pT > 50 GeV trigger."
+)
 ### Tuplizer options:
 options.register ('cutPtTuplizer',
 	20,
@@ -291,7 +297,10 @@ process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 process.filter = cms.EDFilter("JetFilter",
 	cut_pt=cms.double(options.cutPtFilter),
 	cut_eta=cms.double(options.cutEtaFilter),
+	cut_smu=cms.bool(options.cutSmuFilter),
 	jetCollection=cms.InputTag("selectedPatJetsCA12CHS"),
+	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
+	triggerPrescales=cms.InputTag("patTrigger", ""),
 )
 
 #out_location = options.outDir + "/test.root"
