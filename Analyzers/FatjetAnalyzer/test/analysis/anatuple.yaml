@@ -166,90 +166,45 @@ variables:
       type: jet
       description: x-component of the ungroomed jet momentum
     
-    - name: px_p
-      dimension: 2
-      type: jet
-      description: x-component of the pruned jet momentum
-    
     - name: py
       dimension: 2
       type: jet
       description: y-component of the ungroomed jet momentum
-    
-    - name: py_p
-      dimension: 2
-      type: jet
-      description: y-component of the pruned jet momentum
     
     - name: pz
       dimension: 2
       type: jet
       description: z-component of the ungroomed jet momentum
     
-    - name: pz_p
-      dimension: 2
-      type: jet
-      description: z-component of the pruned jet momentum
-    
     - name: pt
       dimension: 2
       type: jet
       description: ungroomed jet transverse momentum
-    
-    - name: pt_p
-      dimension: 2
-      type: jet
-      description: pruned jet transverse momentum
     
     - name: ptasy
       dimension: 1
       type: jet
       description: ungroomed jet pair transverse momentum asymmetry
     
-    - name: ptasy_p
-      dimension: 1
-      type: jet
-      description: pruned jet pair transverse momentum asymmetry
-    
     - name: e
       dimension: 2
       type: jet
       description: ungroomed jet energy
-    
-    - name: e_p
-      dimension: 2
-      type: jet
-      description: pruned jet energy
     
     - name: eta
       dimension: 2
       type: jet
       description: ungroomed jet pseudorapidity
     
-    - name: eta_p
-      dimension: 2
-      type: jet
-      description: pruned jet pseudorapidity
-    
     - name: deta
       dimension: 1
       type: jet
       description: ungroomed jet pair pseudorapidity difference
     
-    - name: deta_p
-      dimension: 1
-      type: jet
-      description: pruned jet pair pseudorapidity difference
-    
     - name: phi
       dimension: 2
       type: jet
       description: ungroomed jet phi
-    
-    - name: phi_p
-      dimension: 2
-      type: jet
-      description: pruned jet phi
     
     - name: dphi
       dimension: 1
@@ -260,266 +215,381 @@ variables:
       dimension: 1
       type: jet
       description: ungroomed jet pair pseudoangular separation
-    
-    - name: dr_p
-      dimension: 1
-      type: jet
-      description: pruned jet pair pseudoangular separation
-    
+      
     - name: tau1
       dimension: 2
       type: jet
       description: ungroomed jet 1-subjettiness
-    
+      
     - name: tau1_f
       dimension: 2
       type: jet
       description: filtered jet 1-subjettiness
-    
+      
     - name: tau1_p
       dimension: 2
       type: jet
       description: pruned jet 1-subjettiness
-    
+      
     - name: tau1_s
       dimension: 2
       type: jet
       description: SoftDropped jet 1-subjettiness
-    
+      
     - name: tau1_t
       dimension: 2
       type: jet
-      description: trimmed jet 1-subjettiness
-    
+      description: Trimmed jet 1-subjettiness
+      
     - name: tau2
       dimension: 2
       type: jet
       description: ungroomed jet 2-subjettiness
-    
+      
     - name: tau2_f
       dimension: 2
       type: jet
       description: filtered jet 2-subjettiness
-    
+      
     - name: tau2_p
       dimension: 2
       type: jet
       description: pruned jet 2-subjettiness
-    
+      
     - name: tau2_s
       dimension: 2
       type: jet
       description: SoftDropped jet 2-subjettiness
-    
+      
     - name: tau2_t
       dimension: 2
       type: jet
-      description: trimmed jet 2-subjettiness
-    
+      description: Trimmed jet 2-subjettiness
+      
     - name: tau3
       dimension: 2
       type: jet
       description: ungroomed jet 3-subjettiness
-    
+      
     - name: tau3_f
       dimension: 2
       type: jet
       description: filtered jet 3-subjettiness
-    
+      
     - name: tau3_p
       dimension: 2
       type: jet
       description: pruned jet 3-subjettiness
-    
+      
     - name: tau3_s
       dimension: 2
       type: jet
       description: SoftDropped jet 3-subjettiness
-    
+      
     - name: tau3_t
       dimension: 2
       type: jet
-      description: trimmed jet 3-subjettiness
-    
+      description: Trimmed jet 3-subjettiness
+      
     - name: tau4
       dimension: 2
       type: jet
       description: ungroomed jet 4-subjettiness
-    
+      
     - name: tau4_f
       dimension: 2
       type: jet
       description: filtered jet 4-subjettiness
-    
+      
     - name: tau4_p
       dimension: 2
       type: jet
       description: pruned jet 4-subjettiness
-    
+      
     - name: tau4_s
       dimension: 2
       type: jet
       description: SoftDropped jet 4-subjettiness
-    
+      
     - name: tau4_t
       dimension: 2
       type: jet
-      description: trimmed jet 4-subjettiness
-    
+      description: Trimmed jet 4-subjettiness
+      
     - name: tau5
       dimension: 2
       type: jet
       description: ungroomed jet 5-subjettiness
-    
-    - name: tau43
+      
+    - name: tau5_f
       dimension: 2
       type: jet
-      description: ungroomed jet 4-subjettiness over 3-subjettiness
-    
-    - name: tau43_f
+      description: filtered jet 5-subjettiness
+      
+    - name: tau5_p
       dimension: 2
       type: jet
-      description: filtered jet 4-subjettiness over 3-subjettiness
-    
-    - name: tau43_p
+      description: pruned jet 5-subjettiness
+      
+    - name: tau5_s
       dimension: 2
       type: jet
-      description: pruned jet 4-subjettiness over 3-subjettiness
-    
-    - name: tau43_s
+      description: SoftDropped jet 5-subjettiness
+      
+    - name: tau5_t
       dimension: 2
       type: jet
-      description: SoftDropped jet 4-subjettiness over 3-subjettiness
-    
-    - name: tau43_t
-      dimension: 2
-      type: jet
-      description: trimmed jet 4-subjettiness over 3-subjettiness
-    
-    - name: tau42
-      dimension: 2
-      type: jet
-      description: ungroomed jet 4-subjettiness over 2-subjettiness
-    
-    - name: tau42_f
-      dimension: 2
-      type: jet
-      description: filtered jet 4-subjettiness over 2-subjettiness
-    
-    - name: tau42_p
-      dimension: 2
-      type: jet
-      description: pruned jet 4-subjettiness over 2-subjettiness
-    
-    - name: tau42_s
-      dimension: 2
-      type: jet
-      description: SoftDropped jet 4-subjettiness over 2-subjettiness
-    
-    - name: tau42_t
-      dimension: 2
-      type: jet
-      description: trimmed jet 4-subjettiness over 2-subjettiness
-    
-    - name: tau41
-      dimension: 2
-      type: jet
-      description: ungroomed jet 4-subjettiness over 1-subjettiness
-    
-    - name: tau41_f
-      dimension: 2
-      type: jet
-      description: filtered jet 4-subjettiness over 1-subjettiness
-    
-    - name: tau41_p
-      dimension: 2
-      type: jet
-      description: pruned jet 4-subjettiness over 1-subjettiness
-    
-    - name: tau41_s
-      dimension: 2
-      type: jet
-      description: SoftDropped jet 4-subjettiness over 1-subjettiness
-    
-    - name: tau41_t
-      dimension: 2
-      type: jet
-      description: trimmed jet 4-subjettiness over 1-subjettiness
-    
-    - name: tau32
-      dimension: 2
-      type: jet
-      description: ungroomed jet 3-subjettiness over 2-subjettiness
-    
-    - name: tau32_f
-      dimension: 2
-      type: jet
-      description: filtered jet 3-subjettiness over 2-subjettiness
-    
-    - name: tau32_p
-      dimension: 2
-      type: jet
-      description: pruned jet 3-subjettiness over 2-subjettiness
-    
-    - name: tau32_s
-      dimension: 2
-      type: jet
-      description: SoftDropped jet 3-subjettiness over 2-subjettiness
-    
-    - name: tau32_t
-      dimension: 2
-      type: jet
-      description: trimmed jet 3-subjettiness over 2-subjettiness
-    
-    - name: tau31
-      dimension: 2
-      type: jet
-      description: ungroomed jet 3-subjettiness over 1-subjettiness
-    
-    - name: tau31_f
-      dimension: 2
-      type: jet
-      description: filtered jet 3-subjettiness over 1-subjettiness
-    
-    - name: tau31_p
-      dimension: 2
-      type: jet
-      description: pruned jet 3-subjettiness over 1-subjettiness
-    
-    - name: tau31_s
-      dimension: 2
-      type: jet
-      description: SoftDropped jet 3-subjettiness over 1-subjettiness
-    
-    - name: tau31_t
-      dimension: 2
-      type: jet
-      description: trimmed jet 3-subjettiness over 1-subjettiness
+      description: Trimmed jet 5-subjettiness
     
     - name: tau21
       dimension: 2
       type: jet
       description: ungroomed jet 2-subjettiness over 1-subjettiness
     
-    - name: tau21_f
-      dimension: 2
-      type: jet
-      description: filtered jet 2-subjettiness over 1-subjettiness
+#    - name: tau21_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 2-subjettiness over 1-subjettiness
+#    
+#    - name: tau21_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 2-subjettiness over 1-subjettiness
+#    
+#    - name: tau21_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 2-subjettiness over 1-subjettiness
+#    
+#    - name: tau21_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 2-subjettiness over 1-subjettiness
     
-    - name: tau21_p
+    - name: tau31
       dimension: 2
       type: jet
-      description: pruned jet 2-subjettiness over 1-subjettiness
+      description: ungroomed jet 3-subjettiness over 1-subjettiness
     
-    - name: tau21_s
-      dimension: 2
-      type: jet
-      description: SoftDropped jet 2-subjettiness over 1-subjettiness
+#    - name: tau31_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 3-subjettiness over 1-subjettiness
+#    
+#    - name: tau31_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 3-subjettiness over 1-subjettiness
+#    
+#    - name: tau31_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 3-subjettiness over 1-subjettiness
+#    
+#    - name: tau31_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 3-subjettiness over 1-subjettiness
     
-    - name: tau21_t
+    - name: tau32
       dimension: 2
       type: jet
-      description: trimmed jet 2-subjettiness over 1-subjettiness
+      description: ungroomed jet 3-subjettiness over 2-subjettiness
+    
+#    - name: tau32_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 3-subjettiness over 2-subjettiness
+#    
+#    - name: tau32_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 3-subjettiness over 2-subjettiness
+#    
+#    - name: tau32_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 3-subjettiness over 2-subjettiness
+#    
+#    - name: tau32_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 3-subjettiness over 2-subjettiness
+    
+    - name: tau41
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 1-subjettiness
+    
+#    - name: tau41_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 4-subjettiness over 1-subjettiness
+#    
+#    - name: tau41_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 4-subjettiness over 1-subjettiness
+#    
+#    - name: tau41_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 4-subjettiness over 1-subjettiness
+#    
+#    - name: tau41_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 4-subjettiness over 1-subjettiness
+    
+    - name: tau42
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 2-subjettiness
+    
+#    - name: tau42_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 4-subjettiness over 2-subjettiness
+#    
+#    - name: tau42_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 4-subjettiness over 2-subjettiness
+#    
+#    - name: tau42_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 4-subjettiness over 2-subjettiness
+#    
+#    - name: tau42_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 4-subjettiness over 2-subjettiness
+    
+    - name: tau43
+      dimension: 2
+      type: jet
+      description: ungroomed jet 4-subjettiness over 3-subjettiness
+    
+#    - name: tau43_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 4-subjettiness over 3-subjettiness
+#    
+#    - name: tau43_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 4-subjettiness over 3-subjettiness
+#    
+#    - name: tau43_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 4-subjettiness over 3-subjettiness
+#    
+#    - name: tau43_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 4-subjettiness over 3-subjettiness
+    
+    - name: tau51
+      dimension: 2
+      type: jet
+      description: ungroomed jet 5-subjettiness over 1-subjettiness
+    
+#    - name: tau51_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 5-subjettiness over 1-subjettiness
+#    
+#    - name: tau51_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 5-subjettiness over 1-subjettiness
+#    
+#    - name: tau51_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 5-subjettiness over 1-subjettiness
+#    
+#    - name: tau51_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 5-subjettiness over 1-subjettiness
+    
+    - name: tau52
+      dimension: 2
+      type: jet
+      description: ungroomed jet 5-subjettiness over 2-subjettiness
+    
+#    - name: tau52_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 5-subjettiness over 2-subjettiness
+#    
+#    - name: tau52_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 5-subjettiness over 2-subjettiness
+#    
+#    - name: tau52_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 5-subjettiness over 2-subjettiness
+#    
+#    - name: tau52_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 5-subjettiness over 2-subjettiness
+    
+    - name: tau53
+      dimension: 2
+      type: jet
+      description: ungroomed jet 5-subjettiness over 3-subjettiness
+    
+#    - name: tau53_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 5-subjettiness over 3-subjettiness
+#    
+#    - name: tau53_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 5-subjettiness over 3-subjettiness
+#    
+#    - name: tau53_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 5-subjettiness over 3-subjettiness
+#    
+#    - name: tau53_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 5-subjettiness over 3-subjettiness
+    
+    - name: tau54
+      dimension: 2
+      type: jet
+      description: ungroomed jet 5-subjettiness over 4-subjettiness
+    
+#    - name: tau54_f
+#      dimension: 2
+#      type: jet
+#      description: filtered jet 5-subjettiness over 4-subjettiness
+#    
+#    - name: tau54_p
+#      dimension: 2
+#      type: jet
+#      description: pruned jet 5-subjettiness over 4-subjettiness
+#    
+#    - name: tau54_s
+#      dimension: 2
+#      type: jet
+#      description: SoftDropped jet 5-subjettiness over 4-subjettiness
+#    
+#    - name: tau54_t
+#      dimension: 2
+#      type: jet
+#      description: trimmed jet 5-subjettiness over 4-subjettiness
     
     - name: neef
       dimension: 2

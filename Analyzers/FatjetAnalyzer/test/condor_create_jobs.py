@@ -35,9 +35,12 @@ def main():
 		print a.query
 		return False
 	tstring = utilities.time_string()[:-4]
-	suffix = "cutpt{}".format(cut_pt_filter)
-	if cut_eta_filter < 0: suffix += "etax"
-	else: suffix += "eta{}".format(int(cut_eta_filter*10))
+	suffix = "cut"
+	if cut_smu_filter: suffix += "smu"
+	else:
+		suffix += "pt{}".format(cut_pt_filter)
+		if cut_eta_filter < 0: suffix += "etax"
+		else: suffix += "eta{}".format(int(cut_eta_filter*10))
 	cmssw_version = cmssw.get_version(parsed=False)
 #	condor.unclean()		# A weird bug makes this necessary if there's more than one sample. (WHY?!)
 	
