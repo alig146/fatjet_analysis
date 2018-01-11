@@ -7,7 +7,7 @@
 # IMPORTS:
 import os, sys, re
 from subprocess import Popen, PIPE, check_output
-from decortication import dataset, variables
+from decortication import dataset, variables, site
 from truculence import utilities, condor
 # :IMPORTS
 
@@ -26,6 +26,7 @@ queue_codes = {
 	1: "idle",
 	2: "running",
 }
+Site = site.get_site()
 # :VARIABLES
 
 # FUNCTIONS:
@@ -53,19 +54,35 @@ def analyze_log_stderr(path):
 	n_lines = utilities.wcl(path)
 	if n_lines == 0: return {"code": -1, "n": n_lines}
 	last = check_output(["tail", "-n1", path]).strip()
+	errors = []
+	try: errors = check_output(["grep", "-i", "Begin Fatal Exception", path]).splitlines()
+	except: pass
+#	errors_ok = [
+#		"Impossible to send message kXR_",
+#		"Unable to get the response to request kXR_",
+#		"Unable to send the message kXR_",
+#		"Socket error: Resource temporarily unavailable",
+#	]
+#	errors = [e for e in errors if not [ok for ok in errors_ok if ok in e]]
+	
 	if not last: last = check_output(["tail", "-n1", path]).strip()
 	
 	if not last: return {"code": 3, "n": n_lines}
-	if "[100%][==================================================]" in last: return {"code": 0, "n": n_lines}
-	if "error" in last.lower() or "End Fatal Exception" in last or "system" in last.lower() or "%MSG" in last: return {"code": 2, "n": n_lines}
-	else: return {"code": 1, "n": n_lines}
+	if Site.name == "cmslpc":
+		if "[100%][==================================================]" in last: return {"code": 0, "n": n_lines}
+		if errors or "error" in last.lower() or "End Fatal Exception" in last or "system" in last.lower() or "%MSG" in last: return {"code": 2, "n": n_lines}
+	else:
+		if errors: return {"code": 2, "n": n_lines}
+		if "system" in last.lower(): return {"code": 0, "n": n_lines}
+		else: return {"code": 2, "n": n_lines}
+	return {"code": 1, "n": n_lines}
 
 
 def check_stderr_logs(indir, logs_stderr=None):
 	if not logs_stderr: logs_stderr = list_logs(indir)["stderr"]
 	
 	results = {}
-	for l in logs_stderr:
+	for il, l in enumerate(logs_stderr):
 		path = indir + "/logs/" + l
 		match = re.search("[a-zA-Z0-9_]+_(\d+).stderr", l)
 		njob = int(match.group(1))
@@ -82,7 +99,10 @@ def check_queue(miniaod, user="tote"):
 	results = {}
 	
 	raw_output = Popen(['condor_q -submitter {} -format "%s " jobstatus -format "%s\\n" cmd'.format(user)], shell=True, stdout=PIPE, stderr=PIPE).communicate()
-	if raw_output[1]: return False
+	raw_stderr = raw_output[1].strip()
+	if raw_stderr:
+		if raw_stderr != "Error: Collector has no record of schedd/submitter": print "[!!] ERROR: condor says '{}'".format(raw_stderr)
+		return {}
 	lines = raw_output[0].split("\n")
 	for line in lines:
 		if not line: continue

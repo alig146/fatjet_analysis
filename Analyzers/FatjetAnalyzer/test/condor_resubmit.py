@@ -44,7 +44,7 @@ def main():
 	if not indate:
 		indate = "161118_062506"
 	
-	for miniaod in miniaods:
+	for iminiaod, miniaod in enumerate(miniaods):
 		indir = "condor_jobs/tuplizer/{}/{}_{}_{}".format(indate, miniaod.subprocess, miniaod.generation, suffix)
 		print "\n[..] Remaking the CMSSW tarball."
 		if not condor.tar_cmssw(indir):
