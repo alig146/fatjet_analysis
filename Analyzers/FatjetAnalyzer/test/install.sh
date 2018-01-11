@@ -21,3 +21,5 @@ scram b -j8
 echo "[..] Downloading JECs."
 cd $CMSSW_BASE/src/Analyzers/FatjetAnalyzer/test/jec_data
 cmsRun download_jec_cfg.py
+
+bash $CMSSW_BASE/src/Deracination/Straphanger/test/decortication/scripts/cache.sh
