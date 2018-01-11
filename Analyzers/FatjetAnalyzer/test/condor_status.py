@@ -154,7 +154,7 @@ def main():
 			print "[!!] There are only {} .stderr logs".format(len(logs_stderr))
 			good = False
 		if good: print "[OK] All logs accounted for."
-		else: sys.exit()
+		else: continue
 	
 		print "[..] Checking jobs."
 		log_results = check_stderr_logs(indir, logs_stderr)
