@@ -20,4 +20,4 @@ scram b -j8
 
 echo "[..] Downloading JECs."
 cd $CMSSW_BASE/src/Analyzers/FatjetAnalyzer/test/jec_data
-cmsRun download_jec.py
+cmsRun download_jec_cfg.py
