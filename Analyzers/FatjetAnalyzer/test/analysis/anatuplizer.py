@@ -59,56 +59,57 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 	
 	groomers = ["", "f", "p", "s", "t"]
 ##	groomers = ["", "p"]
+	vars_calc = {}
 #	if all([len(getattr(event, "{}_pf{}_pt".format(alg, groomer))) > 1 for groomer in groomers]):   # Sometimes there might not be two jets?
-#		vars_calc = {};
+	vars_calc = {}
 #		for groomer in groomers:
 #			
 #			print suffix
 			
-		# Fetch basic kinematics:
-		vars_calc["px"] = [getattr(event, "{}_pf_px".format(alg))[i] for i in range(2)]
-		vars_calc["py"] = [getattr(event, "{}_pf_py".format(alg))[i] for i in range(2)]
-		vars_calc["pz"] = [getattr(event, "{}_pf_pz".format(alg))[i] for i in range(2)]
-		vars_calc["e"] = [getattr(event, "{}_pf_e".format(alg))[i] for i in range(2)]
-		vars_calc["pt"] = [getattr(event, "{}_pf_pt".format(alg))[i] for i in range(2)]
-		vars_calc["eta"] = [getattr(event, "{}_pf_eta".format(alg))[i] for i in range(2)]
-		vars_calc["phi"] = [getattr(event, "{}_pf_phi".format(alg))[i] for i in range(2)]
-		# Fetch corrections for crosschecking (they're already applied at the tuple level):
-		vars_calc["jec"] = [getattr(event, "{}_pf_jec".format(alg))[i] for i in range(2)]
-		vars_calc["jmc"] = [getattr(event, "{}_pf_jmc".format(alg))[i] for i in range(2)]
-		# Fetch more jet variables:
-		for groomer in grommers:
-			suffix = groomer if not groomer else "_" + groomer
+	# Fetch basic kinematics:
+	vars_calc["px"] = [getattr(event, "{}_pf_px".format(alg))[i] for i in range(2)]
+	vars_calc["py"] = [getattr(event, "{}_pf_py".format(alg))[i] for i in range(2)]
+	vars_calc["pz"] = [getattr(event, "{}_pf_pz".format(alg))[i] for i in range(2)]
+	vars_calc["e"] = [getattr(event, "{}_pf_e".format(alg))[i] for i in range(2)]
+	vars_calc["pt"] = [getattr(event, "{}_pf_pt".format(alg))[i] for i in range(2)]
+	vars_calc["eta"] = [getattr(event, "{}_pf_eta".format(alg))[i] for i in range(2)]
+	vars_calc["phi"] = [getattr(event, "{}_pf_phi".format(alg))[i] for i in range(2)]
+	# Fetch corrections for crosschecking (they're already applied at the tuple level):
+	vars_calc["jec"] = [getattr(event, "{}_pf_jec".format(alg))[i] for i in range(2)]
+	vars_calc["jmc"] = [getattr(event, "{}_pf_jmc".format(alg))[i] for i in range(2)]
+	# Fetch more jet variables:
+	for groomer in groomers:
+		suffix = groomer if not groomer else "_" + groomer
 #			ngroomed = min(2, len(getattr))
-			vars_calc["m" + suffix] = [getattr(event, "{}_pf_m{}".format(alg, groomer))[i] for i in range(2)]
-			vars_calc["tau1" + suffix] = [getattr(event, "{}_pf_tau1{}".format(alg, groomer))[i] for i in range(2)]
-			vars_calc["tau2" + suffix] = [getattr(event, "{}_pf_tau2{}".format(alg, groomer))[i] for i in range(2)]
-			vars_calc["tau3" + suffix] = [getattr(event, "{}_pf_tau3{}".format(alg, groomer))[i] for i in range(2)]
-			vars_calc["tau4" + suffix] = [getattr(event, "{}_pf_tau4{}".format(alg, groomer))[i] for i in range(2)]
-			vars_calc["tau5" + suffix] = [getattr(event, "{}_pf_tau5{}".format(alg, groomer))[i] for i in range(2)]
-			if not groomer:
-				vars_calc["tau21" + suffix] = [getattr(event, "{}_pf_tau21{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau31" + suffix] = [getattr(event, "{}_pf_tau31{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau32" + suffix] = [getattr(event, "{}_pf_tau32{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau41" + suffix] = [getattr(event, "{}_pf_tau41{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau42" + suffix] = [getattr(event, "{}_pf_tau42{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau43" + suffix] = [getattr(event, "{}_pf_tau43{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau51" + suffix] = [getattr(event, "{}_pf_tau51{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau52" + suffix] = [getattr(event, "{}_pf_tau52{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau53" + suffix] = [getattr(event, "{}_pf_tau53{}".format(alg, groomer))[i] for i in range(2)]
-				vars_calc["tau54" + suffix] = [getattr(event, "{}_pf_tau54{}".format(alg, groomer))[i] for i in range(2)]
-	
-		# Calculated variables (not in the tuple):
-		vars_calc["ptavg"] = [(vars_calc["pt"][0] + vars_calc["pt"][1])/2]
-		vars_calc["dpt"] = [abs(vars_calc["pt"][0] - vars_calc["pt"][1])]
-		vars_calc["ptasy"] = [vars_calc["dpt"][0]/vars_calc["ptavg"][0]/2]
-		vars_calc["deta"] = [abs(vars_calc["eta"][0] - vars_calc["eta"][1])]
-		vars_calc["dphi"] = [math.pi - abs(math.pi - abs(vars_calc["phi"][0] - vars_calc["phi"][1]))]
-		vars_calc["dr"] = [(vars_calc["deta"][0]**2 + vars_calc["dphi"][0]**2)**0.5]
-		for groomer in groomers:
-			vars_calc["mavg" + suffix] = [(vars_calc["m" + suffix][0] + vars_calc["m" + suffix][1])/2]
-			vars_calc["dm" + suffix] = [abs(vars_calc["m" + suffix][0] - vars_calc["m" + suffix][1])]
-			vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
+		vars_calc["m" + suffix] = [getattr(event, "{}_pf_m{}".format(alg, groomer))[i] for i in range(2)]
+		vars_calc["tau1" + suffix] = [getattr(event, "{}_pf_tau1{}".format(alg, groomer))[i] for i in range(2)]
+		vars_calc["tau2" + suffix] = [getattr(event, "{}_pf_tau2{}".format(alg, groomer))[i] for i in range(2)]
+		vars_calc["tau3" + suffix] = [getattr(event, "{}_pf_tau3{}".format(alg, groomer))[i] for i in range(2)]
+		vars_calc["tau4" + suffix] = [getattr(event, "{}_pf_tau4{}".format(alg, groomer))[i] for i in range(2)]
+		vars_calc["tau5" + suffix] = [getattr(event, "{}_pf_tau5{}".format(alg, groomer))[i] for i in range(2)]
+		if not groomer:
+			vars_calc["tau21" + suffix] = [getattr(event, "{}_pf_tau21{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau31" + suffix] = [getattr(event, "{}_pf_tau31{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau32" + suffix] = [getattr(event, "{}_pf_tau32{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau41" + suffix] = [getattr(event, "{}_pf_tau41{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau42" + suffix] = [getattr(event, "{}_pf_tau42{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau43" + suffix] = [getattr(event, "{}_pf_tau43{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau51" + suffix] = [getattr(event, "{}_pf_tau51{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau52" + suffix] = [getattr(event, "{}_pf_tau52{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau53" + suffix] = [getattr(event, "{}_pf_tau53{}".format(alg, groomer))[i] for i in range(2)]
+			vars_calc["tau54" + suffix] = [getattr(event, "{}_pf_tau54{}".format(alg, groomer))[i] for i in range(2)]
+
+	# Calculated variables (not in the tuple):
+	vars_calc["ptavg"] = [(vars_calc["pt"][0] + vars_calc["pt"][1])/2]
+	vars_calc["dpt"] = [abs(vars_calc["pt"][0] - vars_calc["pt"][1])]
+	vars_calc["ptasy"] = [vars_calc["dpt"][0]/vars_calc["ptavg"][0]/2]
+	vars_calc["deta"] = [abs(vars_calc["eta"][0] - vars_calc["eta"][1])]
+	vars_calc["dphi"] = [math.pi - abs(math.pi - abs(vars_calc["phi"][0] - vars_calc["phi"][1]))]
+	vars_calc["dr"] = [(vars_calc["deta"][0]**2 + vars_calc["dphi"][0]**2)**0.5]
+	for groomer in groomers:
+		vars_calc["mavg" + suffix] = [(vars_calc["m" + suffix][0] + vars_calc["m" + suffix][1])/2]
+		vars_calc["dm" + suffix] = [abs(vars_calc["m" + suffix][0] - vars_calc["m" + suffix][1])]
+		vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
 
 
 	for variable in variables:
