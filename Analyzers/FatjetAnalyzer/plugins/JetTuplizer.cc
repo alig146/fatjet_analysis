@@ -407,7 +407,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"trig_pfak8ht650mt50",
 		"trig_pfak8ht700mt50",
 		"trig_pfak8pt360mt30",
-		"trig_pfak8pt280pt200mt30csvm020",
+		"trig_pfak8pt300pt200mt30csv087",
+		"trig_pfak8pt280pt200mt30csv20",
 		"trig_pfpt450",
 		"trig_pfht750pt50x4",		// probably not needed
 		"trig_pfht750pt70x4",		// probably not needed
@@ -632,7 +633,8 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 		{"trig_pfak8ht650mt50", "HLT_AK8PFHT650_TrimR0p1PT0p03Mass50", ""},
 		{"trig_pfak8ht700mt50", "HLT_AK8PFHT700_TrimR0p1PT0p03Mass50", ""},
 		{"trig_pfak8pt360mt30", "HLT_AK8PFJet360_TrimMass30", ""},
-		{"trig_pfak8pt280pt200mt30csvm020", "HLT_AK8PFDiJet280_200_TrimMass30_CSVM_0p20", ""},
+		{"trig_pfak8pt300pt200mt30csv087", "HLT_AK8DiPFJet300_200_TrimMass30_BTagCSV_p087", ""},
+		{"trig_pfak8pt280pt200mt30csv20", "HLT_AK8DiPFJet280_200_TrimMass30_BTagCSV_p20", ""},
 		{"trig_pfpt450", "HLT_PFJet450", ""},
 		{"trig_pfht750pt50x4", "HLT_PFHT750_4JetPt50", ""},
 		{"trig_pfht750pt70x4", "HLT_PFHT750_4JetPt70", ""},
@@ -642,6 +644,7 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 	
 	for (unsigned int i=0; i < results->size(); ++i) {
 		string full_name = names.triggerName(i);
+//		cout << full_name << endl;
 		for (unsigned int j=0; j < trigger_desired.size(); ++j) {
 			size_t found = full_name.find(trigger_desired[j][1]);
 			if (found != string::npos) {		// If contains

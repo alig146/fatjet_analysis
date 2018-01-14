@@ -8,8 +8,12 @@ gROOT.SetBatch()
 nevents_process = -1
 
 # Read input:
-path = "/cms/tote/store/SingleMuon/tuple_smu16f_feb17_cutpt0etax/180108_201610"
-files = ["/".join([path, f]) for f in os.listdir(path)]
+paths = [
+	"/cms/tote/store/SingleMuon/tuple_smu16e_feb17_cutsmu/180110_151709",
+	"/cms/tote/store/SingleMuon/tuple_smu16f_feb17_cutpt0etax/180108_201610",
+]
+print "[..] Making TChain."
+files = [os.path.join(p, f) for p in paths for f in os.listdir(p)]
 tc = root.make_tc(files, "tuplizer/events")
 nevents = tc.GetEntries()
 if nevents_process < 0: nevents_process = nevents

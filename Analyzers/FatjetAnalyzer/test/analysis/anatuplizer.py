@@ -107,6 +107,7 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 	vars_calc["dphi"] = [math.pi - abs(math.pi - abs(vars_calc["phi"][0] - vars_calc["phi"][1]))]
 	vars_calc["dr"] = [(vars_calc["deta"][0]**2 + vars_calc["dphi"][0]**2)**0.5]
 	for groomer in groomers:
+		suffix = groomer if not groomer else "_" + groomer
 		vars_calc["mavg" + suffix] = [(vars_calc["m" + suffix][0] + vars_calc["m" + suffix][1])/2]
 		vars_calc["dm" + suffix] = [abs(vars_calc["m" + suffix][0] - vars_calc["m" + suffix][1])]
 		vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
@@ -168,6 +169,9 @@ def main():
 		tuples = dataset.sort_datasets(tuples, collapse=True)		# This combines "extension" datasets in addition to other things.
 	else:
 		tuples = {args.process: tuples}
+	if not tuples:
+		print "[!!] ERROR: The arguments provided don't define any input."
+		sys.exit()
 	
 	## Combine jetht15 and jetht16:
 	for name in ["jetht15", "jetht16"]:
