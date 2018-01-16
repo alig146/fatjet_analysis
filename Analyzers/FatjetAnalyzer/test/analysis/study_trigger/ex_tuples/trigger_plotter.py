@@ -37,8 +37,14 @@ print "[..] Processing {}/{} ({:.1f}%) events in the tuple.".format(nevents_proc
 for ievent, event in enumerate(tc):
 	if nevents_process > 0 and ievent >= nevents_process: break
 	if ievent%10000 == 0: print "[..] Processing event {}/{} ({:.1f}%)".format(ievent + 1, nevents, float(ievent + 1)/nevents_process*100)
+	
+	
+#	trig_ht = bool(event.trig_pfht900[0] or event.trig_pfak8ht700mt50[0] or event.trig_pfpt450[0] or event.trig_pfak8pt360mt30[0] or event.trig_pfak8pt280pt200mt30csv20[0])
+	trig_ht = bool(event.trig_pfht900[0] or event.trig_pfak8ht700mt50[0] or event.trig_pfpt450[0] or event.trig_pfak8pt360mt30[0])
+	
 	if ievent < 10:
-		print event.trig_mupt50[0], "\t", event.trig_pfht900[0], event.trig_pfak8ht700mt50[0], event.trig_pfpt450[0], event.trig_pfak8pt360mt30[0], bool(event.trig_pfht900[0] or event.trig_pfak8ht700mt50[0] or event.trig_pfpt450[0] or event.trig_pfak8pt360mt30[0])
+#		print event.trig_mupt50[0], "\t", event.trig_pfht900[0], event.trig_pfak8ht700mt50[0], event.trig_pfpt450[0], event.trig_pfak8pt360mt30[0], event.trig_pfak8pt280pt200mt30csv20[0], trig_ht
+		print event.trig_mupt50[0], "\t", event.trig_pfht900[0], event.trig_pfak8ht700mt50[0], event.trig_pfpt450[0], event.trig_pfak8pt360mt30[0], trig_ht
 	
 #	if len(event.ca12_pf_mp) == 0:
 #		print "[--] WARNING: Event {} has no pruned masses.".format(ievent + 1)
@@ -53,7 +59,7 @@ for ievent, event in enumerate(tc):
 		mp0ak8 = event.ak8_pf_mp[0]
 		hs["ht_mp0_total"].Fill(ht, mp0)
 		hs["ht_mp0ak8_total"].Fill(ht, mp0ak8)
-		if event.trig_pfht900[0] or event.trig_pfak8ht700mt50[0] or event.trig_pfpt450[0] or event.trig_pfak8pt360mt30[0]:
+		if trig_ht:
 			hs["ht_mp0_pass"].Fill(ht, mp0)
 			hs["ht_mp0ak8_pass"].Fill(ht, mp0ak8)
 

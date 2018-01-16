@@ -110,7 +110,8 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		suffix = groomer if not groomer else "_" + groomer
 		vars_calc["mavg" + suffix] = [(vars_calc["m" + suffix][0] + vars_calc["m" + suffix][1])/2]
 		vars_calc["dm" + suffix] = [abs(vars_calc["m" + suffix][0] - vars_calc["m" + suffix][1])]
-		vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
+		try: vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
+		except: vars_calc["masy" + suffix] = 2
 
 
 	for variable in variables:

@@ -88,7 +88,7 @@ void trigger_styler() {
 	axis_ht->SetTitleFont(43);
 	axis_ht->SetTitleSize(50);
 	axis_ht->SetTitle("Events/50 GeV");
-	axis_ht->SetTitleOffset(1.6);
+	axis_ht->SetTitleOffset(1.8);
 	axis_ht->SetLabelColor(kBlue - 9);
 	axis_ht->SetLabelFont(43);
 	axis_ht->SetLabelSize(50*0.83);
@@ -179,7 +179,7 @@ void trigger_styler() {
 		axis_m->SetTitleFont(43);
 		axis_m->SetTitleSize(50);
 		axis_m->SetTitle("Events/10 GeV");
-		axis_m->SetTitleOffset(1.6);
+		axis_m->SetTitleOffset(1.8);
 		axis_m->SetLabelColor(kBlue - 9);
 		axis_m->SetLabelFont(43);
 		axis_m->SetLabelSize(50*0.83);
@@ -207,7 +207,7 @@ void trigger_styler() {
 	
 		gPad->RedrawAxis();
 	
-		style_info(false, lum_string["16f"], 1, false, 0.50);
+		style_info(false, lum_string["16ef"], 1, false, 0.50);
 		style_cut("ht" + to_string((int) cut_ht));
 	
 		save(tc_m);

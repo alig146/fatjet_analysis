@@ -16,6 +16,7 @@ from truculence import root
 # VARIABLES:
 masses_sq = [100, 150, 175, 200, 250, 300, 400, 500, 600, 700]
 masses_sg = [100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650]
+#masses_sg = [100, 150, 200, 250, 300, 400, 450, 500, 550, 600, 650]
 #weight_factor = 38.180/2.183
 # :VARIABLES
 

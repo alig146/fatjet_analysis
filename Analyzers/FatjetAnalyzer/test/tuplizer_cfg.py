@@ -174,23 +174,25 @@ if options.data:
 #print "Weight:", options.weight
 #in_files = ["{0}/{1}".format(options.inDir, f) for f in options.inFile]
 in_files = options.inFile
-print "User defined input files: {}".format(in_files)
-if (not in_files) and (not options.crab):
-	assert miniaod
-	if miniaod.files:
-		in_files = miniaod.files
-#		if not miniaod.dir.eos: in_files = ["file:" + f for f in in_files]		# This is broken ATM, I need a better way of knowing where data is
-		in_files = ["file:" + f if f[:7] != "/store/" else f for f in in_files]
+if not options.crab:
+	if in_files: print "[OK] User has defined these input files: {}".format(in_files)
 	else:
-		print "ERROR (tuplizer): What files should be run over?"
+		print "[..] Finding files to run over."
+		assert miniaod
+		if miniaod.files:
+			in_files = miniaod.files
+	#		if not miniaod.dir.eos: in_files = ["file:" + f for f in in_files]		# This is broken ATM, I need a better way of knowing where data is
+			in_files = ["file:" + f if f[:7] != "/store/" else f for f in in_files]
+		else:
+			print "ERROR (tuplizer): What files should be run over?"
+			sys.exit()
+	#		in_files = dataset.get_paths(ds.miniaod_name)
+	if in_files:
+		print "[OK] You are running over {} files. An example file is the following:".format(len(in_files))
+		print "\t" + in_files[0]
+	else:
+		print "ERROR: You're not running over any files! Check your dataset."
 		sys.exit()
-#		in_files = dataset.get_paths(ds.miniaod_name)
-print "You are running over {} files. An example file is the following:".format(len(in_files))
-print "\t" + in_files[0] 
-
-if (not in_files) and (not options.crab):
-	print "ERROR: You're not running over any files! Check your dataset."
-	sys.exit()
 
 ### Output:
 if not options.outFile:

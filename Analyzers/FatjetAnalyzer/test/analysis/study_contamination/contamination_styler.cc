@@ -75,7 +75,8 @@ void draw_set(TString cut, int mass) {
 	style_cut(cut);
 	
 	vector<TString> texts;
-	texts.push_back("#bf{Contamination:}");
+	if (cut == "sig") texts.push_back("#bf{Contribution:}");
+	else texts.push_back("#bf{Contamination:}");
 	double sb = h_sqto4j->Integral()/(h_ttbar->Integral() + h_qcdmg->Integral());
 	std::ostringstream oss;
 	oss << "s/b = " << std::fixed << std::setprecision(1) << sb * 100 << " %";

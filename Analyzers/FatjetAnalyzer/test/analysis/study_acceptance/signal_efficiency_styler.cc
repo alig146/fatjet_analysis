@@ -29,7 +29,8 @@ void signal_efficiency_styler() {
 	TGraphAsymmErrors* eff_sg = teff_sg->CreateGraph();
 	TEfficiency* teff_pre_sg = new TEfficiency(*pass_pre_sg, *total_sg);
 	TGraphAsymmErrors* eff_pre_sg = teff_pre_sg->CreateGraph();
-	for (unsigned i = 0; i < 12; ++i){
+//	for (unsigned i = 0; i < 12; ++i){
+	for (unsigned i = 0; i < 11; ++i){
 		eff_sg->SetPointEXhigh(i, 0);
 		eff_sg->SetPointEXlow(i, 0);
 		eff_pre_sg->SetPointEXhigh(i, 0);
