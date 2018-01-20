@@ -45,7 +45,8 @@ vector<TH1*> make_plot_set(TString option_ana, TString cut, int nbins=1200) {
 void basic_plotter(TString option_ana="") {
 	// Options:
 	gROOT->SetBatch();
-	vector<TString> cuts = {"pre", "sigxtau4", "sig", "sb", "sbb"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
+//	vector<TString> cuts = {"pre", "sigxtau4", "sig", "sb", "sbb"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
+	vector<TString> cuts = {"pre", "prehtjec", "sig", "sigprehtjec"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
 	
 	// Output:
 	TString foutname = "basic_plots";

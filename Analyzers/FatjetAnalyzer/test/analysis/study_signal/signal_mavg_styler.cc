@@ -72,7 +72,7 @@ void signal_mavg_styler() {
 //	gROOT->SetBatch();
 	gStyle->SetOptStat(0);
 	
-	vector<TString> cuts = {"sig"};
+	vector<TString> cuts = {"sig", "sigprehtjec"};
 	for (int i = 0; i < cuts.size(); ++ i) {
 		draw_set(cuts[i]);
 	}

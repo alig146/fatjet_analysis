@@ -108,7 +108,7 @@ TH1* make_temp_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TStrin
 	return temp;
 }
 
-void template_plotter(TString cut="sb") {
+void template_plotter(TString cut="sig") {
 	// Options:
 	gROOT->SetBatch();
 	
@@ -119,8 +119,9 @@ void template_plotter(TString cut="sb") {
 	tf_in_ext = get_ana("qcdmgext");
 	TFile* tf_out = new TFile("template_plots_" + cut + ".root", "RECREATE");
 //	vector<TString> dss = {"jetht", "qcdmg", "qcdp", "inj"};
-	vector<TString> dss = {"jetht", "inj100", "inj150", "inj200", "inj250", "inj300", "inj400", "inj500"};
+//	vector<TString> dss = {"jetht", "inj100", "inj150", "inj200", "inj250", "inj300", "inj400", "inj500"};
 //	vector<TString> dss = {"inj"};
+	vector<TString> dss = {"jetht"};
 	
 	// Make plots:
 	for (unsigned i = 0; i < dss.size(); ++i) {

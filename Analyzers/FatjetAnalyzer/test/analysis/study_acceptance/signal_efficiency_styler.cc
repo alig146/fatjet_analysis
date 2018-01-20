@@ -29,13 +29,23 @@ void signal_efficiency_styler() {
 	TGraphAsymmErrors* eff_sg = teff_sg->CreateGraph();
 	TEfficiency* teff_pre_sg = new TEfficiency(*pass_pre_sg, *total_sg);
 	TGraphAsymmErrors* eff_pre_sg = teff_pre_sg->CreateGraph();
-//	for (unsigned i = 0; i < 12; ++i){
-	for (unsigned i = 0; i < 11; ++i){
+	for (unsigned i = 0; i < 13; ++i){
 		eff_sg->SetPointEXhigh(i, 0);
 		eff_sg->SetPointEXlow(i, 0);
 		eff_pre_sg->SetPointEXhigh(i, 0);
 		eff_pre_sg->SetPointEXlow(i, 0);
 	}
+	
+	
+//	total_sg->Draw("histe");
+	
+//	cout << teff_sg->GetConfidenceLevel() << endl;
+//	teff_sg->Draw("alpe");
+//	eff_sg->SetMarkerColor(kBlue);
+//	eff_sg->SetLineColor(kBlue);
+////	eff_sg->Draw("pe same");
+	
+//	return;
 	
 	
 	eff_sq->SetLineWidth(2);

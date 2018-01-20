@@ -111,7 +111,7 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		vars_calc["mavg" + suffix] = [(vars_calc["m" + suffix][0] + vars_calc["m" + suffix][1])/2]
 		vars_calc["dm" + suffix] = [abs(vars_calc["m" + suffix][0] - vars_calc["m" + suffix][1])]
 		try: vars_calc["masy" + suffix] = [vars_calc["dm" + suffix][0]/vars_calc["mavg" + suffix][0]/2]
-		except: vars_calc["masy" + suffix] = 2
+		except: vars_calc["masy" + suffix] = [2]
 
 
 	for variable in variables:
@@ -127,7 +127,8 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		elif var_name == "njets": branches[var_name][0] = getattr(event, "ak4_pf_njets")[0]
 #		elif var_name == "pthat": branches[var_name][0] = getattr(event, "pt_hat")[0]
 		elif var_name == "htak4": branches[var_name][0] = getattr(event, "ak4_pf_ht")[0]
-		elif var_name == "htak8": branches[var_name][0] = getattr(event, "ak8_pf_ht")[0]
+		elif var_name == "htak8jec": branches[var_name][0] = getattr(event, "ak8_pf_ht")[0]
+		elif var_name == "htak8": branches[var_name][0] = sum([pt/jec for pt, jec, eta in zip(getattr(event, "ak8_pf_pt"), getattr(event, "ak8_pf_jec"), getattr(event, "ak8_pf_eta")) if pt/jec > 150 and abs(eta) < 2.5])
 		elif var_name == "wtt": branches[var_name][0] = (getattr(event, "q_gn_sf")[0]*getattr(event, "q_gn_sf")[1])**0.5 if len(getattr(event, "q_gn_sf")) == 2 else 1
 		elif var_name == "bd":
 			for i in range(var_dim): branches[var_name][i] = getattr(event, alg + "_pf_bd_csv")[i]
@@ -147,7 +148,7 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 #				for i in range(var_dim): branches[var_name][i] = getattr(event, "{}_pf{}_{}".format(alg, groomer, var_stem))[i]
 	
 	# Calculate total weight:
-	branches["W"][0] = branches["w"][0]*branches["wtt"][0]
+	branches["W"][0] = branches["w"][0] #*branches["wtt"][0]
 	if branches["wpu"][0] > 0: branches["W"][0] *= branches["wpu"][0]
 	
 #	match_leptons(loop)

@@ -22,7 +22,6 @@ from ROOT import TFile, TCut, TH1F, gROOT
 # VARIABLES:
 #anatuple_in = "~/anatuples/anatuple_cutpt400eta25.root"
 anatuple_in = "~/anatuples/anatuple_cutpt400eta25_pre.root"
-anatuple_in_sq100 = "~/anatuples/anatuple_sq100to4j_cutpt300eta20_pre.root"
 anatuple_in_bosons = "~/anatuples/anatuple_vbosons_moriond17_cutpt400eta25_pre.root"
 #weight_factor = 38.180/2.183
 # /VARIABLES
@@ -71,12 +70,12 @@ def apply_cut(cut, tt, v=False):
 def main():
 	gROOT.SetBatch()
 	rf = root.rfile(anatuple_in)
-	rf_sq100 = root.rfile(anatuple_in_sq100)
+#	rf_sq100 = root.rfile(anatuple_in_sq100)
 	rf_bosons = root.rfile(anatuple_in_bosons)
 	ttrees = rf.get_ttrees()
-	ttrees_sq100 = rf_sq100.get_ttrees()
+#	ttrees_sq100 = rf_sq100.get_ttrees()
 	ttrees_bosons = rf_bosons.get_ttrees()
-	ttrees["sq100to4j"] = ttrees_sq100["sq100to4j"]
+#	ttrees["sq100to4j"] = ttrees_sq100["sq100to4j"]
 	ttrees["wjets"] = ttrees_bosons["wjets"]
 	ttrees["zjets"] = ttrees_bosons["zjets"]
 	
@@ -101,6 +100,7 @@ def main():
 		print "\tWill apply a weight factor of {:.2f}".format(wf)
 		generation = "moriond17"
 		if "sq" in tt_name: generation = "moriond17cutht700"
+		elif "sg" in tt_name: generation = "moriond17cutht500"
 		miniaods = fetch_entries("miniaod", {"process": tt_name, "generation": generation})
 		original_w = sum([miniaod.n*miniaod.weight for miniaod in miniaods])
 		

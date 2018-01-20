@@ -43,7 +43,12 @@ variables:
     - name: htak8
       dimension: 1
       type: event
-      description: HT of the event calculated from AK8 PF jets with pT > 150
+      description: HT of the event calculated from uncorrected AK8 PF jets with pT > 150 and |eta| < 2.5
+      
+    - name: htak8jec
+      dimension: 1
+      type: event
+      description: HT of the event calculated from AK8 PF jets with pT > 150 and |eta| < 2.5
       
     - name: wtt
       dimension: 1

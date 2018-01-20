@@ -29,7 +29,7 @@ if __name__ == "__main__":
 			cut_eta_filter=cut_eta_filter,
 			cut_smu_filter=cut_smu_filter,
 			suffix=suffix,
-			unitsper=50000,
+			unitsper=20000,
 			publish=False,
 		)
 		with open(path + "/{}_{}_cfg.py".format(miniaod.Name, suffix), "w") as out:
