@@ -28,7 +28,7 @@ void get_reweighting_functions(TString ds, TString cut, TFile* tf_out, TString a
 	vector<TTree*> tts;
 	TString era = "";
 	if (ds == "inj") {
-		if (cut == "sig" || cut == "sigl") era = "15";
+//		if (cut == "sig" || cut == "sigl") era = "15";
 		tts.push_back((TTree*) tf->Get("jetht"));
 		tts.push_back((TTree*) tf->Get("sq150to4j"));
 	} 
@@ -38,7 +38,9 @@ void get_reweighting_functions(TString ds, TString cut, TFile* tf_out, TString a
 		tts.push_back((TTree*) tf->Get("sq150to4j"));
 	}
 	else tts.push_back((TTree*) tf->Get(ds));
-	tts[0]->Draw("htak8>>" + name + "(24, 800, 3200)", get_cut("fjp_" + cut, era, get_weight(tts[0]->GetName(), era)));
+	double weight_factor = get_weight(tts[0]->GetName(), era);
+	cout << "[..] Making the HT plot with a weight factor of " << weight_factor << "." << endl;
+	tts[0]->Draw("htak8>>" + name + "(24, 800, 3200)", get_cut("fjp_" + cut, era, weight_factor));
 	TH1* h = (TH1*) gDirectory->Get(name);
 	if (ds == "all" || ds == "inj") {
 		for (unsigned i = 1; i < tts.size() ; ++i) {
@@ -48,7 +50,8 @@ void get_reweighting_functions(TString ds, TString cut, TFile* tf_out, TString a
 			h->Add(h_temp);
 		}
 	}
-	if (ds == "qcdp" && cut == "sig") h->Rebin(2);
+	cout << "[OK] HT distribution integral = " << h->Integral() << endl;
+//	if (ds == "qcdp" && cut == "sig") h->Rebin(2);
 	
 	for (int i=0; i < function_defs.size(); ++i) {
 		TString cname = name + "_f" + to_string(i);
@@ -164,6 +167,13 @@ void reweighting_plotter(TString cut="sb") {
 //	TFile* tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
 	TFile* tf_out = new TFile("reweight_functions_" + cut + ".root", "RECREATE");
 	vector<TString> dss = {"jetht", "inj", "qcdmg", "qcdp"};
+//	vector<TString> dss = {"jetht"};
 	
-	for (unsigned i = 0; i < dss.size(); ++ i) get_reweighting_functions(dss[i], cut, tf_out);
+	for (unsigned i = 0; i < dss.size(); ++ i) {
+		TString ana_option = "";
+		TString ds = dss[i];
+		if (ds == "qcdp") ana_option = ds;
+		get_reweighting_functions(dss[i], cut, tf_out, ana_option);
+		cout << endl;
+	}
 }

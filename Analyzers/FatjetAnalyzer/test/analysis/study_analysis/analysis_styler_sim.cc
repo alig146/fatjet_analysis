@@ -145,9 +145,9 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 //			bins = {20, 80, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700};	// worked before lum change
 			bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 420, 480, 600};
 //			newAmp1 = 4e-7;
-			newAmp1 = 0.85;
+			newAmp1 = 0.70;
 			newShift1 = -20.0;
-			newStretch1 = 0.9;
+			newStretch1 = 0.90;
 			newAmp2 = 1.00;
 			newShift2 = 0.0;
 			newStretch2 = 1.0;
@@ -166,12 +166,12 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 		}
 		else if (f == 1) {
 			// Before variable HT binning:
-			bins = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 260, 270, 300, 330, 360, 390, 420, 480, 540, 600};
+			bins = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250, 260, 270, 300, 330, 360, 390, 420, 480, 540};
 			newAmp1 = 1.0;
 			newShift1 = -20;
 			newStretch1 = 0.90;
 			newAmp2 = 1.0;
-			newShift2 = 1.0;
+			newShift2 = 0.0;
 			newStretch2 = 1.0;
 			
 			if (inj == "inj") {
@@ -204,7 +204,7 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 		newStretch2 = 0.9;
 	}
 	else if (cut_name == "sbl42b") {
-		bins = {0, 60, 90, 100, 120, 130, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480, 540};
+		bins = {0, 30, 60, 90, 100, 120, 130, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480, 540};
 //			newAmp1 = 4e-7;
 		newAmp1 = 0.8;
 		newShift1 = -20;
@@ -215,26 +215,27 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 	}
 	else if (cut_name == "sbl42") {
 //		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480, 540, 600, 660};
-		bins = {0, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330};		// Converges: 0.97 =/- 0.8
+//		bins = {0, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330};		// Converges: 0.97 =/- 0.8 (AN.v6)
 //		bins = {0, 60, 90, 120, 150, 180, 210, 240, 270, 330, 450, 600};		// Converges: 2.05 +/- 0.6 (?)
 //		bins = {60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 420, 480, 540, 600};
+		bins = {0, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480};
 //			newAmp1 = 4e-7;
-		newAmp1 = 0.8;
-		newShift1 = -20;
+		newAmp1 = 0.80;
+		newShift1 = -21;
 		newStretch1 = 0.95;
 		newAmp2 = 0.90;
 		newShift2 = 5.0;
 		newStretch2 = 1.1;
 	}
 	else if (cut_name == "sbl43b") {		// chi2
-		bins = {0, 70, 80, 90, 120, 130, 140, 150, 170, 190, 200, 210, 220, 240, 300, 330, 360, 420, 450};
-		bins = {0, 30, 60, 120, 130, 150, 170, 190, 200, 210, 220, 240, 300, 330, 360};
-		bins = {0, 90, 120, 150, 180, 210, 240, 300, 330, 360, 420, 600, 1200};
-//		bins = {60, 120, 180, 210, 240, 270, 300, 330, 360};
+//		bins = {0, 70, 80, 90, 120, 130, 140, 150, 170, 190, 200, 210, 220, 240, 300, 330, 360, 420, 450};
+//		bins = {0, 30, 60, 120, 130, 150, 170, 190, 200, 210, 220, 240, 300, 330, 360};
+//		bins = {0, 90, 120, 150, 180, 210, 240, 300, 330, 360, 420, 600, 1200};
+		bins = {60, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390};
 //			newAmp1 = 4e-7;
-		newAmp1 = 0.150;
+		newAmp1 = 0.15;
 		newShift1 = -25;
-		newStretch1 = 1.0;
+		newStretch1 = 1.20;
 		newAmp2 = 0.80;
 		newShift2 = -10.0;
 		newStretch2 = 0.8;
@@ -292,23 +293,30 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 		}
 	}
 	else if (cut_name == "sbideb") {
-		bins = {90, 120, 150, 180, 210, 240, 300, 330, 360, 390, 420, 450, 480};
-		newAmp1 = 0.8;
+		bins = {0, 150, 180, 210, 240, 300, 330, 360, 390, 420, 450, 480, 900};
+		newAmp1 = 1.0;
 		newShift1 = 20.0;
 		newStretch1 = 1.00;
 		newAmp2 = 1.0;
 		newShift2 = -20.0;
-		newStretch2 = 1.0;
+		newStretch2 = 1.1;
 	}
 	else if (cut_name == "sbide") {
 //		bins = {60, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570};
+//		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 390, 510, 540, 570, 600, 630};
+//		newAmp1 = 1.2;
+//		newShift1 = -20;
+//		newStretch1 = 1.00;
+//		newAmp2 = 1.0;
+//		newShift2 = -10.0;
+//		newStretch2 = 1.0;
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 390, 510, 540, 570, 600, 630};
-		newAmp1 = 1.2;
-		newShift1 = -20;
+		newAmp1 = 1.0;
+		newShift1 = 30.0;
 		newStretch1 = 1.00;
 		newAmp2 = 1.0;
-		newShift2 = -10.0;
-		newStretch2 = 1.0;
+		newShift2 = -30.0;
+		newStretch2 = 0.97;
 	}
 	else if (cut_name == "sig") {
 //		bins = {60, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570};
@@ -434,7 +442,7 @@ void analysis_styler_sim(TString cut_name="sb", TString inj="", int f=1, int nre
 		leg->AddEntry(h_fjp_jetht, name_proper["data"], "ple");
 //		leg->AddEntry(h_fjp_jetht, name_proper["jetht"], "ple");
 		leg->AddEntry(h_fit_jetht, "QCD template", "f");
-		leg->AddEntry(h_fit_ttbar, "t#bar{t} MC", "f");
+		leg->AddEntry(h_fit_ttbar, "t#bar{t} simulation", "f");
 		leg->Draw();
 		
 		// Axes:

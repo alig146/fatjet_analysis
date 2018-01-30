@@ -4,6 +4,7 @@
 TH1* make_plot(TTree* tt, TString variable, TString cut, TString name, TString nbins, TString low, TString high) {
 	TString option = "";
 	if (is_sig(tt->GetName())) option = "xwtt";
+	if (TString(tt->GetName()) == "ttbar") option = "wtt";
 	tt->Draw(variable + ">>" + name + "(" + nbins + ", " + low + ", " + high + ")", get_cut("fjp_" + cut, option));
 	TH1* h = (TH1*) gDirectory->Get(name);
 	h->SetTitle("");
@@ -45,8 +46,8 @@ vector<TH1*> make_plot_set(TString option_ana, TString cut, int nbins=1200) {
 void basic_plotter(TString option_ana="") {
 	// Options:
 	gROOT->SetBatch();
-//	vector<TString> cuts = {"pre", "sigxtau4", "sig", "sb", "sbb"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
-	vector<TString> cuts = {"pre", "prehtjec", "sig", "sigprehtjec"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
+	vector<TString> cuts = {"pre", "sig", "sb", "sbb"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
+//	vector<TString> cuts = {"pre", "prehtjec", "sig", "sigprehtjec"};//, "sbide", "sbideb", "sbl", "sblb", "sbt", "sbtb", "sigl", "sbl42", "sbl42b", "sbl43", "sbl43b"};
 	
 	// Output:
 	TString foutname = "basic_plots";

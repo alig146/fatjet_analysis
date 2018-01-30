@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void data_styler() {
 	gROOT->SetBatch();
@@ -14,9 +14,9 @@ void data_styler() {
 		TH1* h15 = (TH1*) tf->Get(variable + "_jetht_" + "fjp_sb15");
 		TH1* h16 = (TH1*) tf->Get(variable + "_jetht_" + "fjp_sb16");
 		
-		h15->SetLineColor(kBlue);
+		h15->SetLineColor(kRed);
 		h15->SetMarkerStyle(21);
-		h15->SetMarkerColor(kBlue);
+		h15->SetMarkerColor(kRed);
 		h16->SetLineColor(kBlack);
 		h16->SetMarkerColor(kBlack);
 		
@@ -82,9 +82,9 @@ void data_styler() {
 			canvases[i]->cd();
 			style_info(false, lum_string["sum"], 1, false, 0.49);
 			leg->Draw();
-			style_write(TString("Selection: #bf{") + cut_proper["sb"] + "}",  0.18, 0.94, 0.018);
+			style_cut("sb");
 			canvases[i]->SaveAs(TString(canvases[i]->GetName()) + ".pdf");
-			canvases[i]->SaveAs(TString(canvases[i]->GetName()) + ".png");
+//			canvases[i]->SaveAs(TString(canvases[i]->GetName()) + ".png");
 		}
 	}
 }

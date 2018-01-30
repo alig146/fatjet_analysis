@@ -1,24 +1,28 @@
 from truculence import root
-import os, yaml, math
+from decortication import dataset
+import os, sys, yaml, math
 from ROOT import gROOT, gDirectory, TFile, TH1D, TH2D
 
-#path = "/cms/tote/store/Sq200To4J/tuple_sq200to4j_moriond17cutht700_cutpt0eta20/171221_121025"
-paths = {
-##	"sq100to4j": "/cms/tote/store/Sq100To4J/tuple_sq100to4j_moriond17cutht700_cutpt0etax/180103_171558",
-##	"sq200to4j": "/cms/tote/store/Sq200To4J/tuple_sq200to4j_moriond17cutht700_cutpt0etax/180103_171558",
-##	"sq500to4j": "/cms/tote/store/Sq500To4J/tuple_sq500to4j_moriond17cutht700_cutpt0etax/180103_171558",
-	"sq100to4j": "/cms/tote/store/Sq100To4J/tuple_sq100to4j_moriond17cutht700_cutpt0etax/180107_222419",
-	"sq200to4j": "/cms/tote/store/Sq200To4J/tuple_sq200to4j_moriond17cutht700_cutpt0etax/180107_222419",
-	"sq300to4j": "/cms/tote/store/Sq300To4J/tuple_sq300to4j_moriond17cutht700_cutpt0etax/180107_222419",
-	"sq400to4j": "/cms/tote/store/Sq400To4J/tuple_sq400to4j_moriond17cutht700_cutpt0etax/180107_222419",
-	"sq500to4j": "/cms/tote/store/Sq500To4J/tuple_sq500to4j_moriond17cutht700_cutpt0etax/180107_222419",
+
+tuples = {
+	"sq100to4j": dataset.fetch_entries("tuple", dict(process="sq100to4j", generation=["moriond17cutht700"], suffix="cutpt0etax")),
+	"sq200to4j": dataset.fetch_entries("tuple", dict(process="sq200to4j", generation=["moriond17cutht700"], suffix="cutpt0etax")),
+	"sq300to4j": dataset.fetch_entries("tuple", dict(process="sq300to4j", generation=["moriond17cutht700"], suffix="cutpt0etax")),
+	"sq400to4j": dataset.fetch_entries("tuple", dict(process="sq400to4j", generation=["moriond17cutht700"], suffix="cutpt0etax")),
+	"sq500to4j": dataset.fetch_entries("tuple", dict(process="sq500to4j", generation=["moriond17cutht700"], suffix="cutpt0etax")),
+#	"qcdmg": dataset.fetch_entries("tuple", dict(process="qcdmg", generation=["moriond17", "moriond17ext"], suffix="cutpt300eta20")),
 }
+
 tf = TFile.Open("jets_plots.root", "recreate")
 gROOT.SetBatch()
 
-for p, path in paths.items():
+for p, tups in tuples.items():
 	print p
-	files = ["/".join([path, f]) for f in os.listdir(path)]
+	files = []
+	for tup in tups: files += tup.files
+#	if not isinstance(paths, list): list(paths)
+#	files = []
+#	for path in paths: files += ["/".join([path, f]) for f in os.listdir(path)]
 	tc = root.make_tc(files, "tuplizer/events")
 	print tc.GetEntries()
 	
@@ -49,7 +53,10 @@ for p, path in paths.items():
 	)
 
 	for ievent, event in enumerate(tc):
-		ht = event.ak8_pf_ht[0]
+		if ievent%1000000 == 0 and ievent != 0: print "event", ievent
+		
+#		ht = event.ak8_pf_ht[0]
+		ht = sum([pt/jec for pt, jec, eta in zip(getattr(event, "ak8_pf_pt"), getattr(event, "ak8_pf_jec"), getattr(event, "ak8_pf_eta")) if pt/jec > 150 and abs(eta) < 2.5])
 		w = event.wpu[0]*event.w[0]
 		
 		pt0 = event.ca12_pf_pt[0]

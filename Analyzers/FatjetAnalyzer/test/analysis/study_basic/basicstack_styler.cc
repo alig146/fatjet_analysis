@@ -1,12 +1,12 @@
 #include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int corner=1, double line=-1, TString line_label="Cut value") {
+void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int corner=1, bool change_xaxis=true, double line=-1, TString line_label="Cut value") {
 	TString signame = "sq" + mass + "to4j";
 	bool plot_jetht = true;
 	if (cut == "sig" || cut == "sigxdeta" || cut == "sigxmasyp" || cut == "sigxtau21" || cut == "sigxtau42" || cut == "sigxtau43") plot_jetht = false;
 	
 	// Get plots from the file and set up:
-	cout << variable + "_qcdmg_" + cut << endl;
+//	cout << variable + "_qcdmg_" + cut << endl;
 	TH1* h_qcdmg_orig = (TH1*) gDirectory->Get(variable + "_qcdmg_" + cut);
 	TH1* h_ttbar_orig = (TH1*) gDirectory->Get(variable + "_ttbar_" + cut);
 	TH1* h_sqto4j_orig = (TH1*) gDirectory->Get(variable + "_" + signame + "_" + cut);
@@ -43,8 +43,8 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		h_sige->Add(h_qcdmg);
 		h_sige->Add(h_ttbar);
 	
-		h_qcdmg->SetFillColorAlpha(kBlue, 0.1);
 		h_qcdmg->SetFillStyle(1001);
+		h_qcdmg->SetFillColorAlpha(kBlue, 0.1);
 		h_qcdmg->SetLineStyle(2);
 		h_qcdmg->SetLineWidth(2);
 		h_qcdmg->SetMarkerSize(0);
@@ -54,28 +54,31 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		h_ttbar->SetMarkerSize(0);
 		h_ttbar->SetLineWidth(2);
 		hs->Add(h_ttbar);
-		h_sqto4j->SetFillColorAlpha(kGreen-5, 0.5);
 		h_sqto4j->SetFillStyle(1001);
+		h_sqto4j->SetFillColorAlpha(kGreen-5, 0.5);
 		h_sqto4j->SetLineWidth(2);
 		h_sqto4j->SetMarkerSize(0);
 		hs->Add(h_sqto4j);
 	
 		h_bkge->SetMarkerSize(0);
+		h_bkge->SetFillStyle(1001);
 		h_bkge->SetFillColorAlpha(kBlack, 0.2);
 		h_sige->SetMarkerSize(0);
-		h_sige->SetFillColorAlpha(kBlack, 0.8);
 		h_sige->SetFillStyle(3013);
+		h_sige->SetFillColorAlpha(kBlack, 0.8);
 	
 		h_bkg->SetFillStyle(0);
 
 
 		hs->Draw("hist");
-		if (variable == "mavg") hs->GetXaxis()->SetRangeUser(0, 900);
-		if (variable == "deta") hs->GetXaxis()->SetRangeUser(0, 1.0);
-		if (variable == "masy") hs->GetXaxis()->SetRangeUser(0, 0.1);
-		if (variable == "tau21") hs->GetXaxis()->SetRangeUser(0, 1.0);
-		if (variable == "tau42") hs->GetXaxis()->SetRangeUser(0.2, 0.6);
-		if (variable == "tau43") hs->GetXaxis()->SetRangeUser(0.4, 1.0);
+		if (change_xaxis) {
+			if (variable == "mavg") hs->GetXaxis()->SetRangeUser(0, 900);
+			if (variable == "deta") hs->GetXaxis()->SetRangeUser(0, 1.0);
+			if (variable == "masy") hs->GetXaxis()->SetRangeUser(0, 0.1);
+			if (variable == "tau21") hs->GetXaxis()->SetRangeUser(0, 1.0);
+			if (variable == "tau42") hs->GetXaxis()->SetRangeUser(0.2, 0.6);
+			if (variable == "tau43") hs->GetXaxis()->SetRangeUser(0.4, 1.0);
+		}
 		if (logy == 0) hs->SetMaximum(hs->GetMaximum()*1.3);
 		else {
 			hs->SetMaximum(hs->GetMaximum()*10);

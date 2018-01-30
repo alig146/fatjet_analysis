@@ -24,7 +24,7 @@ vector<double> get_significances(int m, TH1* signal, TH1* qcd, TH1* ttbar, int w
 
 void optimization_matrix_plotter() {
 	gROOT->SetBatch();
-	vector<int> ms = {100, 150, 200, 250, 300, 400, 500};
+	vector<int> ms = {100, 150, 175, 200, 250, 300, 400, 500};
 	
 	TFile *tf_in = TFile::Open("optimization_plots.root");
 	TFile* tf_out = new TFile("optimization_matrices.root", "RECREATE");

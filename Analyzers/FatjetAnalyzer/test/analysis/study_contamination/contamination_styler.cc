@@ -28,8 +28,8 @@ void draw_set(TString cut, int mass) {
 	for (int i = 1; i < h_qcdmg->GetXaxis()->GetNbins() + 1; ++i) h_qcdmg->SetBinError(i, 0);
 	for (int i = 1; i < h_ttbar->GetXaxis()->GetNbins() + 1; ++i) h_ttbar->SetBinError(i, 0);
 	
-	h_qcdmg->SetFillColorAlpha(kBlue, 0.1);
 	h_qcdmg->SetFillStyle(1001);
+	h_qcdmg->SetFillColorAlpha(kBlue, 0.1);
 	h_qcdmg->SetLineStyle(2);
 	h_qcdmg->SetLineWidth(2);
 	h_qcdmg->SetMarkerSize(0);
@@ -39,8 +39,8 @@ void draw_set(TString cut, int mass) {
 	h_ttbar->SetMarkerSize(0);
 	h_ttbar->SetLineWidth(2);
 	hs->Add(h_ttbar);
-	h_sqto4j->SetFillColorAlpha(kGreen-5, 0.5);
 	h_sqto4j->SetFillStyle(1001);
+	h_sqto4j->SetFillColorAlpha(kGreen-5, 0.5);
 	h_sqto4j->SetLineWidth(2);
 	h_sqto4j->SetMarkerSize(0);
 	hs->Add(h_sqto4j);
@@ -54,6 +54,7 @@ void draw_set(TString cut, int mass) {
 	h_bkg->Draw("same hist");
 	h_bkge->SetMarkerSize(0);
 //	h_bkge->SetFillStyle(3244);
+	h_bkge->SetFillStyle(1001);
 	h_bkge->SetFillColorAlpha(kBlack, 0.2);
 	h_bkge->Draw("same e2");
 	
@@ -96,7 +97,7 @@ void contamination_styler(TString cut_sb="sb", TString cut_sig="sig") {
 	if (cut_sb == "sblmasy") fname = "contamination_lmasy_plots.root";
 	TFile* tf = TFile::Open(fname);
 	
-	vector<int> masses = {100, 150, 200, 250, 300, 400, 500};
+	vector<int> masses = {100, 150, 175, 200, 250, 300, 400, 500, 600, 700};
 	for (int i = 0; i < masses.size(); ++ i) {
 		draw_set(cut_sig, masses[i]);
 		draw_set(cut_sb, masses[i]);

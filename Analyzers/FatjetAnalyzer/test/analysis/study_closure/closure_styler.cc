@@ -1,12 +1,5 @@
 #include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void fix_zeros(TH1* h) {
-	for (unsigned i = 0; i <= h->GetNbinsX(); ++i) {
-		if (h->GetBinContent(i) == 0) h->SetBinContent(i, 0.0001);
-		cout << i << " " << h->GetBinContent(i) << endl;
-	}
-}
-
 void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1* fit, TH1* params, vector<Double_t> stats, int logy=0) {
 	// Make pull:
 	TCanvas* tc = draw_pull(name, data, fit, 0, 1200);
@@ -77,22 +70,19 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 	tc->SaveAs(name + ".png");
 }
 
-void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=30, bool ht=true, TString dir="", int f=1) {
-//	TFile* tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
-	TString ana_option = "";
-	if (ds == "qcdp") ana_option = ds;
-	TFile* tf_in = get_ana(ana_option);
-//	if (ds == "qcdmg") tf_in = get_ana("qcdmgext");
+void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString dir="", int f=1) {
+//	TString ana_option = "";
+//	if (ds == "qcdp") ana_option = ds;
+//	TFile* tf_in = get_ana(ana_option);
+//	
+//	TTree* tt = (TTree*) tf_in->Get(ds);
 	
-	TTree *tt = (TTree*) tf_in->Get(ds);
+	// Get input plots:
+	TFile* tf_gar = TFile::Open("garwood_plots_" + ds + "_" + cut + ".root");
+	TH1* h_fjp = (TH1*) tf_gar->Get("gar");
 	
-//	tt->Draw("mavg_p>>" + ds + "_fjp(1200,0,1200)", get_cut("fjp_" + cut_name, get_weight(ds)));
-//	TH1 *h_fjp = (TH1*) gDirectory->Get(ds + "_fjp");
-	TH1D* h_fjp = make_qcd_garwood(tf_in, ds, cut_name, nrebin);
-	cout << "here" << endl;
-	TH1* h_temp = fetch_template(ds, cut_name, dir, f, ht);
+	TH1* h_temp = fetch_template(ds, cut, dir, f, ht);
 	TH1* h_cdf = make_cdf(h_temp, ds + "_cdf");
-	
 	
 	/// Save untouched plots for use later:
 	TH1* h_fjp_original = (TH1*) h_fjp->Clone("fjp");
@@ -103,20 +93,20 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 	double stretch = 1.0;
 	double ampe, shifte, stretche;
 	vector<double> bins {0, 100, 150, 200, 250, 300, 350, 400, 500, 600, 650, 800};
-	if (ds == "jetht" && cut_name == "sb") {
+	if (ds == "jetht" && cut == "sb") {
 		amp = 2e-6;
 		shift = -10;
 		stretch = 0.90;
 		bins = {0, 50, 150, 200, 250, 300, 400, 500, 600};
 	}
-	else if (ds == "qcdmg" && cut_name == "sb") {
+	else if (ds == "qcdmg" && cut == "sb") {
 		amp = 1.0;
 		shift = -10;
 		stretch = 0.90;
 //		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600, 650};
 		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
 	}
-	else if (ds == "qcdp" && cut_name == "sb") {
+	else if (ds == "qcdp" && cut == "sb") {
 		amp = 1.0;
 		shift = -20;
 		stretch = 0.90;
@@ -124,31 +114,31 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 //		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600};
 		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
 	}
-	else if (ds == "qcdmg" && cut_name == "sbb") {
+	else if (ds == "qcdmg" && cut == "sbb") {
 		amp = 5.0e-7;
 		shift = -10;
 		stretch = 0.95;
 		bins = {0, 50, 100, 150, 200, 250, 300, 400, 500};
 	}
-	else if (ds == "qcdp" && cut_name == "sbb") {
+	else if (ds == "qcdp" && cut == "sbb") {
 		amp = 5.0e-6;
 		shift = -10;
 		stretch = 0.95;
 		bins = {0, 50, 100, 150, 200, 250, 300, 400, 500};
 	}
-	else if (ds == "qcdmg" && cut_name == "sig") {
+	else if (ds == "qcdmg" && cut == "sig") {
 		amp = 2.0;
 		shift = -20.0;
 		stretch = 1.0;
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570, 600};
 	}
-	else if (ds == "qcdp" && cut_name == "sig") {
+	else if (ds == "qcdp" && cut == "sig") {
 		amp = 1.0;
 		shift = -20.0;
 		stretch = 1.0;
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 330, 390, 450, 510, 570, 630};
 	}
-	else if (ds == "qcdmg" && cut_name == "sigl" && ht) {		// This works
+	else if (ds == "qcdmg" && cut == "sigl" && ht) {		// This works
 		amp = 100.0;
 		shift = -10;
 		stretch = 1.0;
@@ -156,19 +146,19 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 		bins = {60, 90, 120, 150, 180, 210, 240, 300, 360, 390, 450, 510, 540, 600, 810};
 		bins = {60, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600, 810};
 	}
-//	else if (ds == "qcdmg" && cut_name == "sigl" && ht) {		// Experimental
+//	else if (ds == "qcdmg" && cut == "sigl" && ht) {		// Experimental
 //		amp = 2.0e-6;
 //		shift = 1.0;
 //		stretch = 1.0;
 //		bins = {100, 250, 350, 550, 800};
 //	}
-	else if (ds == "qcdmg" && cut_name == "sigl" && !ht) {
+	else if (ds == "qcdmg" && cut == "sigl" && !ht) {
 		amp = 2.0e-6;
 		shift = 1.0;
 		stretch = 1.0;
 		bins = {0, 50, 100, 150, 200, 250, 300, 400};
 	}
-	else if (ds == "qcdp" && cut_name == "sigl" && ht) {
+	else if (ds == "qcdp" && cut == "sigl" && ht) {
 		amp = 1.0;
 		shift = -10.0;
 		stretch = 1.0;
@@ -178,31 +168,31 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 //		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600};
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1200};
 	}
-	else if (cut_name == "sbt") {
+	else if (cut == "sbt") {
 		amp = 2e-6;
 		shift = -10;
 		stretch = 0.90;
 		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600, 650};
 	}
-	else if (cut_name == "sbtb") {
+	else if (cut == "sbtb") {
 		amp = 5.0e-6;
 		shift = -10;
 		stretch = 0.95;
 		bins = {0, 100, 150, 200, 300, 450};
 	}
-	else if (cut_name == "sbs") {
+	else if (cut == "sbs") {
 		amp = 2e-6;
 		shift = -10;
 		stretch = 0.90;
 		bins = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650};
 	}
-	else if (cut_name == "sbsb") {
+	else if (cut == "sbsb") {
 		amp = 5.0e-6;
 		shift = -10;
 		stretch = 0.95;
 		bins = {0, 100, 150, 200, 250, 300, 400};
 	}
-	else if (cut_name == "sigs") {
+	else if (cut == "sigs") {
 		amp = 2.0e-6;
 		shift = 1.0;
 		stretch = 1.0;
@@ -231,7 +221,7 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 	
 	// Calculate some stats:
 	vector<Double_t> stats;
-	h_fit->Rebin(nrebin);
+	h_fit->Rebin(30);
 	stats.push_back(h_fjp->KolmogorovTest(h_fit));
 	
 	// Histogram styling:
@@ -243,7 +233,7 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 	h_fjp->SetTitle("");
 	h_fjp->GetXaxis()->SetTitle(get_xtitle("mavg"));
 //	fix_zeros(h_fjp);
-	h_temp->Rebin(nrebin);
+	h_temp->Rebin(30);
 	h_temp->SetFillStyle(1001);
 	h_temp->SetFillColorAlpha(kBlue-10, 0.5);
 	h_temp->SetLineWidth(2);
@@ -257,11 +247,11 @@ void closure_plotter_gar(TString cut_name="sb", TString ds="qcdmg", int nrebin=3
 	// Histogram drawing:
 	style_ylabel_th1(h_temp);
 	for (int i=0; i < 2; ++ i) {
-		TString name = "closure_gar_" + ds + "_" + cut_name + "_f" + to_string(f);
+		TString name = "closure_gar_" + ds + "_" + cut + "_f" + to_string(f);
 		if (!ht) name = name + "_xht";
 		if (dir != "") name + "_" + dir;
 		if (i == 1) name = name + "_logy";
-		draw_plot(name, ds, cut_name, h_fjp, h_temp, h_fit, params, stats, i);
+		draw_plot(name, ds, cut, h_fjp, h_temp, h_fit, params, stats, i);
 	}
 	
 }

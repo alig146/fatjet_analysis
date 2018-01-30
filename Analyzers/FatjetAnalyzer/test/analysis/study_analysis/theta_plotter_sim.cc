@@ -50,15 +50,14 @@ void make_plots(TString region, TString name, TFile* tf_out, TH1* h_fjp, TH1* h_
 }
 
 
-// To-do:
-// * "era" doesn't do anything.
 
-void theta_plotter_sim(TString cut_sig="sig", TString cut_sb="sb", TString era="", TString inj="") {
+void theta_plotter_sim(TString cut_sig="sig", TString cut_sb="sb", TString signal_type="sq", TString inj="") {
 	int nrebin = 30;
 	if (cut_sig == "sig") nrebin = 30;
 	
 	// Organize input and output:
 	TString out_prefix = "theta_plots_sim_";
+	if (signal_type != "sq") out_prefix += signal_type + "_";
 	if (inj != "") out_prefix += "inj_";
 	TFile* tf_out = new TFile(out_prefix + cut_sig + "_" + cut_sb + ".root", "RECREATE");
 	
@@ -100,14 +99,19 @@ void theta_plotter_sim(TString cut_sig="sig", TString cut_sb="sb", TString era="
 		);
 		
 		// Signals:
-		vector<int> masses = {100, 150, 175, 200, 250, 300, 400, 500, 600};
+		vector<int> masses = {100, 150, 175, 200, 250, 300, 400, 500, 600, 700};
+		if (signal_type == "sg") masses = {100, 150, 175, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650};
 		for (int im = 0; im < masses.size(); ++im) {
+			TString signal_name = "sq" + to_string(masses[im]) + "to4j";
+			if (signal_type == "sg") signal_name = "sg" + to_string(masses[im]) + "to5j";
+			TH1* h_fjp = (TH1*) tfs[i]->Get(TString("fjp_") + signal_name);
+			TH1* h_cdf = (TH1*) tfs[i]->Get(TString("cdf_") + signal_name);
 			make_plots(
 				regions[i],
 				"Ms" + to_string(masses[im]),
 				tf_out,
-				(TH1*) tfs[i]->Get(TString("fjp_sq") + to_string(masses[im]) + "to4j"),
-				(TH1*) tfs[i]->Get(TString("cdf_sq") + to_string(masses[im]) + "to4j"),
+				h_fjp,
+				h_cdf,
 				nrebin,
 				true		// Signal
 			);

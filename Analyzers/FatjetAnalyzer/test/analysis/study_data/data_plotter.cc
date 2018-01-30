@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 
 TH1* make_plot(TTree* tt, TString variable, TCut tcut, TString name, TString nbins, TString low, TString high) {

@@ -14,6 +14,20 @@ void signal_efficiency_styler() {
 	
 	TCanvas* tc = new TCanvas(name, name);
 	// sq:
+	
+//	/// 200 GeV kludge:
+//	double wfactor = 0.04827/0.0481;
+//	pass_sq->SetBinContent(5, pass_sq->GetBinContent(5)*wfactor);
+//	pass_pre_sq->SetBinContent(5, pass_pre_sq->GetBinContent(5)*wfactor);
+//	/// 250 GeV kludge:
+//	wfactor = 0.10906/0.0673;
+//	pass_sq->SetBinContent(7, pass_sq->GetBinContent(7)*wfactor);
+//	pass_pre_sq->SetBinContent(7, pass_pre_sq->GetBinContent(7)*wfactor);
+//	/// 300 GeV kludge:
+//	wfactor = 0.21185/0.1664;
+//	pass_sq->SetBinContent(9, pass_sq->GetBinContent(9)*wfactor);
+//	pass_pre_sq->SetBinContent(9, pass_pre_sq->GetBinContent(9)*wfactor);
+	
 	TEfficiency* teff_sq = new TEfficiency(*pass_sq, *total_sq);
 	TGraphAsymmErrors* eff_sq = teff_sq->CreateGraph();
 	TEfficiency* teff_pre_sq = new TEfficiency(*pass_pre_sq, *total_sq);

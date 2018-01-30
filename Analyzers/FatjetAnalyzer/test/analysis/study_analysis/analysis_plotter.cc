@@ -4,7 +4,8 @@ bool VERBOSE = true;
 
 void analysis_plotter(TString cut="sbb", TString ds="jetht", int f=1, TString groom_name="p") {
 	// Arguments:
-	vector<int> masses = {100, 150, 175, 200, 250, 300, 400, 500, 600};
+	vector<int> masses_sq = {100, 150, 175, 200, 250, 300, 400, 500, 600, 700};
+	vector<int> masses_sg = {100, 150, 175, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650};
 	TString name = cut;
 	if (groom_name != "p") {
 		name += "_" + groom_name;
@@ -20,7 +21,7 @@ void analysis_plotter(TString cut="sbb", TString ds="jetht", int f=1, TString gr
 	
 	// Define input and output:
 	TFile *tfile = get_ana();
-	TFile *tfile_sq100 = get_ana("sq100");
+//	TFile *tfile_sq100 = get_ana("sq100");
 	TFile* tf_out = new TFile("analysis_plots_" + name + ".root", "RECREATE");
 	
 	// Define TTrees:
@@ -39,21 +40,27 @@ void analysis_plotter(TString cut="sbb", TString ds="jetht", int f=1, TString gr
 		run = "15";
 	}
 	cout << "here 41" << endl;
-	tt_ttbar->Draw("mavg_" + groom_name + ">>fjp_ttbar(1200,0,1200)", get_cut("fjp_" + cut_practical, "", weight));
+	tt_ttbar->Draw("mavg_" + groom_name + ">>fjp_ttbar(1200,0,1200)", get_cut("fjp_" + cut_practical, "wtt", weight));
 	TH1* h_fjp_ttbar = (TH1*) gDirectory->Get("fjp_ttbar");
 	tt_jetht->Draw("mavg_" + groom_name + ">>fjp_jetht(1200,0,1200)", get_cut("fjp_" + cut_practical, run));
 	TH1* h_fjp_jetht = (TH1*) gDirectory->Get("fjp_jetht");
 	
 	cout << "here 47" << endl;
-	for (int i = 0; i < masses.size(); ++i) {
-		TString sig_name = "sq" + to_string(masses[i]) + "to4j";
-		TTree* tt;
-		if (i == 0) tt = (TTree*) tfile_sq100->Get(sig_name);		// KLUDGE
-		else tt = (TTree*) tfile->Get(sig_name);
-		tt->Draw("mavg_" + groom_name + ">>fjp_" + sig_name + "(1200,0,1200)", get_cut("fjp_" + cut_practical, "xwtt", weight));
+	for (int i = 0; i < masses_sq.size(); ++i) {
+		TString sig_name = "sq" + to_string(masses_sq[i]) + "to4j";
+		TTree* tt = (TTree*) tfile->Get(sig_name);
+		tt->Draw("mavg_" + groom_name + ">>fjp_" + sig_name + "(1200,0,1200)", get_cut("fjp_" + cut_practical, "", weight));
 		TH1* fjp = (TH1*) gDirectory->Get("fjp_" + sig_name);
-		if (masses[i] == 150) fjp->Scale(0.3937);		// KLUDGE!
-//		if (i == 0) fjp->Scale(0.10);		// KLUDGE
+		TH1* cdf = make_cdf(fjp, "cdf_" + sig_name);
+		tf_out->WriteTObject(fjp);
+		tf_out->WriteTObject(cdf);
+	}
+	cout << "here 47.5" << endl;
+	for (int i = 0; i < masses_sg.size(); ++i) {
+		TString sig_name = "sg" + to_string(masses_sg[i]) + "to5j";
+		TTree* tt = (TTree*) tfile->Get(sig_name);
+		tt->Draw("mavg_" + groom_name + ">>fjp_" + sig_name + "(1200,0,1200)", get_cut("fjp_" + cut_practical, "", weight));
+		TH1* fjp = (TH1*) gDirectory->Get("fjp_" + sig_name);
 		TH1* cdf = make_cdf(fjp, "cdf_" + sig_name);
 		tf_out->WriteTObject(fjp);
 		tf_out->WriteTObject(cdf);

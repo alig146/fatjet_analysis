@@ -20,6 +20,7 @@ from truculence import condor, utilities
 # FUNCTIONS:
 def main():
 	## Arguments:
+	eos = dataset.Site.get_dir("data").eos
 	a = variables.arguments()
 	args = a.args
 	tstring = [piece for piece in args.dir.split("/") if piece][-1]
@@ -31,8 +32,13 @@ def main():
 	log_results = condor.check_stderr_logs(args.dir)
 	jobs_error = sorted(utilities.flatten_list([jobs_list for code, jobs_list in {k: v for k, v in log_results.items() if k > 0}.items()]))
 #	queue_results = check_queue(miniaod)
-	if 0 in log_results: print "{}/{} jobs completed successfully.".format(len(log_results[0]), njobs)
-	if -1 in log_results: print "{}/{} jobs are unsubmitted or running.".format(len(log_results[-1]), njobs)
+	if eos:
+		if 0 in log_results: print "{}/{} jobs completed successfully.".format(len(log_results[0]), njobs)
+		if -1 in log_results: print "{}/{} jobs are unsubmitted or running.".format(len(log_results[-1]), njobs)
+	else:
+		keys = [key for key in log_results if key in [0, -1]]
+		if keys:
+			print "{}/{} jobs completed successfully.".format(sum([len(log_results[key]) for key in keys]), njobs)
 #	print log_results
 #	for key, nlist in queue_results.items(): print "\t{}/{} jobs are {}.".format(len(nlist), len(log_results[-1]), queue_codes[key] if key in queue_codes else "?")
 	for code, jobs in {key: value for key, value in log_results. items() if key > 0}.items():

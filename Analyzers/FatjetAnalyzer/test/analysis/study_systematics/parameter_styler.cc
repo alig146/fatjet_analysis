@@ -9,8 +9,9 @@ void parameter_styler() {
 		for (int b = 0; b < 2; ++ b) {
 			TString name = "b" + to_string(b) + "_p" + to_string(ip);
 			int corner = 0;
-			if (ip == 3 && b == 0) corner = 3;
+			if (ip == 3 && b == 0) corner = 0;
 			if (ip == 3 && b == 1) corner = 0;
+			if (ip == 4 && b == 1) corner = 3;
 			if (ip == 5 && b == 0) corner = 1;
 			if (ip == 5 && b == 0) corner = 3;
 			if (ip == 5 && b == 1) corner = 3;

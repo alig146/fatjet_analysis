@@ -35,14 +35,18 @@ void make_stack(TH1* hwjets, TH1* hzjets, TH1* hother, TString cut, int nrebin=1
 	hwjets->Rebin(nrebin);
 	hzjets->Rebin(nrebin);
 	hother->Rebin(nrebin);
+	hwjets->SetFillStyle(1001);
 	hwjets->SetFillColorAlpha(kBlue, 0.1);
+	hzjets->SetFillStyle(1001);
 	hzjets->SetFillColorAlpha(kRed, 0.4);
+	hother->SetFillStyle(1001);
 	hother->SetFillColorAlpha(kGreen-5, 0.5);
 //	hwjets->SetLineColorAlpha(kBlue, 0.1);
 //	hzjets->SetLineColorAlpha(kRed, 0.4);
 //	hother->SetLineColorAlpha(kGreen-5, 0.5);
 	sum->SetFillStyle(0);
 	sume->SetMarkerSize(0);
+	sume->SetFillStyle(1001);
 	sume->SetFillColorAlpha(kBlack, 0.2);
 	
 	stack->Add(hother);
@@ -74,7 +78,8 @@ void make_stack(TH1* hwjets, TH1* hzjets, TH1* hother, TString cut, int nrebin=1
 	style_write(oss1.str(), 0.55, 0.58);
 	
 	for (int ilog = 0; ilog < 2; ++ilog) {
-		stack->SetMaximum(stack->GetMaximum()*1.4);
+		if (cut == "sbb") stack->SetMaximum(stack->GetMaximum()*2.0);
+		else stack->SetMaximum(stack->GetMaximum()*1.4);
 		stack->GetXaxis()->SetNdivisions(406);
 		tc->SetLogy(ilog);
 		TString fname = tc->GetName();

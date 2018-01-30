@@ -27,7 +27,7 @@
 
 void parameter_plotter() {
 	vector<TString> cuts = {"sb", "sbl", "sbl42", "sbl43", "sbide"};
-	vector<TString> labels = {"nominal", "loose", "loose-#tau_{42}", "loose-#tau_{43}", "inverted"};
+	vector<TString> labels = {"nominal", "loose", "loose-#tau_{42}", "loose-#tau_{43}", "inverted-#Delta#eta"};
 	
 	TFile* tf_out = new TFile("parameter_plots.root", "recreate");
 	
@@ -44,13 +44,13 @@ void parameter_plotter() {
 				
 				if (cut == "sb" || cut == "sbb") {
 					int ip_bat = 0;
-					if (ip == 2) ip_bat = 10;		// QCD shift
-					else if (ip == 3) ip_bat = 12;		// QCD stretch
+					if (ip == 2) ip_bat = 3;		// QCD shift
+					else if (ip == 3) ip_bat = 5;		// QCD stretch
 					else if (ip == 4) ip_bat = 2;		// ttbar norm
-					else if (ip == 5) ip_bat = 11;		// ttbar shift
-					else if (ip == 6) ip_bat = 13;		// ttbar stretch
+					else if (ip == 5) ip_bat = 4;		// ttbar shift
+					else if (ip == 6) ip_bat = 6;		// ttbar stretch
 					
-					TFile* tf_in = TFile::Open(TString("bat_ftest_null_plots_") + cut + ".root");
+					TFile* tf_in = TFile::Open(TString("bat_ftest_plots_null_") + cut + ".root");
 					TH1* params = (TH1*) tf_in->Get("params");
 					cout << cut << "  " << params->GetBinContent(ip_bat) << "  " << params->GetBinError(ip_bat) << endl;
 					plot->SetBinContent(i + 1, params->GetBinContent(ip_bat));

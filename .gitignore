@@ -1,6 +1,7 @@
 *.pyc
 *__init__.py
 *.lhe
+*.root.*
 
 # Simulators:
 Simulators/FatjetSimulator/test/*.root

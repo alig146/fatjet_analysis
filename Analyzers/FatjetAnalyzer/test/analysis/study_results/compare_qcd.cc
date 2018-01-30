@@ -1,4 +1,4 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
 void draw_plot(TString name, TString ds, TH1* post, TH1* mc, TH1* mce, int logy=0, int norm=0) {
 	TH1* post_clone = (TH1*) post->Clone(TString(post->GetName()) + "_clone");

@@ -23,7 +23,8 @@ import cutflow
 # FUNCTIONS:
 def get_ttnames():
 	return {
-		"sig": ["sq100to4j", "sq150to4j", "sq200to4j", "sq250to4j", "sq300to4j", "sq400to4j", "sq500to4j"],
+		"sq": ["sq100to4j", "sq150to4j", "sq175to4j", "sq200to4j", "sq250to4j", "sq300to4j", "sq400to4j", "sq500to4j", "sq600to4j", "sq700to4j"],
+		"sg": ["sg100to5j", "sg150to5j", "sg175to5j", "sg200to5j", "sg250to5j", "sg300to5j", "sg350to5j", "sg400to5j", "sg450to5j", "sg500to5j", "sg550to5j", "sg600to5j", "sg650to5j"],
 		"bkg": ["ttbar", "qcdmg", "qcdp", "wjets", "zjets"],
 	}
 
@@ -33,7 +34,7 @@ def read_cutflow(name):
 #	ttrees = rf.get_ttrees()
 	info = cutflow.get_cutnames(style="latex")
 	tt_names = get_ttnames()
-	tt_names = tt_names["sig"] + tt_names["bkg"]
+	tt_names = tt_names["sq"] + tt_names["sg"] + tt_names["bkg"]
 	results = OrderedDict()
 	for tt_name in tt_names:
 		print tt_name
@@ -58,7 +59,7 @@ def make_table(results, name, caption="", norm_qcd=True):
 	if not os.path.exists(path): os.makedirs(path)
 	
 	tt_names = get_ttnames()
-	cuts = [d["label"] for d in results[tt_names["sig"][0]]]
+	cuts = [d["label"] for d in results[tt_names["sq"][0]]]
 	
 	table_name = "table_cutflow_{}".format(name)
 	tabular_name = "tabular_cutflow_{}".format(name)
@@ -82,7 +83,7 @@ def make_table(results, name, caption="", norm_qcd=True):
 
 	# Make rows:
 	rows = []
-	groups = ["sig", "bkg"]
+	groups = ["sq", "sg", "bkg"]
 	for igroup, group in enumerate(groups):
 		for tt_name in tt_names[group]:
 			row = names_latex[tt_name] + " & "
