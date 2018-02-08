@@ -1,13 +1,15 @@
 #include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void njets_styler() {
+void njets_styler(TString cut="") {
 	gStyle->SetOptStat(0);
+	TString name = "njets";
+	if (cut != "") name += "_fj" + cut;
 	TFile* tf_in = TFile::Open("jets_plots.root");
-	TH1* h_njets_sq100to4j = (TH1*) tf_in->Get("njets_sq100to4j");
-	TH1* h_njets_sq200to4j = (TH1*) tf_in->Get("njets_sq200to4j");
-	TH1* h_njets_sq500to4j = (TH1*) tf_in->Get("njets_sq500to4j");
+	TH1* h_njets_sq100to4j = (TH1*) tf_in->Get(name + "_sq100to4j");
+	TH1* h_njets_sq200to4j = (TH1*) tf_in->Get(name + "_sq200to4j");
+	TH1* h_njets_sq500to4j = (TH1*) tf_in->Get(name + "_sq500to4j");
 	
-	TCanvas* tc = new TCanvas("njets", "njets");
+	TCanvas* tc = new TCanvas(name, name);
 	
 	h_njets_sq100to4j->Scale(100/h_njets_sq100to4j->Integral());
 	h_njets_sq100to4j->GetXaxis()->SetTitle("CA12 jets with #it{p}_{T} > 400 GeV and |#eta| < 2.0");
@@ -42,6 +44,7 @@ void njets_styler() {
 	gPad->RedrawAxis();
 	
 	style_info(true, "", 1, false, 3.0);
-	style_cut("#it{H}_{T} > 900 GeV");
+	if (cut == "") style_cut("#it{H}_{T} > 900 GeV");
+	else style_cut(cut);
 	save(tc);
 }

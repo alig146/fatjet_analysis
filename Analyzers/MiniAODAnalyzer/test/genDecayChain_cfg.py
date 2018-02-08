@@ -4,7 +4,7 @@ process = cms.Process("GENXSANA")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2) )
 process.source = cms.Source("PoolSource",
 	fileNames = cms.untracked.vstring(
 		'/store/mc/RunIISummer16MiniAODv2/WWToLNuQQ_13TeV-powheg/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/60000/029E7C84-4EB9-E611-9899-0242AC130004.root'

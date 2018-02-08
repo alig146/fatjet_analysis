@@ -108,25 +108,28 @@ TH1* make_temp_plot(TFile* tf_in, TFile* tf_out, TString ds, TString cut, TStrin
 	return temp;
 }
 
-void template_plotter(TString cut="sb") {
+void template_plotter(TString cut="sb", bool ht=true) {
 	// Options:
 	gROOT->SetBatch();
 	
 	// Define input and output:
 //	tf_in = TFile::Open("~/anatuples/anatuple_dalitz_predeta.root");
 //	tf_in_ext = get_ana("qcdmgext");
-	TFile* tf_out = new TFile("template_plots_" + cut + ".root", "RECREATE");
-	vector<TString> dss = {"jetht", "qcdmg", "qcdp", "inj"};
+	TString name = "template_plots_" + cut;
+	if (!ht) name += "_xht";
+	TFile* tf_out = new TFile(name + ".root", "RECREATE");
+//	vector<TString> dss = {"jetht", "qcdmg", "qcdp", "inj"};
 //	vector<TString> dss = {"jetht", "inj100", "inj150", "inj200", "inj250", "inj300", "inj400", "inj500"};
 //	vector<TString> dss = {"inj"};
-//	vector<TString> dss = {"jetht"};
+	vector<TString> dss = {"qcdmg", "qcdp"};
 	
 	// Make plots:
 	for (unsigned i = 0; i < dss.size(); ++i) {
 		TString ds = dss[i];
 		TString ana_option = "";
 		TFile* tf_in = get_ana(ana_option);
-		make_temp_plot(tf_in, tf_out, ds, cut);
+//		make_temp_plot(tf_in, tf_out, ds, cut);
+		make_temp_plot(tf_in, tf_out, ds, cut, "", 1, "p", ht);
 //		if (dss[i] != "inj") make_temp_plot(tf_in, tf_out, dss[i], cut, "", 1, "p", false);
 	}
 //	make_temp_plot(tf_in_ext, tf_out, "qcdmg", cut);

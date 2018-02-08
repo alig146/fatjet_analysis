@@ -28,6 +28,7 @@ for p, tups in tuples.items():
 	
 	hs = dict(
 		njets = TH1D("njets_{}".format(p), "", 6,-0.5,5.5),
+		njets_fjsigl = TH1D("njets_fjsigl_{}".format(p), "", 6,-0.5,5.5),
 		pt0_jec0 = TH2D("pt0_jec0_{}".format(p), "", 1200, 0, 2400, 1200, 0.8, 1.2),
 		pt0ak8_jec0ak8 = TH2D("pt0ak8_jec0ak8_{}".format(p), "", 1200, 0, 2400, 1200, 0.8, 1.2),
 		jec0ak8_jec0 = TH2D("jec0ak8_jec0_{}".format(p), "", 1200, 0.8, 1.2, 1200, 0.8, 1.2),
@@ -103,7 +104,7 @@ for p, tups in tuples.items():
 #			if ievent < 100:
 #				print ievent, event.ca12_pf_pt[1], event.ca12_pf_eta[1], event.ca12_pf_phi[1]
 #				print ievent, event.ca12_pfp_pt[1], event.ca12_pfp_eta[1], event.ca12_pfp_phi[1]
-			hs["njets"].Fill(len([pt*jec for pt, jec, eta in zip(event.ca12_pf_pt, event.ca12_pf_jec, event.ca12_pf_eta) if pt*jec > 400 and abs(eta) < 2.0]), event.wpu[0])
+			hs["njets"].Fill(len([pt for pt, eta in zip(event.ca12_pf_pt, event.ca12_pf_eta) if pt > 400 and abs(eta) < 2.0]), event.wpu[0])
 			
 			hs["mp0"].Fill(mp0, w)
 			hs["mp0ak8"].Fill(mp0ak8, w)
@@ -125,6 +126,10 @@ for p, tups in tuples.items():
 				hs["ms0_pre"].Fill(ms0, w)
 				hs["mavgp_pre"].Fill(mavgp, w)
 				hs["mavgs_pre"].Fill(mavgs, w)
+				
+				# Loose FJ signal selection:
+				if tau210 < 0.75 and tau420 < 0.50 and tau430 < 0.90:
+					hs["njets_fjsigl"].Fill(len([pt for pt, eta in zip(event.ca12_pf_pt, event.ca12_pf_eta) if pt > 400 and abs(eta) < 2.0]), event.wpu[0])
 				
 				# Signal selection:
 				if deta < 1.0 and max(tau210, tau211) < 0.75 and max(tau420, tau421) < 0.50 and max(tau430, tau431) < 0.80:

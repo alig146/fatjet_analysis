@@ -18,7 +18,7 @@ void garwood_plotter(int nrebin=30) {
 		for (int ids = 0; ids < dss.size(); ++ids) {
 			TString ds = dss[ids];
 			TString ana_option = "";
-			if (ds == "qcdp") ana_option = ds;
+//			if (ds == "qcdp") ana_option = ds;
 			TFile* tf_in = get_ana(ana_option);
 			
 			// Make the plot:

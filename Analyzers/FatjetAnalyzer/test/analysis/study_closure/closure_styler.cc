@@ -1,6 +1,6 @@
 #include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1* fit, TH1* params, vector<Double_t> stats, int logy=0) {
+void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1* fit, TH1* params, vector<Double_t> stats, int logy=0, bool paper=false) {
 	// Make pull:
 	TCanvas* tc = draw_pull(name, data, fit, 0, 1200);
 	TPad* pad = (TPad*) tc->GetPad(1);
@@ -34,23 +34,26 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 	style_info(true, lum_string["all"], 1, true);
 	style_write(TString("Selection: #bf{") + cut_proper[cut] + "}",  0.18, 0.94, 0.032);
 	
-	style_write(name_proper[ds], 0.61, 0.74, 0.04);
+	if (!paper) style_write(name_proper[ds], 0.61, 0.74, 0.04);
+	else style_write("QCD multijet", 0.645, 0.76, 0.04);
 	
 	// Statistical text:
-	TFile* tf_stats = TFile::Open(name + ".root");
-	TH1* hstats = (TH1*) tf_stats->Get("stats");
-//	cout << "Pull Chi2/ndf = " << stats->GetBinContent(3) << endl;
-//	cout << "KS probability = " << data->KolmogorovTest(fit) << endl;
-	vector<TString> texts_stats;
-	texts_stats.push_back("#bf{Statistics:}");
-	std::ostringstream oss_stats1;
-//	oss_stats1 << "KS prob. = " << std::fixed << std::setprecision(3) << stats[0];
-	std::ostringstream oss_stats2;
-	oss_stats2 << "pull #chi^{2}/NDF = " << std::fixed << std::setprecision(2) << hstats->GetBinContent(3);
-	texts_stats.push_back(oss_stats2.str());
-	texts_stats.push_back(oss_stats1.str());
-	if (logy == 1) style_write(texts_stats, 0.21, 0.87, 0.035);
-	else if (logy == 0) style_write(texts_stats, 0.55, 0.35, 0.035);
+	if (!paper) {
+		TFile* tf_stats = TFile::Open(name + ".root");
+		TH1* hstats = (TH1*) tf_stats->Get("stats");
+	//	cout << "Pull Chi2/ndf = " << stats->GetBinContent(3) << endl;
+	//	cout << "KS probability = " << data->KolmogorovTest(fit) << endl;
+		vector<TString> texts_stats;
+		texts_stats.push_back("#bf{Statistics:}");
+		std::ostringstream oss_stats1;
+	//	oss_stats1 << "KS prob. = " << std::fixed << std::setprecision(3) << stats[0];
+		std::ostringstream oss_stats2;
+		oss_stats2 << "pull #chi^{2}/NDF = " << std::fixed << std::setprecision(2) << hstats->GetBinContent(3);
+		texts_stats.push_back(oss_stats2.str());
+		texts_stats.push_back(oss_stats1.str());
+		if (logy == 1) style_write(texts_stats, 0.21, 0.87, 0.035);
+		else if (logy == 0) style_write(texts_stats, 0.55, 0.35, 0.035);
+	}
 	
 	// Write params:
 	std::ostringstream oss1;
@@ -70,7 +73,7 @@ void draw_plot(TString name, TString ds, TString cut, TH1* data, TH1* temp, TH1*
 	tc->SaveAs(name + ".png");
 }
 
-void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString dir="", int f=1) {
+void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, bool paper=false, TString dir="", int f=1) {
 //	TString ana_option = "";
 //	if (ds == "qcdp") ana_option = ds;
 //	TFile* tf_in = get_ana(ana_option);
@@ -105,6 +108,12 @@ void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString 
 		stretch = 0.90;
 //		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600, 650};
 		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
+		if (!ht) {
+			amp = 1.0;
+			shift = 0.0;
+			stretch = 1.0;
+			bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660, 720, 780, 840};
+		}
 	}
 	else if (ds == "qcdp" && cut == "sb") {
 		amp = 1.0;
@@ -113,6 +122,12 @@ void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString 
 //		bins = {0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800};
 //		bins = {0, 100, 150, 200, 250, 300, 350, 400, 500, 600};
 		bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
+		if (!ht) {
+			amp = 1.0;
+			shift = 0.0;
+			stretch = 1.0;
+			bins = {0, 90, 150, 210, 240, 300, 360, 420, 480, 600, 660};
+		}
 	}
 	else if (ds == "qcdmg" && cut == "sbb") {
 		amp = 5.0e-7;
@@ -138,27 +153,27 @@ void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString 
 		stretch = 1.0;
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 330, 390, 450, 510, 570, 630};
 	}
-	else if (ds == "qcdmg" && cut == "sigl" && ht) {		// This works
+	else if (ds == "qcdmg" && cut == "sigl") {		// This works
 		amp = 100.0;
 		shift = -10;
 		stretch = 1.0;
 //		bins = {50, 100, 150, 250, 300, 350, 400, 450, 500, 550, 600, 800};
 		bins = {60, 90, 120, 150, 180, 210, 240, 300, 360, 390, 450, 510, 540, 600, 810};
 		bins = {60, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600, 810};
+		if (!ht) {
+			amp = 1.0;
+			shift = 0.0;
+			stretch = 1.0;
+			bins = {60, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600, 810};
+		}
 	}
-//	else if (ds == "qcdmg" && cut == "sigl" && ht) {		// Experimental
+//	else if (ds == "qcdmg" && cut == "sigl" && !ht) {
 //		amp = 2.0e-6;
 //		shift = 1.0;
 //		stretch = 1.0;
-//		bins = {100, 250, 350, 550, 800};
+//		bins = {0, 50, 100, 150, 200, 250, 300, 400};
 //	}
-	else if (ds == "qcdmg" && cut == "sigl" && !ht) {
-		amp = 2.0e-6;
-		shift = 1.0;
-		stretch = 1.0;
-		bins = {0, 50, 100, 150, 200, 250, 300, 400};
-	}
-	else if (ds == "qcdp" && cut == "sigl" && ht) {
+	else if (ds == "qcdp" && cut == "sigl") {
 		amp = 1.0;
 		shift = -10.0;
 		stretch = 1.0;
@@ -167,6 +182,12 @@ void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString 
 //		bins = {0, 30, 60, 90, 120, 150, 240, 300, 360, 390, 450, 510, 540, 600};
 //		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600};
 		bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 360, 390, 450, 510, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1200};
+		if (!ht) {
+			amp = 1.0;
+			shift = 0.0;
+			stretch = 1.5;
+			bins = {0, 30, 60, 90, 120, 150, 180, 210, 240, 300, 360, 390, 450, 510, 540, 600, 660, 720, 780, 840};
+		}
 	}
 	else if (cut == "sbt") {
 		amp = 2e-6;
@@ -251,7 +272,7 @@ void closure_styler(TString cut="sb", TString ds="qcdmg", bool ht=true, TString 
 		if (!ht) name = name + "_xht";
 		if (dir != "") name + "_" + dir;
 		if (i == 1) name = name + "_logy";
-		draw_plot(name, ds, cut, h_fjp, h_temp, h_fit, params, stats, i);
+		draw_plot(name, ds, cut, h_fjp, h_temp, h_fit, params, stats, i, paper);
 	}
 	
 }

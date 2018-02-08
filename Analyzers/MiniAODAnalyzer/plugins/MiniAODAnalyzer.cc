@@ -68,8 +68,8 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 
       // ----------member data ---------------------------
       int nevents;
-      EDGetTokenT<GenEventInfoProduct> genInfo_;
       EDGetTokenT<vector<reco::GenParticle>> genParticles_;
+      EDGetTokenT<GenEventInfoProduct> genInfo_;
       EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo_;
       EDGetTokenT<TriggerResults> triggerResults_;
       EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
@@ -87,7 +87,7 @@ class MiniAODAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 // constructors and destructor
 //
 MiniAODAnalyzer::MiniAODAnalyzer(const edm::ParameterSet& iConfig):
-//	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles")))
+	genParticles_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genParticles"))),
 	genInfo_(consumes<GenEventInfoProduct>(iConfig.getParameter<InputTag>("genInfo"))),
 	pileupInfo_(consumes<vector<PileupSummaryInfo>>(iConfig.getParameter<InputTag>("pileupInfo"))),
 	triggerResults_(consumes<TriggerResults>(iConfig.getParameter<InputTag>("triggerResults"))),
@@ -118,8 +118,8 @@ MiniAODAnalyzer::~MiniAODAnalyzer()
 void
 MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-//	Handle<vector<reco::GenParticle>> genParticles;
-//	iEvent.getByToken(genParticles_, genParticles);
+	Handle<vector<reco::GenParticle>> genParticles;
+	iEvent.getByToken(genParticles_, genParticles);
 	Handle<GenEventInfoProduct> genInfo;
 	iEvent.getByToken(genInfo_, genInfo);
 	Handle<TriggerResults> triggerResults;
@@ -137,17 +137,20 @@ MiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 //                ": " << (triggerResults->accept(i) ? "PASS" : "fail (or not run)")
 //                << std::endl;
 //    }
-	cout << genInfo->weight() << endl;
+//	cout << genInfo->weight() << endl;
 //	cout << pileupInfo->size() << endl;
 	
 	nevents ++;
 	
-//	for (vector<reco::GenParticle>::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++ genParticle) {
-////		if (abs(genParticle->pdgId()) == 6 && genParticle->pt() > 400) {
+	int ngen = 0;
+	for (vector<reco::GenParticle>::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++ genParticle) {
+		ngen ++;
+		cout << ngen << "   " << genParticle->pdgId() << "   " << genParticle->status() << "   " << genParticle->pt() << endl;
+//		if (abs(genParticle->pdgId()) == 6 && genParticle->pt() > 400) {
 //		if (abs(genParticle->pdgId()) > 1000000) {
 //			cout << nevents << "   " << genParticle->pt() << "   " << genParticle->pdgId() << "   " << genParticle->status() << endl;
 //		}
-//	}
+	}
 }
 
 

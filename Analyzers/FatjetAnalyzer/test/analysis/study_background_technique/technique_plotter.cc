@@ -1,6 +1,6 @@
-#include "/home/tote/decortication/macros/common.cc"
+#include <Deracination/Straphanger/test/decortication/macros/common.cc>
 
-void technique_plotter(TString cut_sig="sig") {
+void technique_plotter(TString cut_sig="sigl") {
 	gROOT->SetBatch();
 	TFile* ana = get_ana();
 	weight = get_weight("qcdmg");
@@ -10,7 +10,7 @@ void technique_plotter(TString cut_sig="sig") {
 	qcdmg->Draw("mavg_p>>fjp(1200,0,1200)", get_cut(TString("fjp_") + cut_sig, weight));
 	TH1* fjp = (TH1*) gDirectory->Get("fjp");
 	tf_out->WriteTObject(fjp);
-	qcdmg->Draw("mavg_p>>fj(1200,0,1200)", get_cut(TString("fj_") + cut_sig, weight));
+	qcdmg->Draw("m_p[0]>>fj(1200,0,1200)", get_cut(TString("fj_") + cut_sig, weight));
 	TH1* fj = (TH1*) gDirectory->Get("fj");
 	tf_out->WriteTObject(fj);
 }
