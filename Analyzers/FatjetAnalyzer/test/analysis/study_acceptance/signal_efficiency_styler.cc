@@ -32,7 +32,8 @@ void signal_efficiency_styler() {
 	TGraphAsymmErrors* eff_sq = teff_sq->CreateGraph();
 	TEfficiency* teff_pre_sq = new TEfficiency(*pass_pre_sq, *total_sq);
 	TGraphAsymmErrors* eff_pre_sq = teff_pre_sq->CreateGraph();
-	for (unsigned i = 0; i < 10; ++i){
+	int n_sq = 9;
+	for (unsigned i = 0; i < n_sq; ++i){
 		eff_sq->SetPointEXhigh(i, 0);
 		eff_sq->SetPointEXlow(i, 0);
 		eff_pre_sq->SetPointEXhigh(i, 0);
@@ -43,7 +44,8 @@ void signal_efficiency_styler() {
 	TGraphAsymmErrors* eff_sg = teff_sg->CreateGraph();
 	TEfficiency* teff_pre_sg = new TEfficiency(*pass_pre_sg, *total_sg);
 	TGraphAsymmErrors* eff_pre_sg = teff_pre_sg->CreateGraph();
-	for (unsigned i = 0; i < 13; ++i){
+	int n_sg = 12;
+	for (unsigned i = 0; i < n_sg; ++i){
 		eff_sg->SetPointEXhigh(i, 0);
 		eff_sg->SetPointEXlow(i, 0);
 		eff_pre_sg->SetPointEXhigh(i, 0);
@@ -86,7 +88,8 @@ void signal_efficiency_styler() {
 	
 	set_xtitle(eff_sq, "msq");
 	eff_sq->GetYaxis()->SetTitle("Selection acceptance");
-	eff_sq->GetXaxis()->SetLimits(75, 725);
+//	eff_sq->GetXaxis()->SetLimits(75, 725);
+	eff_sq->GetXaxis()->SetLimits(75, 625);
 	eff_sq->GetXaxis()->SetNdivisions(207);
 	eff_sq->SetMaximum(1.0);
 	eff_sq->SetMinimum(5.0e-8);

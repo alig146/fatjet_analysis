@@ -1348,7 +1348,9 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 	iEvent.getByToken(token, gens);
 	
 	// Loop over the collection:
+	int ngen = 0;
 	for (vector<reco::GenParticle>::const_iterator gen = gens->begin(); gen != gens->end(); ++ gen) {
+		ngen += 1;
 		// Define some useful event variables:
 		double m = gen->mass();
 		double px = gen->px();
@@ -1365,7 +1367,7 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 //		cout << status << "  " << pdgid << endl;
 		
 		// Fill branches:
-		if ((abs(pdgid) == 6 || abs(pdgid) == 1000006 || abs(pdgid) == 2000002) and status == 22) {
+		if (((abs(pdgid) == 6 || abs(pdgid) == 1000006 || abs(pdgid) == 2000002) and status == 22) or (abs(pdgid) == 6 and status == 11 and ngen <= 2)) {
 			branches[name_type]["phi"].push_back(phi);
 			branches[name_type]["eta"].push_back(eta);
 			branches[name_type]["y"].push_back(y);

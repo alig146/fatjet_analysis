@@ -125,7 +125,8 @@ void get_reweighting_functions(TString ds, TString cut, TFile* tf_out, TString a
 		leg->AddEntry(f1_plus, "Fit function #pm 1#sigma", "l");
 	//	leg->AddEntry(f1_fix, "Adjusted function", "l");
 		leg->Draw();
-		style_info(true, lum_string["all"]);
+		if (ds != "jetht") style_info(true, lum_string["all"]);
+		else style_info(false, lum_string["all"]);
 		style_cut(cut);
 	
 		std::ostringstream oss1;

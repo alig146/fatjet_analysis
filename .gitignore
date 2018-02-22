@@ -17,5 +17,7 @@ Analyzers/FatjetAnalyzer/test/analysis/results/
 Analyzers/FatjetAnalyzer/test/analysis/study_dalitz/results/
 Analyzers/FatjetAnalyzer/test/analysis/study_*/*.root
 Analyzers/FatjetAnalyzer/test/analysis/study_*/*.pdf
+Analyzers/FatjetAnalyzer/test/analysis/study_*/*/*.root
+Analyzers/FatjetAnalyzer/test/analysis/study_*/*/*.pdf
 Analyzers/FatjetAnalyzer/test/analysis/study_*/*.png
 Analyzers/FatjetAnalyzer/test/analysis/study_*/*.tex

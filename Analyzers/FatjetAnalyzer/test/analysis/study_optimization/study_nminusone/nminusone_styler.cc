@@ -5,7 +5,7 @@ void nminusone_styler() {
 	
 	TFile* tf = TFile::Open("nminusone_plots.root");
 	vector<TString> vars = {"deta", "masyp", "tau21", "tau42", "tau43"};
-	vector<double> values = {1.0, 0.1, 0.75, 0.45, 0.80};
+	vector<double> values = {1.0, 0.1, 0.75, 0.50, 0.80};
 	
 	vector<TH1*> hs;
 	vector<TCanvas*> canvases;

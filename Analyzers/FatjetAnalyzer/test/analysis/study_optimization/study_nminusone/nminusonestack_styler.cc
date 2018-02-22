@@ -35,7 +35,7 @@ void nminusonestack_styler() {
 		if (variable == "deta") line = 1.0;
 		else if (variable == "masyp") line = 0.1;
 		else if (variable == "tau21") line = 0.75;
-		else if (variable == "tau42") line = 0.45;
+		else if (variable == "tau42") line = 0.50;
 		else if (variable == "tau43") line = 0.80;
 		draw_stack(variable, cut, "200", nrebin, corner, false, line);
 	}

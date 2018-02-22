@@ -3,7 +3,7 @@
 void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int corner=1, bool change_xaxis=true, double line=-1, TString line_label="Cut value") {
 	TString signame = "sq" + mass + "to4j";
 	bool plot_jetht = true;
-	if (cut == "sig" || cut == "sigxdeta" || cut == "sigxmasyp" || cut == "sigxtau21" || cut == "sigxtau42" || cut == "sigxtau43") plot_jetht = false;
+//	if (cut == "sig" || cut == "sigxdeta" || cut == "sigxmasyp" || cut == "sigxtau21" || cut == "sigxtau42" || cut == "sigxtau43") plot_jetht = false;
 	
 	// Get plots from the file and set up:
 //	cout << variable + "_qcdmg_" + cut << endl;
@@ -24,9 +24,10 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		TH1* h_qcdmg = (TH1*) h_qcdmg_orig->Clone(name + "_qcd");
 		TH1* h_ttbar = (TH1*) h_ttbar_orig->Clone(name + "_ttbar");
 		TH1* h_sqto4j = (TH1*) h_sqto4j_orig->Clone(name + "_" + signame);
-		TH1* h_jetht;
-		if (plot_jetht) h_jetht = (TH1*) h_jetht_orig->Clone(name + "_jetht");
+		TH1D* h_jetht;
+		if (plot_jetht) h_jetht = (TH1D*) h_jetht_orig->Clone(name + "_jetht");
 		if (plot_jetht) h_jetht->Rebin(nrebin);
+		h_jetht = GarwoodErrorBands_68CL(h_jetht);
 		h_qcdmg->Rebin(nrebin);
 		h_ttbar->Rebin(nrebin);
 		h_sqto4j->Rebin(nrebin);
@@ -108,24 +109,28 @@ void draw_stack(TString variable, TString cut, TString mass, int nrebin=30, int 
 		int corner_cms = 1;
 		TLegend* leg;
 		if (corner == 1) {
-			if (cut != "sig") leg = new TLegend(0.50, 0.71, 0.80, 0.91);
-			else leg = new TLegend(0.50, 0.76, 0.80, 0.91);
+//			if (cut != "sig") leg = new TLegend(0.50, 0.71, 0.80, 0.91);		// When I was blinded.
+//			else leg = new TLegend(0.50, 0.76, 0.80, 0.91);
+			leg = new TLegend(0.50, 0.71, 0.80, 0.91);
 			leg->SetFillStyle(0);
 			corner_cms = 0;
 		}
 		else if (corner == 0) {
-			if (cut != "sig") leg = new TLegend(0.20, 0.71, 0.50, 0.91);
-			else leg = new TLegend(0.20, 0.76, 0.50, 0.91);
+//			if (cut != "sig") leg = new TLegend(0.20, 0.71, 0.50, 0.91);
+//			else leg = new TLegend(0.20, 0.76, 0.50, 0.91);
+			leg = new TLegend(0.20, 0.71, 0.50, 0.91);
 			leg->SetFillStyle(0);
 		}
 		else if (corner == 5) {
-			if (cut != "sig") leg = new TLegend(0.20, 0.80, 0.37, 0.91);
-			else leg = new TLegend(0.20, 0.81, 0.37, 0.91);
+//			if (cut != "sig") leg = new TLegend(0.20, 0.80, 0.37, 0.91);
+//			else leg = new TLegend(0.20, 0.81, 0.37, 0.91);
+			leg = new TLegend(0.20, 0.80, 0.37, 0.91);
 			leg->SetFillStyle(0);
 		}
 		else if (corner == 3) {
-			if (cut != "sig") leg = new TLegend(0.20, 0.32, 0.50, 0.52);
-			else leg = new TLegend(0.20, 0.32, 0.50, 0.47);
+//			if (cut != "sig") leg = new TLegend(0.20, 0.32, 0.50, 0.52);
+//			else leg = new TLegend(0.20, 0.32, 0.50, 0.47);
+			leg = new TLegend(0.20, 0.32, 0.50, 0.52);
 		}
 		leg->AddEntry(h_qcdmg, "QCD (2 #rightarrow 4)", "f");
 		leg->AddEntry(h_ttbar, "t#bar{t}", "f");
