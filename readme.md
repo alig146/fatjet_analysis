@@ -10,9 +10,7 @@ cmsrel CMSSW_xx_yy_zz_patchp
 
 ## Installation
 Inside of the appropriate `CMSSW_xx_yy_zz_patchp/src` clone this repository.
-```
 
-```
 Then,
 ```
 cd Analyzers/FatjetAnalyzer/test
