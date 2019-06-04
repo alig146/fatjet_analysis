@@ -1,0 +1,1 @@
+cmsRun testing_cfg.py  maxEvents=10 cutPtFilter=0 cutEtaFilter=-1 inFile='/store/user/elhughes/Sq400To4J/miniaod_sq400to4j_moriond17cutht700/170817_221513/0000/miniaod_sq400to4j_moriond17cutht700_99.root'

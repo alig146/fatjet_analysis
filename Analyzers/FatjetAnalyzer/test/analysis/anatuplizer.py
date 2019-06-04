@@ -82,11 +82,11 @@ def treat_event(loop, event, args):		# Where "loop" refers to an event_loop obje
 		suffix = groomer if not groomer else "_" + groomer
 #			ngroomed = min(2, len(getattr))
 		vars_calc["m" + suffix] = [getattr(event, "{}_pf_m{}".format(alg, groomer))[i] for i in range(2)]
-		vars_calc["tau1" + suffix] = [getattr(event, "{}_pf_tau1{}".format(alg, groomer))[i] for i in range(2)]
-		vars_calc["tau2" + suffix] = [getattr(event, "{}_pf_tau2{}".format(alg, groomer))[i] for i in range(2)]
-		vars_calc["tau3" + suffix] = [getattr(event, "{}_pf_tau3{}".format(alg, groomer))[i] for i in range(2)]
-		vars_calc["tau4" + suffix] = [getattr(event, "{}_pf_tau4{}".format(alg, groomer))[i] for i in range(2)]
-		vars_calc["tau5" + suffix] = [getattr(event, "{}_pf_tau5{}".format(alg, groomer))[i] for i in range(2)]
+#		vars_calc["tau1" + suffix] = [getattr(event, "{}_pf_tau1{}".format(alg, groomer))[i] for i in range(2)]
+#		vars_calc["tau2" + suffix] = [getattr(event, "{}_pf_tau2{}".format(alg, groomer))[i] for i in range(2)]
+#		vars_calc["tau3" + suffix] = [getattr(event, "{}_pf_tau3{}".format(alg, groomer))[i] for i in range(2)]
+#		vars_calc["tau4" + suffix] = [getattr(event, "{}_pf_tau4{}".format(alg, groomer))[i] for i in range(2)]
+#		vars_calc["tau5" + suffix] = [getattr(event, "{}_pf_tau5{}".format(alg, groomer))[i] for i in range(2)]
 		if not groomer:
 			vars_calc["tau21" + suffix] = [getattr(event, "{}_pf_tau21{}".format(alg, groomer))[i] for i in range(2)]
 			vars_calc["tau31" + suffix] = [getattr(event, "{}_pf_tau31{}".format(alg, groomer))[i] for i in range(2)]

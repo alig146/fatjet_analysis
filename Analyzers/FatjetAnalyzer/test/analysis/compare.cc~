@@ -1,0 +1,16 @@
+void compare()                                                                                                                                                                                                                          
+{
+	TFile* tf_out = new TFile("comparer_plots.root","recreate");
+    TFile* o = TFile::Open("/home/ag1378/cmslink/second/CMSSW_8_0_28_patch1/src/Analyzers/FatjetAnalyzer/test/analysis/results/anatuplizer_190531_124507/anatuplizer_190531_124507.root");
+    TFile* n = TFile::Open("sg300to5j_test_2.root");
+	TTree* o1 = (TTree*) o->Get("sg300to5j");
+	TTree* n1 = (TTree*) n->Get("sg300to5j");
+
+	o1->Draw("mavg >> mavg_p_old (1200, 0, 1200)");
+	TH1* mavg_old = (TH1*) gDirectory->Get("mavg_p_old");
+	tf_out->WriteTObject(mavg_old);
+
+    n1->Draw("mavg >> mavg_p_new (1200, 0, 1200)");                                                                                                                                                                                
+    TH1* mavg_new = (TH1*) gDirectory->Get("mavg_p_new");
+    tf_out->WriteTObject(mavg_new);
+}

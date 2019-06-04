@@ -16,7 +16,7 @@ for ievent, event in enumerate(events):
 		event.getByLabel(label_jets, handle_jets)
 		event.getByLabel(label_jets_pruned, handle_jets_pruned)
 #		event.getByLabel(label_jets_pruned2, handle_jets_pruned2)
-		jets = handle_jets.product()
+#		jets = handle_jets.product()
 		jets_pruned = handle_jets_pruned.product()
 #		jets_pruned2 = handle_jets_pruned2.product()
 	

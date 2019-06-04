@@ -8,7 +8,8 @@ from RecoJets.JetProducers.PFJetParameters_cfi import PFJetParameters
 from RecoJets.JetProducers.AnomalousCellParameters_cfi import AnomalousCellParameters
 from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
 
-import RecoJets.Configuration.RecoPFJets_cff as PFJets
+#import RecoJets.Configuration.RecoPFJets_cff as PFJets
+from RecoJets.Configuration.RecoPFJets_cff import ak4PFJets, ak8PFJetsCHSSoftDrop, ak8PFJetsCHSSoftDropMass, ak8PFJetsCHSPruned, ak8PFJetsCHSPrunedMass, ak8PFJetsCHSTrimmed, ak8PFJetsCHSTrimmedMass, ak8PFJetsCHSFiltered, ak8PFJetsCHSFilteredMass, ak8PFJetsCSConstituents, ak4PFJetsCHS
 from RecoJets.Configuration.RecoGenJets_cff import ak4GenJets
 from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
 from RecoJets.JetProducers.PFJetParameters_cfi import *
@@ -255,7 +256,8 @@ def groom_pfjet_collection(process, sequence, pfjet_tag, patjet_tag, algo, groom
 		"matched": cms.InputTag(tag_jets),
 		"distMax": cms.double(algo.r),
 	}
-	mass_producer = PFJets.ak8PFJetsCHSPrunedMass.clone(**arguments_mass)
+	#mass_producer = PFJets.ak8PFJetsCHSPrunedMass.clone(**arguments_mass)
+	mass_producer = ak8PFJetsCHSPrunedMass.clone(**arguments_mass) 
 	setattr(process, tag_mass, mass_producer)
 	sequence += getattr(process, tag_mass)
 	getattr(process, patjet_tag).userData.userFloats.src += [tag_mass]
@@ -386,13 +388,17 @@ def add_jet_collection(
 		print "ERROR: I don't know about the jet algorithm you called {}.".format(algo.name)
 		sys.exit()
 	pum = pileup_mitigation(pum_name)   # Pileup mitigation object to use.
-	
+	#p
+
+	#p
 	grooms = []
 	if groom_names != None:
 		grooms = [jet_groomer(groom_name) for groom_name in groom_names]   # Groomer objects to use.
 	
 	sequence = cms.Sequence()         # Sequence of modules to run.
-	
+	#p                                                                                                                                                                                                                                    
+
+        #p
 #	## Data versus MC:
 #	if data:
 #		getJetMCFlavour = False
@@ -407,7 +413,9 @@ def add_jet_collection(
 	else:
 		print "ERROR: The PUM you called {} is not implemented.".format(pum.name)
 		sys.exit()
-	
+	#p                                                                                                                                                                                                                                    
+
+        #p
 	# Make normal jet collections:
 	pfjet_tag = make_pfjet_collection(process, sequence, tags_dict["pf"], algo, pum)
 #	pfsubjet_tag = make_pfsubjet_collection(process, sequence, tags_dict["pf"], algo, pum)
@@ -464,9 +472,14 @@ def add_jet_collection(
 		"*_selectedPatJets*_calo*_*",
 		"*_selectedPatJets*_tagInfos_*",
 	]
-	
+	#p                                                                                                                                                                                                                                    
+
+        #p
 	getattr(process, output).outputCommands.extend(["keep {}".format(tag) for tag in products_keep])
 	getattr(process, output).outputCommands.extend(["drop {}".format(tag) for tag in products_drop])
+        #p                                                                                                                                                                                                                                    
+
+        #p
 # /FUNCTIONS
 
 # MAIN:

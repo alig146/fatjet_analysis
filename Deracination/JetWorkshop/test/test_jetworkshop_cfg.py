@@ -38,12 +38,12 @@ process.out = cms.OutputModule('PoolOutputModule',
 from Deracination.JetWorkshop.jetWorkshop_cff import add_jet_collection
 
 #add_jet_collection(process, algo_name="ak8", pum_name="chs", groom_names=["p", "f", "s", "t"], data=False, taus=range(1,6))
-add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=["p", "f", "s", "t"], data=False, taus=range(1,6))
-#add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=[], data=False, taus=range(1,6))
+#add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=["p", "f", "s", "t"], data=False, taus=range(1,6))
+add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=[], data=False, taus=range(1,6))
 
 
 process.endpath = cms.EndPath(process.out)
-
+print("out ")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.source = cms.Source("PoolSource",
 		fileNames = cms.untracked.vstring(

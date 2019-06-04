@@ -1,6 +1,7 @@
 import sys
 import FWCore.ParameterSet.Config as cms
 
+
 process = cms.Process('jetToolbox')
 
 process.load("Configuration.EventContent.EventContent_cff")
@@ -10,11 +11,14 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_v4'
 
-process.load('FWCore.MessageLogger.MessageLogger_cfi')
+
+process.load("FWCore.MessageService.MessageLogger_cfi")
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+#process.load('FWCore.MessageLogger.MessageLogger_cfi')
 #process.MessageLogger.cerr.FwkReport.reportEvery = 100
-process.MessageLogger.suppressWarning = cms.untracked.vstring('ecalLaserCorrFilter','manystripclus53X','toomanystripclus53X')
-process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
-process.options.allowUnscheduled = cms.untracked.bool(True)
+#process.MessageLogger.suppressWarning = cms.untracked.vstring('ecalLaserCorrFilter','manystripclus53X','toomanystripclus53X')
+#process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+#process.options.allowUnscheduled = cms.untracked.bool(True)
 
 #process.load("JetMETCorrections.Configuration.JetCorrectionServices_cff")
 #process.load("JetMETCorrections.Configuration.JetCorrectionServicesAllAlgos_cff")
@@ -72,9 +76,9 @@ jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
 #sys.exit()
 
 
-process.endpath = cms.EndPath(process.out)
-
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+#process.endpath = cms.EndPath(process.out)
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.source = cms.Source("PoolSource",
 #		fileNames = cms.untracked.vstring(#'file:example.root'
 		fileNames = cms.untracked.vstring(
@@ -92,3 +96,4 @@ process.source = cms.Source("PoolSource",
 #from PhysicsTools.PatAlgos.patInputFiles_cff import filesRelValProdTTbarAODSIM
 #process.source.fileNames = filesRelValProdTTbarAODSIM
 
+process.endpath = cms.EndPath(process.out)  

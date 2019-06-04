@@ -19,7 +19,7 @@ from decortication import dataset
 
 # SET UP:
 ## Very basic variables:
-out_dir_default = "/uscms/home/tote/temp"
+out_dir_default = "/home/ag1378/cmslink/CMSSW_9_4_14/src/Filters/JetFilter/test"
 
 ## Construct process:
 process = cms.Process("filter")
@@ -52,11 +52,24 @@ options.register('outFile',
 	"The output file name. This will overwrite the default one assigned by the dataset."
 )
 options.register ('cutPt',
-	175
+	0,
 	VarParsing.multiplicity.singleton,
 	VarParsing.varType.float,
 	"The pT filtering cut. The default is 175 GeV."
 )
+options.register ('cutEta',
+        -1,
+        VarParsing.multiplicity.singleton,
+        VarParsing.varType.float,
+        "The eta filtering cut. The default is 0 GeV."
+)
+options.register ('cutSmuFilter',
+		  False,
+		  VarParsing.multiplicity.singleton,
+		  VarParsing.varType.bool,
+		  "Cut based on the single-muon pT > 50 GeV trigger."
+)
+
 
 options.parseArguments()
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))		# Set up the number of events to run over.
@@ -104,7 +117,12 @@ process.TFileService = cms.Service("TFileService",
 # FILTER:
 ## Construct filter:
 process.filter = cms.EDFilter("JetFilter",
-	cut_pt=cms.double(options.cutPt)
+	cut_pt=cms.double(options.cutPt),
+	cut_eta=cms.double(options.cutEta),
+	cut_smu=cms.bool(options.cutSmuFilter),
+	jetCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
+        triggerPrescales=cms.InputTag("patTrigger", ""),
 )
 # PATH:
 process.p = cms.Path(

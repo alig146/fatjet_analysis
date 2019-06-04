@@ -140,40 +140,40 @@ class JetTuplizer : public edm::EDAnalyzer {
 	// Basic fatjet variables
 	// Algorithm variables
 	int n_event, n_event_sel, n_sel_lead, counter, n_error_g, n_error_q, n_error_sq, n_error_sq_match, n_error_m, n_error_sort;
-	
+
 	// Input collections:
 	vector<string> jet_collections_maod, jet_collections_gn, jet_collections_pf;
 	vector<string> lep_names, lep_types;
 	vector<string> gen_names, gen_types;
-	
+
 	// Pile-up re-weighting components:
 	LumiReWeighting lumi_weights;
-	
+
 	// JEC info:
 	string jec_prefix;
 	vector<string> jec_ak4_files, jmc_ak4_files, jec_ak8_files, jmc_ak8_files;
 	FactorizedJetCorrector *jec_corrector_ak4, *jmc_corrector_ak4, *jec_corrector_ak8, *jmc_corrector_ak8;
-	
+
 	// JER info:
 	JME::JetResolutionScaleFactor jer_calculator_ak4;
 	JME::JetResolutionScaleFactor jer_calculator_ak8;
-	
+
 	// b-tag scale factor things:
 	BTagCalibration btagsf_calib;
 	BTagCalibrationReader btagsf_reader;
-	
+
 	// Ntuple information:
 	vector<string> jet_variables, jet_variables_maod, jet_variables_gn, jet_variables_pf, lep_variables, gen_variables, event_variables;
 	map<string, map<string, vector<double>>> branches;
 	map<string, TTree*> ttrees;
 	map<string, map<string, TBranch*>> tbranches;
 	TTree* tt;
-	
+
 	// Event variables:
 	double pt_hat;
 	double rho;
 	double npv;
-	
+
 	// Tokens:
 	EDGetTokenT<GenEventInfoProduct> genInfo_;
 	EDGetTokenT<double> rhoInfo_;
@@ -215,8 +215,8 @@ class JetTuplizer : public edm::EDAnalyzer {
 	/// Custom iterators:
 	typedef map<string, vector<double>>::iterator branch_it_inner;
 	typedef map<string, map<string, vector<double>>>::iterator branch_it_outer;
-	
-	
+
+
 	// DEFINE CUTS
 //	float cut_dm = 25;
 
@@ -266,8 +266,8 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 	photonCollection_(consumes<vector<pat::Photon>>(iConfig.getParameter<InputTag>("photonCollection"))),
 //	genCollection_(consumes<vector<pat::PackedGenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
 	genCollection_(consumes<vector<reco::GenParticle>>(iConfig.getParameter<InputTag>("genCollection")))
-	
-	
+
+
 {
 //do what ever initialization is needed
 	// Collections setup:
@@ -372,14 +372,14 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"spx2", "spy2", "spz2", "se2", "spt2", "sm2", "seta2", "sphi2",		// Subjet 3
 		"spx3", "spy3", "spz3", "se3", "spt3", "sm3", "seta3", "sphi3"		// Subjet 4
 	};
-	
+
 	/// Lepton (and photon) collection variables:
 	lep_names = {"le", "lm", "lt", "lp"};
 	lep_types = {"pf"};
 	lep_variables = {		// List of event branch variables for each collection.
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m"
 	};
-	
+
 	/// "gen"
 	gen_names = {"q"};
 	gen_types = {"gn"};
@@ -387,7 +387,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"phi", "eta", "y", "px", "py", "pz", "e", "pt", "m", "pid",
 		"sf"		// ttbar rewighting scale factor: https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
 	};
-	
+
 	/// "event"
 	event_variables = {
 		"pt_hat",
@@ -415,14 +415,21 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		"trig_pfht800pt50x4",		// probably not needed
 		"trig_mupt50"
 	};
-	
+
 	// Ntuple setup:
 	edm::Service<TFileService> fs;		// Open output services
-	
+
 	/// Event-by-event variables:
 	ttrees["events"] = fs->make<TTree>();
 	ttrees["events"]->SetName("events");
-	
+
+    auto directory = ttrees["events"]->GetDirectory();
+	std::cout << directory->GetName() << "  " << directory->GetTitle() << "\n";
+	auto mother = directory->GetMotherDir();
+	std::cout << mother->GetName() << "  " << mother->GetTitle() << "\n";
+
+
+
 	//// Build jet branches:
 	///// miniAOD jet branches:
 	for (vector<string>::const_iterator i = jet_collections_maod.begin(); i != jet_collections_maod.end(); i++) {
@@ -500,14 +507,14 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		string branch_name = *i;
 		tbranches["event"][*i] = ttrees["events"]->Branch(branch_name.c_str(), &(branches["event"][*i]), 64000, 0);
 	}
-	
+
 	// Pile-up re-weighting setup:
 	lumi_weights = LumiReWeighting(pileup_path_ + "pileup_distribution_moriond17.root", pileup_path_ + "pileup_distribution_data16.root", "pileup", "pileup");
-	
+
 	// JEC setup:
 	jec_prefix = jec_version_mc_;
 	if (is_data_) jec_prefix = jec_version_data_;
-	
+
 	/// AK4 JEC setup:
 	jec_ak4_files.push_back(jec_prefix + "_L1FastJet_AK4PFchs.txt");
 	jec_ak4_files.push_back(jec_prefix + "_L2Relative_AK4PFchs.txt");
@@ -519,7 +526,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		jec_parameters_ak4.push_back(*(new JetCorrectorParameters(*jec_file)));
 	}
 	jec_corrector_ak4 = new FactorizedJetCorrector(jec_parameters_ak4);
-	
+
 	/// AK4 JMC setup:
 	jmc_ak4_files.push_back(jec_prefix + "_L2Relative_AK4PFchs.txt");
 	jmc_ak4_files.push_back(jec_prefix + "_L3Absolute_AK4PFchs.txt");
@@ -542,7 +549,7 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		jec_parameters_ak8.push_back(*(new JetCorrectorParameters(*jec_file)));
 	}
 	jec_corrector_ak8 = new FactorizedJetCorrector(jec_parameters_ak8);
-	
+
 	/// AK8 JMC setup:
 	jmc_ak8_files.push_back(jec_prefix + "_L2Relative_AK8PFchs.txt");
 	jmc_ak8_files.push_back(jec_prefix + "_L3Absolute_AK8PFchs.txt");
@@ -553,14 +560,14 @@ JetTuplizer::JetTuplizer(const edm::ParameterSet& iConfig) :
 		jmc_parameters_ak8.push_back(*(new JetCorrectorParameters(*jmc_file)));
 	}
 	jmc_corrector_ak8 = new FactorizedJetCorrector(jmc_parameters_ak8);
-	
+
 	// b-tag scale factor setup:
 	btagsf_calib = BTagCalibration("CSVv2", "CSVv2_ichep.csv");		// "CSVv2_ichep.csv" must be in the directory cmsRun is run from.
 	btagsf_reader = BTagCalibrationReader(BTagEntry::OP_LOOSE, "central", {"up", "down"});
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_B, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_C, "comb");
 	btagsf_reader.load(btagsf_calib, BTagEntry::FLAV_UDSG, "comb");
-	
+
 	// Debug:
 	cout << endl;
 	cout << "Starting the Jet Analyzer..." << endl;
@@ -595,6 +602,8 @@ void JetTuplizer::beginJob()
 
 // CLASS METHODS ("method" = "member function")
 /// Pile-up re-weighting calculation:
+
+
 void JetTuplizer::process_pileup(const edm::Event& iEvent, LumiReWeighting weights, EDGetTokenT<vector<PileupSummaryInfo>> pileupInfo) {
 	if (v_) cout << "Begin process_pileup." << endl;
 	float tnpv = -1;
@@ -617,16 +626,16 @@ void JetTuplizer::process_pileup(const edm::Event& iEvent, LumiReWeighting weigh
 	if (v_) cout << "End process_pileup." << endl;
 }
 
-/// Trigger bits method:
+// /// Trigger bits method:
 void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<TriggerResults> resultsToken, EDGetTokenT<pat::PackedTriggerPrescales> prescalesToken) {
 	if (v_) cout << "Begin process_triggers." << endl;
 	Handle<TriggerResults> results;
 	iEvent.getByToken(resultsToken, results);
 	Handle<pat::PackedTriggerPrescales> prescales;
 	iEvent.getByToken(prescalesToken, prescales);
-	
+
 	const TriggerNames& names = iEvent.triggerNames(*results);
-	
+
 	vector<vector<string>> trigger_desired = {
 		{"trig_pfht800", "HLT_PFHT800", ""},
 		{"trig_pfht900", "HLT_PFHT900", ""},
@@ -641,7 +650,7 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 		{"trig_pfht800pt50x4", "HLT_PFHT800_4JetPt50", ""},
 		{"trig_mupt50", "HLT_Mu50_v", ""}
 	};
-	
+
 	for (unsigned int i=0; i < results->size(); ++i) {
 		string full_name = names.triggerName(i);
 //		cout << full_name << endl;
@@ -663,7 +672,7 @@ void JetTuplizer::process_triggers(const edm::Event& iEvent, EDGetTokenT<Trigger
 	if (v_) cout << "End process_triggers." << endl;
 }
 
-/// PF jets method:
+// /// PF jets method:
 void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 	string algo,
 	EDGetTokenT<vector<pat::Jet>> token_u,
@@ -671,14 +680,14 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 	EDGetTokenT<vector<pat::Jet>> token_p,
 	EDGetTokenT<vector<pat::Jet>> token_s,
 	EDGetTokenT<vector<pat::Jet>> token_t
-) {
+ ) {
 	// Debug:
 	if (v_) cout << "Begin process_jets_pf." << endl;
-	
+
 	// Arguments:
 	string type = "pf";
 	string algo_type = algo + "_" + type;
-	
+
 	// Extract jet collections from event:
 	Handle<vector<pat::Jet>> jets_u;           // Ungroomed PAT jet collection
 	Handle<vector<pat::Jet>> jets_f;           // Filtered PAT jet collection
@@ -693,21 +702,23 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
-	
+
 	// Loop over the ungroomed jet collection:
 	int njet = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets_u->begin(); jet != jets_u->end(); ++ jet) {
-		
+
 //		if (njet > 4) break;		// Only save top 4 jets.
 
 		// Define basic event variables:
 		double m = jet->mass();
-		string mass_tag = string("mass") + boost::to_upper_copy<string>(algo) + string("CHS");
-		double mf = jet->userFloat(mass_tag + string("Filtered"));
-		double mp = jet->userFloat(mass_tag + string("Pruned"));
-		double ms = jet->userFloat(mass_tag + string("SoftDrop"));
-		double mt = jet->userFloat(mass_tag + string("Trimmed"));
-		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + string(":tau");
+		//		string mass_tag = string("mass") + boost::to_upper_copy<string>(algo) + string("CHS");
+		string mass_tag = boost::to_lower_copy<string>(algo) +string("PFJets")+ string("CHS");
+		double mf = jet->userFloat(mass_tag + string("FilteredMass"));
+		double mp = jet->userFloat(mass_tag + string("PrunedMass"));
+		double ms = jet->userFloat(mass_tag + string("SoftDropMass"));
+		double mt = jet->userFloat(mass_tag + string("TrimmedMass"));
+		//		string tau_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHS") + string(":tau");
+		string tau_tag = string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHS") + string(":tau");
 		double tau1 = jet->userFloat(tau_tag + string("1"));
 		double tau2 = jet->userFloat(tau_tag + string("2"));
 		double tau3 = jet->userFloat(tau_tag + string("3"));
@@ -770,7 +781,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 			jec_corrector_ak4->setRho(rho);
 			jec_corrector_ak4->setNPV(npv);
 			jec = jec_corrector_ak4->getCorrection();
-			
+
 			jmc_corrector_ak4->setJetPt(pt);
 			jmc_corrector_ak4->setJetEta(eta);
 			jmc_corrector_ak4->setJetPhi(phi);
@@ -779,7 +790,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 			jmc_corrector_ak4->setRho(rho);
 			jmc_corrector_ak4->setNPV(npv);
 			jmc = jmc_corrector_ak4->getCorrection();
-			
+
 			if (is_data_) jer = 1;
 			else {
 				JME::JetParameters jer_params;
@@ -798,7 +809,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 			jec_corrector_ak8->setRho(rho);
 			jec_corrector_ak8->setNPV(npv);
 			jec = jec_corrector_ak8->getCorrection();
-			
+
 			jmc_corrector_ak8->setJetPt(pt);
 			jmc_corrector_ak8->setJetEta(eta);
 			jmc_corrector_ak8->setJetPhi(phi);
@@ -807,7 +818,7 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 			jmc_corrector_ak8->setRho(rho);
 			jmc_corrector_ak8->setNPV(npv);
 			jmc = jmc_corrector_ak8->getCorrection();
-			
+
 			if (is_data_) jer = 1;
 			else {
 				JME::JetParameters jer_params;
@@ -828,112 +839,116 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 		pz = pz*jec;
 		pt = pt*jec;
 		e = e*jec;
-		
+
 		// Apply pT threshold:
 		if (pt < cut_pt_) continue;		// Only save jets with pT greater than the cutoff.
 		njet ++;
-		
+
 		// Subjet variables:
-		double spx0 = 0, spy0 = 0, spz0 = 0, se0 = 0, spt0 = 0, sm0 = 0, seta0 = 0, sphi0 = 0;
-		double spx1 = 0, spy1 = 0, spz1 = 0, se1 = 0, spt1 = 0, sm1 = 0, seta1 = 0, sphi1 = 0;
-		double spx2 = 0, spy2 = 0, spz2 = 0, se2 = 0, spt2 = 0, sm2 = 0, seta2 = 0, sphi2 = 0;
-		double spx3 = 0, spy3 = 0, spz3 = 0, se3 = 0, spt3 = 0, sm3 = 0, seta3 = 0, sphi3 = 0;
-		if (algo == "ca12") {		// Only get subjet variables for ungroomed CA12 jets.
-			string subjet_tag = string("subjets") + boost::to_upper_copy<string>(algo) + string("CHS:");
-			spx0 = jet->userFloat(subjet_tag + string("px0"));
-			spx1 = jet->userFloat(subjet_tag + string("px1"));
-			spx2 = jet->userFloat(subjet_tag + string("px2"));
-			spx3 = jet->userFloat(subjet_tag + string("px3"));
-			spy0 = jet->userFloat(subjet_tag + string("py0"));
-			spy1 = jet->userFloat(subjet_tag + string("py1"));
-			spy2 = jet->userFloat(subjet_tag + string("py2"));
-			spy3 = jet->userFloat(subjet_tag + string("py3"));
-			spz0 = jet->userFloat(subjet_tag + string("pz0"));
-			spz1 = jet->userFloat(subjet_tag + string("pz1"));
-			spz2 = jet->userFloat(subjet_tag + string("pz2"));
-			spz3 = jet->userFloat(subjet_tag + string("pz3"));
-			se0 = jet->userFloat(subjet_tag + string("e0"));
-			se1 = jet->userFloat(subjet_tag + string("e1"));
-			se2 = jet->userFloat(subjet_tag + string("e2"));
-			se3 = jet->userFloat(subjet_tag + string("e3"));
-			spt0 = jet->userFloat(subjet_tag + string("pt0"));
-			spt1 = jet->userFloat(subjet_tag + string("pt1"));
-			spt2 = jet->userFloat(subjet_tag + string("pt2"));
-			spt3 = jet->userFloat(subjet_tag + string("pt3"));
-			sm0 = jet->userFloat(subjet_tag + string("m0"));
-			sm1 = jet->userFloat(subjet_tag + string("m1"));
-			sm2 = jet->userFloat(subjet_tag + string("m2"));
-			sm3 = jet->userFloat(subjet_tag + string("m3"));
-			seta0 = jet->userFloat(subjet_tag + string("eta0"));
-			seta1 = jet->userFloat(subjet_tag + string("eta1"));
-			seta2 = jet->userFloat(subjet_tag + string("eta2"));
-			seta3 = jet->userFloat(subjet_tag + string("eta3"));
-			sphi0 = jet->userFloat(subjet_tag + string("phi0"));
-			sphi1 = jet->userFloat(subjet_tag + string("phi1"));
-			sphi2 = jet->userFloat(subjet_tag + string("phi2"));
-			sphi3 = jet->userFloat(subjet_tag + string("phi3"));
-		}
-		
+		// double spx0 = 0, spy0 = 0, spz0 = 0, se0 = 0, spt0 = 0, sm0 = 0, seta0 = 0, sphi0 = 0;
+		// double spx1 = 0, spy1 = 0, spz1 = 0, se1 = 0, spt1 = 0, sm1 = 0, seta1 = 0, sphi1 = 0;
+		// double spx2 = 0, spy2 = 0, spz2 = 0, se2 = 0, spt2 = 0, sm2 = 0, seta2 = 0, sphi2 = 0;
+		// double spx3 = 0, spy3 = 0, spz3 = 0, se3 = 0, spt3 = 0, sm3 = 0, seta3 = 0, sphi3 = 0;
+		// if (algo == "ca12") {		// Only get subjet variables for ungroomed CA12 jets.
+		// 	string subjet_tag = string("subjets") + boost::to_upper_copy<string>(algo) + string("CHS:");
+		// 	spx0 = jet->userFloat(subjet_tag + string("px0"));
+		// 	spx1 = jet->userFloat(subjet_tag + string("px1"));
+		// 	spx2 = jet->userFloat(subjet_tag + string("px2"));
+		// 	spx3 = jet->userFloat(subjet_tag + string("px3"));
+		// 	spy0 = jet->userFloat(subjet_tag + string("py0"));
+		// 	spy1 = jet->userFloat(subjet_tag + string("py1"));
+		// 	spy2 = jet->userFloat(subjet_tag + string("py2"));
+		// 	spy3 = jet->userFloat(subjet_tag + string("py3"));
+		// 	spz0 = jet->userFloat(subjet_tag + string("pz0"));
+		// 	spz1 = jet->userFloat(subjet_tag + string("pz1"));
+		// 	spz2 = jet->userFloat(subjet_tag + string("pz2"));
+		// 	spz3 = jet->userFloat(subjet_tag + string("pz3"));
+		// 	se0 = jet->userFloat(subjet_tag + string("e0"));
+		// 	se1 = jet->userFloat(subjet_tag + string("e1"));
+		// 	se2 = jet->userFloat(subjet_tag + string("e2"));
+		// 	se3 = jet->userFloat(subjet_tag + string("e3"));
+		// 	spt0 = jet->userFloat(subjet_tag + string("pt0"));
+		// 	spt1 = jet->userFloat(subjet_tag + string("pt1"));
+		// 	spt2 = jet->userFloat(subjet_tag + string("pt2"));
+		// 	spt3 = jet->userFloat(subjet_tag + string("pt3"));
+		// 	sm0 = jet->userFloat(subjet_tag + string("m0"));
+		// 	sm1 = jet->userFloat(subjet_tag + string("m1"));
+		// 	sm2 = jet->userFloat(subjet_tag + string("m2"));
+		// 	sm3 = jet->userFloat(subjet_tag + string("m3"));
+		// 	seta0 = jet->userFloat(subjet_tag + string("eta0"));
+		// 	seta1 = jet->userFloat(subjet_tag + string("eta1"));
+		// 	seta2 = jet->userFloat(subjet_tag + string("eta2"));
+		// 	seta3 = jet->userFloat(subjet_tag + string("eta3"));
+		// 	sphi0 = jet->userFloat(subjet_tag + string("phi0"));
+		// 	sphi1 = jet->userFloat(subjet_tag + string("phi1"));
+		// 	sphi2 = jet->userFloat(subjet_tag + string("phi2"));
+		// 	sphi3 = jet->userFloat(subjet_tag + string("phi3"));
+		// }
+
 		// Groomed taus:
 		/// The groomed PAT jets might be in a different order than the ungroomed ones, since the PAT code orders by pT.
 		/// Therefore, I match them, by comparing groomed masses, using this really dumb algorithm:
-		double tau1f = -1, tau2f = -1, tau3f = -1, tau4f = -1, tau5f = -1;
-		double tau1p = -1, tau2p = -1, tau3p = -1, tau4p = -1, tau5p = -1;
-		double tau1s = -1, tau2s = -1, tau3s = -1, tau4s = -1, tau5s = -1;
-		double tau1t = -1, tau2t = -1, tau3t = -1, tau4t = -1, tau5t = -1;
-		if (njet < 5) {		// Only save for the first four saved jets.
-			double epsilon = 0.000001;
-			string taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSFiltered") + string(":tau");
-			for (vector<pat::Jet>::const_iterator jetg = jets_f->begin(); jetg != jets_f->end(); ++ jetg) {
-				double mg = jetg->mass();
-//				cout << njet << "   " << mf/jmc << "   " << mg << endl;
-				if (fabs(mg - mf/jmc) <= epsilon*fabs(mg)) {
-					tau1f = jetg->userFloat(taug_tag + string("1"));
-					tau2f = jetg->userFloat(taug_tag + string("2"));
-					tau3f = jetg->userFloat(taug_tag + string("3"));
-					tau4f = jetg->userFloat(taug_tag + string("4"));
-					tau5f = jetg->userFloat(taug_tag + string("5"));
-					break;
-				}
-			}
-			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSPruned") + string(":tau");
-			for (vector<pat::Jet>::const_iterator jetg = jets_p->begin(); jetg != jets_p->end(); ++ jetg) {
-				double mg = jetg->mass();
-				if (fabs(mg - mp/jmc) <= epsilon*fabs(mg)) {
-					tau1p = jetg->userFloat(taug_tag + string("1"));
-					tau2p = jetg->userFloat(taug_tag + string("2"));
-					tau3p = jetg->userFloat(taug_tag + string("3"));
-					tau4p = jetg->userFloat(taug_tag + string("4"));
-					tau5p = jetg->userFloat(taug_tag + string("5"));
-					break;
-				}
-			}
-			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSSoftDrop") + string(":tau");
-			for (vector<pat::Jet>::const_iterator jetg = jets_s->begin(); jetg != jets_s->end(); ++ jetg) {
-				double mg = jetg->mass();
-				if (fabs(mg - ms/jmc) <= epsilon*fabs(mg)) {
-					tau1s = jetg->userFloat(taug_tag + string("1"));
-					tau2s = jetg->userFloat(taug_tag + string("2"));
-					tau3s = jetg->userFloat(taug_tag + string("3"));
-					tau4s = jetg->userFloat(taug_tag + string("4"));
-					tau5s = jetg->userFloat(taug_tag + string("5"));
-					break;
-				}
-			}
-			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSTrimmed") + string(":tau");
-			for (vector<pat::Jet>::const_iterator jetg = jets_t->begin(); jetg != jets_t->end(); ++ jetg) {
-				double mg = jetg->mass();
-				if (fabs(mg - mt/jmc) <= epsilon*fabs(mg)) {
-					tau1t = jetg->userFloat(taug_tag + string("1"));
-					tau2t = jetg->userFloat(taug_tag + string("2"));
-					tau3t = jetg->userFloat(taug_tag + string("3"));
-					tau4t = jetg->userFloat(taug_tag + string("4"));
-					tau5t = jetg->userFloat(taug_tag + string("5"));
-					break;
-				}
-			}
-		}
-		
+// 		double tau1f = -1, tau2f = -1, tau3f = -1, tau4f = -1, tau5f = -1;
+// 		double tau1p = -1, tau2p = -1, tau3p = -1, tau4p = -1, tau5p = -1;
+// 		double tau1s = -1, tau2s = -1, tau3s = -1, tau4s = -1, tau5s = -1;
+// 		double tau1t = -1, tau2t = -1, tau3t = -1, tau4t = -1, tau5t = -1;
+// 		if (njet < 5) {		// Only save for the first four saved jets.
+// 			double epsilon = 0.000001;
+// 			//			string taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSFiltered") + string(":tau");
+// 			string taug_tag = string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHSFiltered") + string(":tau");
+// 			for (vector<pat::Jet>::const_iterator jetg = jets_f->begin(); jetg != jets_f->end(); ++ jetg) {
+// 				double mg = jetg->mass();
+// //				cout << njet << "   " << mf/jmc << "   " << mg << endl;
+// 				if (fabs(mg - mf/jmc) <= epsilon*fabs(mg)) {
+// 					tau1f = jetg->userFloat(taug_tag + string("1"));
+// 					tau2f = jetg->userFloat(taug_tag + string("2"));
+// 					tau3f = jetg->userFloat(taug_tag + string("3"));
+// 					tau4f = jetg->userFloat(taug_tag + string("4"));
+// 					tau5f = jetg->userFloat(taug_tag + string("5"));
+// 					break;
+// 				}
+// 			}
+// 			//			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSPruned") + string(":tau");
+// 			taug_tag = string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHSPruned") + string(":tau");
+// 			for (vector<pat::Jet>::const_iterator jetg = jets_p->begin(); jetg != jets_p->end(); ++ jetg) {
+// 				double mg = jetg->mass();
+// 				if (fabs(mg - mp/jmc) <= epsilon*fabs(mg)) {
+// 					tau1p = jetg->userFloat(taug_tag + string("1"));
+// 					tau2p = jetg->userFloat(taug_tag + string("2"));
+// 					tau3p = jetg->userFloat(taug_tag + string("3"));
+// 					tau4p = jetg->userFloat(taug_tag + string("4"));
+// 					tau5p = jetg->userFloat(taug_tag + string("5"));
+// 					break;
+// 				}
+// 			}
+// 			//			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSSoftDrop") + string(":tau");
+// 			taug_tag = string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHSSoftDrop") + string(":tau");
+// 			for (vector<pat::Jet>::const_iterator jetg = jets_s->begin(); jetg != jets_s->end(); ++ jetg) {
+// 				double mg = jetg->mass();
+// 				if (fabs(mg - ms/jmc) <= epsilon*fabs(mg)) {
+// 					tau1s = jetg->userFloat(taug_tag + string("1"));
+// 					tau2s = jetg->userFloat(taug_tag + string("2"));
+// 					tau3s = jetg->userFloat(taug_tag + string("3"));
+// 					tau4s = jetg->userFloat(taug_tag + string("4"));
+// 					tau5s = jetg->userFloat(taug_tag + string("5"));
+// 					break;
+// 				}
+// 			}
+// 			//			taug_tag = string("taus") + boost::to_upper_copy<string>(algo) + string("CHSTrimmed") + string(":tau");
+// 			taug_tag = string("Njettiness") + boost::to_upper_copy<string>(algo) + string("CHSTrimmed") + string(":tau");
+// 			for (vector<pat::Jet>::const_iterator jetg = jets_t->begin(); jetg != jets_t->end(); ++ jetg) {
+// 				double mg = jetg->mass();
+// 				if (fabs(mg - mt/jmc) <= epsilon*fabs(mg)) {
+// 					tau1t = jetg->userFloat(taug_tag + string("1"));
+// 					tau2t = jetg->userFloat(taug_tag + string("2"));
+// 					tau3t = jetg->userFloat(taug_tag + string("3"));
+// 					tau4t = jetg->userFloat(taug_tag + string("4"));
+// 					tau5t = jetg->userFloat(taug_tag + string("5"));
+// 					break;
+// 				}
+// 			}
+// 		}
+
 		// Fill branches:
 		branches[algo_type]["phi"].push_back(phi);
 		branches[algo_type]["eta"].push_back(eta);
@@ -963,28 +978,28 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 		branches[algo_type]["tau52"].push_back(tau52);
 		branches[algo_type]["tau53"].push_back(tau53);
 		branches[algo_type]["tau54"].push_back(tau54);
-		if (njet < 5) {
-			branches[algo_type]["tau1f"].push_back(tau1f);
-			branches[algo_type]["tau2f"].push_back(tau2f);
-			branches[algo_type]["tau3f"].push_back(tau3f);
-			branches[algo_type]["tau4f"].push_back(tau4f);
-			branches[algo_type]["tau5f"].push_back(tau5f);
-			branches[algo_type]["tau1p"].push_back(tau1p);
-			branches[algo_type]["tau2p"].push_back(tau2p);
-			branches[algo_type]["tau3p"].push_back(tau3p);
-			branches[algo_type]["tau4p"].push_back(tau4p);
-			branches[algo_type]["tau5p"].push_back(tau5p);
-			branches[algo_type]["tau1s"].push_back(tau1s);
-			branches[algo_type]["tau2s"].push_back(tau2s);
-			branches[algo_type]["tau3s"].push_back(tau3s);
-			branches[algo_type]["tau4s"].push_back(tau4s);
-			branches[algo_type]["tau5s"].push_back(tau5s);
-			branches[algo_type]["tau1t"].push_back(tau1t);
-			branches[algo_type]["tau2t"].push_back(tau2t);
-			branches[algo_type]["tau3t"].push_back(tau3t);
-			branches[algo_type]["tau4t"].push_back(tau4t);
-			branches[algo_type]["tau5t"].push_back(tau5t);
-		}
+		// if (njet < 5) {
+		// 	branches[algo_type]["tau1f"].push_back(tau1f);
+		// 	branches[algo_type]["tau2f"].push_back(tau2f);
+		// 	branches[algo_type]["tau3f"].push_back(tau3f);
+		// 	branches[algo_type]["tau4f"].push_back(tau4f);
+		// 	branches[algo_type]["tau5f"].push_back(tau5f);
+		// 	branches[algo_type]["tau1p"].push_back(tau1p);
+		// 	branches[algo_type]["tau2p"].push_back(tau2p);
+		// 	branches[algo_type]["tau3p"].push_back(tau3p);
+		// 	branches[algo_type]["tau4p"].push_back(tau4p);
+		// 	branches[algo_type]["tau5p"].push_back(tau5p);
+		// 	branches[algo_type]["tau1s"].push_back(tau1s);
+		// 	branches[algo_type]["tau2s"].push_back(tau2s);
+		// 	branches[algo_type]["tau3s"].push_back(tau3s);
+		// 	branches[algo_type]["tau4s"].push_back(tau4s);
+		// 	branches[algo_type]["tau5s"].push_back(tau5s);
+		// 	branches[algo_type]["tau1t"].push_back(tau1t);
+		// 	branches[algo_type]["tau2t"].push_back(tau2t);
+		// 	branches[algo_type]["tau3t"].push_back(tau3t);
+		// 	branches[algo_type]["tau4t"].push_back(tau4t);
+		// 	branches[algo_type]["tau5t"].push_back(tau5t);
+		// }
 		branches[algo_type]["jec"].push_back(jec);
 		branches[algo_type]["jmc"].push_back(jmc);
 		branches[algo_type]["jer"].push_back(jer);
@@ -1000,46 +1015,46 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 		branches[algo_type]["jetid_l"].push_back(jetid_l);
 		branches[algo_type]["jetid_t"].push_back(jetid_t);
 		// Subjet branches:
-		branches[algo_type]["spx0"].push_back(spx0);
-		branches[algo_type]["spy0"].push_back(spy0);
-		branches[algo_type]["spz0"].push_back(spz0);
-		branches[algo_type]["se0"].push_back(se0);
-		branches[algo_type]["spt0"].push_back(spt0);
-		branches[algo_type]["sm0"].push_back(sm0);
-		branches[algo_type]["seta0"].push_back(seta0);
-		branches[algo_type]["sphi0"].push_back(sphi0);
-		branches[algo_type]["spx1"].push_back(spx1);
-		branches[algo_type]["spy1"].push_back(spy1);
-		branches[algo_type]["spz1"].push_back(spz1);
-		branches[algo_type]["se1"].push_back(se1);
-		branches[algo_type]["spt1"].push_back(spt1);
-		branches[algo_type]["sm1"].push_back(sm1);
-		branches[algo_type]["seta1"].push_back(seta1);
-		branches[algo_type]["sphi1"].push_back(sphi1);
-		branches[algo_type]["spx2"].push_back(spx2);
-		branches[algo_type]["spy2"].push_back(spy2);
-		branches[algo_type]["spz2"].push_back(spz2);
-		branches[algo_type]["se2"].push_back(se2);
-		branches[algo_type]["spt2"].push_back(spt2);
-		branches[algo_type]["sm2"].push_back(sm2);
-		branches[algo_type]["seta2"].push_back(seta2);
-		branches[algo_type]["sphi2"].push_back(sphi2);
-		branches[algo_type]["spx3"].push_back(spx3);
-		branches[algo_type]["spy3"].push_back(spy3);
-		branches[algo_type]["spz3"].push_back(spz3);
-		branches[algo_type]["se3"].push_back(se3);
-		branches[algo_type]["spt3"].push_back(spt3);
-		branches[algo_type]["sm3"].push_back(sm3);
-		branches[algo_type]["seta3"].push_back(seta3);
-		branches[algo_type]["sphi3"].push_back(sphi3);
+		// branches[algo_type]["spx0"].push_back(spx0);
+		// branches[algo_type]["spy0"].push_back(spy0);
+		// branches[algo_type]["spz0"].push_back(spz0);
+		// branches[algo_type]["se0"].push_back(se0);
+		// branches[algo_type]["spt0"].push_back(spt0);
+		// branches[algo_type]["sm0"].push_back(sm0);
+		// branches[algo_type]["seta0"].push_back(seta0);
+		// branches[algo_type]["sphi0"].push_back(sphi0);
+		// branches[algo_type]["spx1"].push_back(spx1);
+		// branches[algo_type]["spy1"].push_back(spy1);
+		// branches[algo_type]["spz1"].push_back(spz1);
+		// branches[algo_type]["se1"].push_back(se1);
+		// branches[algo_type]["spt1"].push_back(spt1);
+		// branches[algo_type]["sm1"].push_back(sm1);
+		// branches[algo_type]["seta1"].push_back(seta1);
+		// branches[algo_type]["sphi1"].push_back(sphi1);
+		// branches[algo_type]["spx2"].push_back(spx2);
+		// branches[algo_type]["spy2"].push_back(spy2);
+		// branches[algo_type]["spz2"].push_back(spz2);
+		// branches[algo_type]["se2"].push_back(se2);
+		// branches[algo_type]["spt2"].push_back(spt2);
+		// branches[algo_type]["sm2"].push_back(sm2);
+		// branches[algo_type]["seta2"].push_back(seta2);
+		// branches[algo_type]["sphi2"].push_back(sphi2);
+		// branches[algo_type]["spx3"].push_back(spx3);
+		// branches[algo_type]["spy3"].push_back(spy3);
+		// branches[algo_type]["spz3"].push_back(spz3);
+		// branches[algo_type]["se3"].push_back(se3);
+		// branches[algo_type]["spt3"].push_back(spt3);
+		// branches[algo_type]["sm3"].push_back(sm3);
+		// branches[algo_type]["seta3"].push_back(seta3);
+		// branches[algo_type]["sphi3"].push_back(sphi3);
 	}		// :End collection loop
-	
+
 	// Loop through all jets to calculate HT:
 	double ht = 0;
 	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
 		double pt = branches[algo_type]["pt"][i];
 		double eta = branches[algo_type]["eta"][i];
-		
+
 		if (algo == "ak8") {
 			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
@@ -1050,24 +1065,24 @@ void JetTuplizer::process_jets_pf(const edm::Event& iEvent,
 	}
 	branches[algo_type]["ht"].push_back(ht);
 //	branches[algo_type]["njets"].push_back(njets);
-	
+
 	// Debug:
 	if (v_) cout << "End process_jets_pf." << endl;
 }
 
-/// GN jets method:
+// /// GN jets method:
 void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTokenT<vector<reco::GenJet>> token) {
 	if (v_) cout << "Begin process_jets_gn." << endl;
 	// Arguments:
 	string type = "gn";
 	string algo_type = algo + "_" + type;
-	
+
 	Handle<vector<reco::GenJet>> jets;
 	iEvent.getByToken(token, jets);
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
-	
+
 	// Loop over the collection:
 	int njet = 0;
 	for (vector<reco::GenJet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
@@ -1083,7 +1098,7 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 		double phi = jet->phi();
 		double eta = jet->eta();
 		double y = jet->y();
-		
+
 		// Fill branches:
 		if (pt > cut_pt_) {
 			branches[algo_type]["phi"].push_back(phi);
@@ -1097,13 +1112,13 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 			branches[algo_type]["m"].push_back(m);
 		}
 	}		// :End collection loop
-	
+
 	// Loop through all jets to calculate HT:
 	double ht = 0;
 	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
 		double pt = branches[algo_type]["pt"][i];
 		double eta = branches[algo_type]["eta"][i];
-		
+
 		if (algo == "ak8") {
 			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
@@ -1114,23 +1129,23 @@ void JetTuplizer::process_jets_gn(const edm::Event& iEvent, string algo, EDGetTo
 	}
 	branches[algo_type]["ht"].push_back(ht);
 //	branches[algo_type]["njets"].push_back(njets);
-	
+
 	// Debug:
 	if (v_) cout << "End process_jets_gn." << endl;
 }
 
-/// MAOD jets method:
+// /// MAOD jets method:
 void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGetTokenT<vector<pat::Jet>> token) {
 	// Arguments:
 	string type = "maod";
 	string algo_type = algo + "_" + type;
-	
+
 	Handle<vector<pat::Jet>> jets;
 	iEvent.getByToken(token, jets);
 
 	// Print some info:
 //	if (v_) {cout << ">> There are " << jets->size() << " jets in the " << algo_type << " collection." << endl;}
-	
+
 	// Loop over the collection:
 	int njet = 0;
 	for (vector<pat::Jet>::const_iterator jet = jets->begin(); jet != jets->end(); ++ jet) {
@@ -1146,7 +1161,7 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 		double phi = jet->phi();
 		double eta = jet->eta();
 		double y = jet->y();
-		
+
 		// Fill branches:
 		if (pt > cut_pt_) {
 			branches[algo_type]["phi"].push_back(phi);
@@ -1164,13 +1179,13 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 			branches[algo_type]["bd_cisv"].push_back(jet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"));
 		}
 	}		// :End collection loop
-	
+
 	// Loop through all jets to calculate HT:
 	double ht = 0;
 	for (unsigned i = 0; i < branches[algo_type]["pt"].size(); i++) {
 		double pt = branches[algo_type]["pt"][i];
 		double eta = branches[algo_type]["eta"][i];
-		
+
 		if (algo == "ak8") {
 			if (pt > 150 && fabs(eta) < 2.5) ht += pt;
 		}
@@ -1183,17 +1198,17 @@ void JetTuplizer::process_jets_maod(const edm::Event& iEvent, string algo, EDGet
 //	branches[algo_type]["njets"].push_back(njets);
 }
 
-/// Electrons method:
+// /// Electrons method:
 void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Electron>> token) {
 	if (v_) cout << "Begin process_electrons_pf." << endl;
 	// Arguments:
 	string name = "le";
 	string type = "pf";
 	string name_type = name + "_" + type;
-	
+
 	Handle<vector<pat::Electron>> leps;
 	iEvent.getByToken(token, leps);
-	
+
 	// Loop over the collection:
 	for (vector<pat::Electron>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
 		// Define some useful event variables:
@@ -1206,7 +1221,7 @@ void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vec
 		double phi = lep->phi();
 		double eta = lep->eta();
 		double y = lep->y();
-		
+
 		// Fill branches:
 		if (pt > 5) {
 			branches[name_type]["phi"].push_back(phi);
@@ -1223,16 +1238,16 @@ void JetTuplizer::process_electrons_pf(const edm::Event& iEvent, EDGetTokenT<vec
 	if (v_) cout << "End process_electrons_pf." << endl;
 }
 
-/// Muons method:
+// /// Muons method:
 void JetTuplizer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Muon>> token) {
 	// Arguments:
 	string name = "lm";
 	string type = "pf";
 	string name_type = name + "_" + type;
-	
+
 	Handle<vector<pat::Muon>> leps;
 	iEvent.getByToken(token, leps);
-	
+
 	// Loop over the collection:
 	for (vector<pat::Muon>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
 		// Define some useful event variables:
@@ -1245,7 +1260,7 @@ void JetTuplizer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<
 		double phi = lep->phi();
 		double eta = lep->eta();
 		double y = lep->y();
-		
+
 		// Fill branches:
 		if (pt > 5) {
 			branches[name_type]["phi"].push_back(phi);
@@ -1261,16 +1276,16 @@ void JetTuplizer::process_muons_pf(const edm::Event& iEvent, EDGetTokenT<vector<
 	}		// :End collection loop
 }
 
-/// Tauons method:
+// /// Tauons method:
 void JetTuplizer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Tau>> token) {
 	// Arguments:
 	string name = "lt";
 	string type = "pf";
 	string name_type = name + "_" + type;
-	
+
 	Handle<vector<pat::Tau>> leps;
 	iEvent.getByToken(token, leps);
-	
+
 	// Loop over the collection:
 	for (vector<pat::Tau>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
 		// Define some useful event variables:
@@ -1283,7 +1298,7 @@ void JetTuplizer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector
 		double phi = lep->phi();
 		double eta = lep->eta();
 		double y = lep->y();
-		
+
 		// Fill branches:
 		if (pt > 5) {
 			branches[name_type]["phi"].push_back(phi);
@@ -1299,16 +1314,16 @@ void JetTuplizer::process_tauons_pf(const edm::Event& iEvent, EDGetTokenT<vector
 	}		// :End collection loop
 }
 
-/// Photons method:
+// /// Photons method:
 void JetTuplizer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vector<pat::Photon>> token) {
 	// Arguments:
 	string name = "lp";
 	string type = "pf";
 	string name_type = name + "_" + type;
-	
+
 	Handle<vector<pat::Photon>> leps;
 	iEvent.getByToken(token, leps);
-	
+
 	// Loop over the collection:
 	for (vector<pat::Photon>::const_iterator lep = leps->begin(); lep != leps->end(); ++ lep) {
 		// Define some useful event variables:
@@ -1321,7 +1336,7 @@ void JetTuplizer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 		double phi = lep->phi();
 		double eta = lep->eta();
 		double y = lep->y();
-		
+
 		// Fill branches:
 		if (pt > 5) {
 			branches[name_type]["phi"].push_back(phi);
@@ -1337,16 +1352,16 @@ void JetTuplizer::process_photons_pf(const edm::Event& iEvent, EDGetTokenT<vecto
 	}		// :End collection loop
 }
 
-/// Quarks method:
+// /// Quarks method:
 void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector<reco::GenParticle>> token) {
 	// Arguments:
 	string name = "q";
 	string type = "gn";
 	string name_type = name + "_" + type;
-	
+
 	Handle<vector<reco::GenParticle>> gens;
 	iEvent.getByToken(token, gens);
-	
+
 	// Loop over the collection:
 	int ngen = 0;
 	for (vector<reco::GenParticle>::const_iterator gen = gens->begin(); gen != gens->end(); ++ gen) {
@@ -1363,9 +1378,9 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 		double y = gen->y();
 		double status = gen->status();
 		double pdgid = gen->pdgId();
-		
+
 //		cout << status << "  " << pdgid << endl;
-		
+
 		// Fill branches:
 		if (((abs(pdgid) == 6 || abs(pdgid) == 1000006 || abs(pdgid) == 2000002) and status == 22) or (abs(pdgid) == 6 and status == 11 and ngen <= 2)) {
 			branches[name_type]["phi"].push_back(phi);
@@ -1384,7 +1399,7 @@ void JetTuplizer::process_quarks_gn(const edm::Event& iEvent, EDGetTokenT<vector
 	}		// :End collection loop
 }
 
-// B-jet matching method:
+// // B-jet matching method:
 void JetTuplizer::match_bjets() {
 	if (v_) cout << "Begin match_bjets." << endl;
 	for (unsigned ijet_ca12 = 0; ijet_ca12 < 2; ijet_ca12++) {
@@ -1406,7 +1421,7 @@ void JetTuplizer::match_bjets() {
 			double bd_cisv = branches["ak4_maod"]["bd_cisv"].at(ijet_ak4);
 			double dR = reco::deltaR(ca12_eta, ca12_phi, ak4_eta, ak4_phi);
 //			double dR = sqrt(pow(ca12_eta - ak4_eta, 2) + pow(M_PI - abs(M_PI - abs(ca12_phi - ak4_phi)), 2));		// Same as above.
-		
+
 			if (dR < 0.6 && bd_te > bd_te_max) {bd_te_max = bd_te;}
 			if (dR < 0.6 && bd_tp > bd_tp_max) {bd_tp_max = bd_tp;}
 			if (dR < 0.6 && bd_csv > bd_csv_max) {bd_csv_max = bd_csv;}
@@ -1420,8 +1435,8 @@ void JetTuplizer::match_bjets() {
 	if (v_) cout << "End match_bjets." << endl;
 }
 
-// B-jet scale factors:
-/// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagCalibration#Example_code_in_C
+// // B-jet scale factors:
+// /// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagCalibration#Example_code_in_C
 void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 	if (v_) cout << "Begin find_btagsf." << endl;
 	for (unsigned ijet_ca12 = 0; ijet_ca12 < branches["ca12_pf"]["pt"].size(); ijet_ca12++) {
@@ -1432,7 +1447,7 @@ void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 		double bsf = 1;
 		double bsf_u = 1;
 		double bsf_d = 1;
-		
+
 		if (f == 5) {
 			bsf = reader.eval_auto_bounds("central", BTagEntry::FLAV_B, eta, pt);
 			bsf_u = reader.eval_auto_bounds("up", BTagEntry::FLAV_B, eta, pt);
@@ -1455,13 +1470,18 @@ void JetTuplizer::find_btagsf(BTagCalibrationReader reader) {
 	if (v_) cout << "End find_btagsf." << endl;
 }
 
-// ------------ called for each event  ------------
+
+
+
+
+
+// // ------------ called for each event  ------------
 void JetTuplizer::analyze(
 	const edm::Event& iEvent,
 	const edm::EventSetup& iSetup
-){
+ ){
 	n_event ++;		// Increment the event counter by one. For the first event, n_event = 1.
-	
+
 	// Get objects from event:
 	if (in_type_ == 0) {
 		if (n_event == 1) {
@@ -1470,7 +1490,7 @@ void JetTuplizer::analyze(
 	}
 	else if (in_type_ == 1) {
 		if (v_) {cout << "Running over JetWorkshop collections ..." << endl;}
-		
+
 		// Clear branches:
 		/// Clear jet collection branches:
 		for (vector<string>::const_iterator i = jet_collections_maod.begin(); i != jet_collections_maod.end(); i++) {
@@ -1514,7 +1534,7 @@ void JetTuplizer::analyze(
 		for (vector<string>::iterator i = event_variables.begin(); i != event_variables.end(); i++) {
 			branches["event"][*i].clear();
 		}
-		
+
 		// Get event-wide variables:
 		/// pT-hat:
 		pt_hat = -1;
@@ -1525,7 +1545,7 @@ void JetTuplizer::analyze(
 				pt_hat = gn_event_info->binningValues()[0];
 			}
 		}
-		
+
 		/// Rho:
 		rho = -1;
 		edm::Handle<double> rho_;
@@ -1551,11 +1571,11 @@ void JetTuplizer::analyze(
 		branches["event"]["lumi"].push_back(iEvent.id().luminosityBlock());
 		branches["event"]["run"].push_back(iEvent.id().run());
 		branches["event"]["npv"].push_back(npv);
-		
+
 		/// JER setup:
 		jer_calculator_ak4 = JME::JetResolutionScaleFactor::get(iSetup, "AK4PFchs");
 		jer_calculator_ak8 = JME::JetResolutionScaleFactor::get(iSetup, "AK8PFchs");
-		
+
 		// Process each object collection:
 		process_pileup(iEvent, lumi_weights, pileupInfo_);
 		process_triggers(iEvent, triggerResults_, triggerPrescales_);
@@ -1574,7 +1594,7 @@ void JetTuplizer::analyze(
 		if (!is_data_) {process_quarks_gn(iEvent, genCollection_);}
 		match_bjets();
 		find_btagsf(btagsf_reader);
-		
+
 		// Fill ntuple:
 		if (v_) cout << "Begin tuple fill." << endl;
 		ttrees["events"]->Fill();		// Fills all defined branches.
@@ -1592,25 +1612,25 @@ void JetTuplizer::endJob()
 }
 
 // ------------ method called when starting to processes a run  ------------
-void 
+void
 JetTuplizer::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
-void 
+void
 JetTuplizer::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
-void 
+void
 JetTuplizer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
-void 
+void
 JetTuplizer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }

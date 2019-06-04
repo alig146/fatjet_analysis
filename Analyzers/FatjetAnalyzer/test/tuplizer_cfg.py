@@ -2,7 +2,7 @@
 # CMSSW CONFIGURATION FILE                              #
 #                                                       #
 # Name: fatjetproducer_cfg.py                           #
-# Author: Elliot Hughes                                 #
+# Author: Ali Garabaglu                                 #
 #                                                       #
 # Description: [something]                              #
 #########################################################
@@ -204,12 +204,20 @@ if not options.outFile:
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 if options.maxEvents > 1000 or options.maxEvents < 0:
 	process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
+
+
+
+
 process.options = cms.untracked.PSet(
 	wantSummary=cms.untracked.bool(False),		# Turn off long summary after job.
-	allowUnscheduled=cms.untracked.bool(True),
+#	allowUnscheduled=cms.untracked.bool(True),
 	IgnoreCompletely=cms.untracked.vstring('InvalidReference')		# Dangerous.
 #	SkipEvent=cms.untracked.vstring('ProductNotFound')		# Dangerous.
 )
+
+
+
 
 ## Input:
 #in_files = ["file:fall15.root"]
@@ -228,63 +236,71 @@ else:
 	out_location = "{0}/{1}".format(options.outDir, options.outFile)
 print "Output path: {}".format(out_location)
 
-process.out = cms.OutputModule("PoolOutputModule",
-	fileName = cms.untracked.string(out_location),
-	outputCommands = cms.untracked.vstring(
-		'drop *',
-#		# Keep important stuff from the original MiniAOD:
-		'keep *GenEventInfoProduct*_*_*_*',		# pT-hat information
-		"keep *_packedGenParticles_*_*",		# GN particle collection
-		"keep *_packedPFCandidates_*_*",		# PF particle collection
-	),
-	SelectEvents = cms.untracked.PSet(
-		SelectEvents = cms.vstring("p")
-	)
-)
+
+
+
+# process.out = cms.OutputModule("PoolOutputModule",
+# 	fileName = cms.untracked.string(out_location),
+# 	outputCommands = cms.untracked.vstring(
+# 		'drop *',
+# #		# Keep important stuff from the original MiniAOD:
+# 		'keep *GenEventInfoProduct*_*_*_*',		# pT-hat information
+# 		"keep *_packedGenParticles_*_*",		# GN particle collection
+# 		"keep *_packedPFCandidates_*_*",		# PF particle collection
+# 	),
+# 	SelectEvents = cms.untracked.PSet(
+# 		SelectEvents = cms.vstring("p")
+# 	)
+# )
+
+
+
 
 ### Add jet collections using the JetWorkshop:
-from Deracination.JetWorkshop.jetWorkshop_cff import add_jet_collection
-add_jet_collection(process, algo_name="ak4", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
-add_jet_collection(process, algo_name="ak8", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
-add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+# from Deracination.JetWorkshop.jetWorkshop_cff import add_jet_collection
+# add_jet_collection(process, algo_name="ak4", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+# add_jet_collection(process, algo_name="ak8", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
+# add_jet_collection(process, algo_name="ca12", pum_name="chs", groom_names=["p", "f", "s", "t"], data=options.data, taus=range(1,6))
 
 ### Add jet collections using the JetToolbox:
-#from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
-#jetToolbox(process, 'ak4', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
+from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
+jetToolbox(process, 'ak4', 'jetSequence', 'out',		# Required
+        # Optional:
+        PUMethod='CHS',
+        miniAOD=True,
+        addTrimming=True,
+        addPruning=True,
+        addSoftDrop=True,
+        addFiltering=True,
+#        addMassDrop=True,
+        addNsub=True,
+        maxTau=5,
+)
+jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
+	# Optional:
+	PUMethod='CHS',
+	miniAOD=True,
+	addTrimming=True,
+	addPruning=True,
+	addSoftDrop=True,
+	addFiltering=True,
 #	addMassDrop=True,
-#)
-#jetToolbox(process, 'ak8', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
+	addNsub=True,
+	maxTau=5,
+)
+jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
+	# Optional:
+	PUMethod='CHS',
+	miniAOD=True,
+	addTrimming=True,
+	addPruning=True,
+	addSoftDrop=True,
+	addFiltering=True,
 #	addMassDrop=True,
-#	addNsub=True,
-#		maxTau=5,
-#)
-#jetToolbox(process, 'ca12', 'jetSequence', 'out',		# Required
-#	# Optional:
-#	PUMethod='CHS',
-#	miniAOD=True,
-#	addTrimming=True,
-#	addPruning=True,
-#	addSoftDrop=True,
-#	addFiltering=True,
-#	addMassDrop=True,
-#	JETCorrPayload='None',
-#	addNsub=True,
-#		maxTau=5,
-#)
+	JETCorrPayload='None',
+	addNsub=True,
+	maxTau=5,
+)
 
 ## Geometry and detector configuration:
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
@@ -300,7 +316,7 @@ process.filter = cms.EDFilter("JetFilter",
 	cut_pt=cms.double(options.cutPtFilter),
 	cut_eta=cms.double(options.cutEtaFilter),
 	cut_smu=cms.bool(options.cutSmuFilter),
-	jetCollection=cms.InputTag("selectedPatJetsCA12CHS"),
+	jetCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
 	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
 	triggerPrescales=cms.InputTag("patTrigger", ""),
 )
@@ -334,29 +350,84 @@ process.tuplizer = cms.EDAnalyzer("JetTuplizer",
 	pileupInfo=cms.InputTag("slimmedAddPileupInfo"),
 	triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
 	triggerPrescales=cms.InputTag("patTrigger", ""),
-	## AK4 collections:
-	ak4MAODCollection=cms.InputTag("slimmedJets"),
-	ak4GNCollection=cms.InputTag("selectedPatJetsAK4CHS", "genJets"),
-	ak4PFCollection=cms.InputTag("selectedPatJetsAK4CHS"),
-	ak4PFPrunedCollection=cms.InputTag("selectedPatJetsAK4CHSPruned"),
-	ak4PFTrimmedCollection=cms.InputTag("selectedPatJetsAK4CHSTrimmed"),
-	ak4PFSoftDropCollection=cms.InputTag("selectedPatJetsAK4CHSSoftDrop"),
-	ak4PFFilteredCollection=cms.InputTag("selectedPatJetsAK4CHSFiltered"),
-	## AK8 collections:
-	ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
-	ak8GNCollection=cms.InputTag("selectedPatJetsAK8CHS", "genJets"),
-	ak8PFCollection=cms.InputTag("selectedPatJetsAK8CHS"),
-	ak8PFPrunedCollection=cms.InputTag("selectedPatJetsAK8CHSPruned"),
-	ak8PFTrimmedCollection=cms.InputTag("selectedPatJetsAK8CHSTrimmed"),
-	ak8PFSoftDropCollection=cms.InputTag("selectedPatJetsAK8CHSSoftDrop"),
-	ak8PFFilteredCollection=cms.InputTag("selectedPatJetsAK8CHSFiltered"),
-	## CA12 collections:
-	ca12GNCollection=cms.InputTag("selectedPatJetsCA12CHS", "genJets"),
-	ca12PFCollection=cms.InputTag("selectedPatJetsCA12CHS"),
-	ca12PFPrunedCollection=cms.InputTag("selectedPatJetsCA12CHSPruned"),
-	ca12PFTrimmedCollection=cms.InputTag("selectedPatJetsCA12CHSTrimmed"),
-	ca12PFSoftDropCollection=cms.InputTag("selectedPatJetsCA12CHSSoftDrop"),
-	ca12PFFilteredCollection=cms.InputTag("selectedPatJetsCA12CHSFiltered"),
+	# ## AK4 collections:
+	# ak4MAODCollection=cms.InputTag("slimmedJets"),
+	# ak4GNCollection=cms.InputTag("selectedPatJetsAK4PFCHS", "genJets"),
+	# ak4PFCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	# ak4PFPrunedCollection=cms.InputTag("selectedPatJetsAK4PFCHSPruned"),
+	# ak4PFTrimmedCollection=cms.InputTag("selectedPatJetsAK4PFCHSTrimmed"),
+	# ak4PFSoftDropCollection=cms.InputTag("selectedPatJetsAK4PFCHSSoftDrop"),
+	# ak4PFFilteredCollection=cms.InputTag("selectedPatJetsAK4PFCHSFiltered"),
+	# ## AK8 collections:
+	# ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
+	# ak8GNCollection=cms.InputTag("selectedPatJetsAK8PFCHS", "genJets"),
+	# ak8PFCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+	# ak8PFPrunedCollection=cms.InputTag("selectedPatJetsAK8PFCHSPruned"),
+	# ak8PFTrimmedCollection=cms.InputTag("selectedPatJetsAK8PFCHSTrimmed"),
+	# ak8PFSoftDropCollection=cms.InputTag("selectedPatJetsAK8PFCHSSoftDrop"),
+	# ak8PFFilteredCollection=cms.InputTag("selectedPatJetsAK8PFCHSFiltered"),
+	# ## CA12 collections:
+	# ca12GNCollection=cms.InputTag("selectedPatJetsCA12PFCHS", "genJets"),
+	# ca12PFCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+	# ca12PFPrunedCollection=cms.InputTag("selectedPatJetsCA12PFCHSPruned"),
+	# ca12PFTrimmedCollection=cms.InputTag("selectedPatJetsCA12PFCHSTrimmed"),
+	# ca12PFSoftDropCollection=cms.InputTag("selectedPatJetsCA12PFCHSSoftDrop"),
+	# ca12PFFilteredCollection=cms.InputTag("selectedPatJetsCA12PFCHSFiltered"),
+
+
+
+        # ## AK8
+        # ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
+        # ak8GNCollection=cms.InputTag("selectedPatJetsAK8PFCHS", "genJets"),
+        # ak8PFCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+        # ak8PFPrunedCollection=cms.InputTag("ak8PFJetsCHSPrunedMass"),
+        # ak8PFTrimmedCollection=cms.InputTag("ak8PFJetsCHSTrimmedMass"),
+        # ak8PFSoftDropCollection=cms.InputTag("ak8PFJetsCHSSoftDropMass"),
+        # ak8PFFilteredCollection=cms.InputTag("ak8PFJetsCHSFiltereddMass"),
+        # ## AK4 collections:
+	# ak4MAODCollection=cms.InputTag("slimmedJets"),
+	# ak4GNCollection=cms.InputTag("selectedPatJetsAK4PFCHS", "genJets"),
+	# ak4PFCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	# ak4PFPrunedCollection=cms.InputTag("ak4PFJetsCHSPrunedMass"),
+	# ak4PFTrimmedCollection=cms.InputTag("ak4PFJetsCHSTrimmedMass"),
+	# ak4PFSoftDropCollection=cms.InputTag("ak4PFJetsCHSSoftDropMass"),
+	# ak4PFFilteredCollection=cms.InputTag("ak8PFJetsCHSFiltereddMass"),
+	# ## CA12 collections:
+	# ca12GNCollection=cms.InputTag("selectedPatJetsCA12PFCHS", "genJets"),
+	# ca12PFCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+	# ca12PFPrunedCollection=cms.InputTag("ca12PFJetsCHSPrunedMass"),
+	# ca12PFTrimmedCollection=cms.InputTag("ca12PFJetsCHSTrimmedMass"),
+	# ca12PFSoftDropCollection=cms.InputTag("ca12PFJetsCHSSoftDropMass"),
+	# ca12PFFilteredCollection=cms.InputTag("ca12PFJetsCHSFiltereddMass"),
+
+
+
+        ## AK4 collections:
+        ak4MAODCollection=cms.InputTag("slimmedJets"),
+        ak4GNCollection=cms.InputTag("selectedPatJetsAK4PFCHS", "genJets"),
+        ak4PFCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+        ak4PFPrunedCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+        ak4PFTrimmedCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	ak4PFSoftDropCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+	ak4PFFilteredCollection=cms.InputTag("selectedPatJetsAK4PFCHS"),
+
+        ## AK8 collections:   ak4PFJetsCHSFilteredMass
+        ak8MAODCollection=cms.InputTag("slimmedJetsAK8"),
+        ak8GNCollection=cms.InputTag("selectedPatJetsAK8PFCHS", "genJets"),
+        ak8PFCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+        ak8PFPrunedCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+        ak8PFTrimmedCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+        ak8PFSoftDropCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+        ak8PFFilteredCollection=cms.InputTag("selectedPatJetsAK8PFCHS"),
+
+        ## CA12 collections:  selectedPatJetsAK4PFCHSFiltered
+        ca12GNCollection=cms.InputTag("selectedPatJetsCA12PFCHS", "genJets"),
+        ca12PFCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+        ca12PFPrunedCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+        ca12PFTrimmedCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+        ca12PFSoftDropCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+        ca12PFFilteredCollection=cms.InputTag("selectedPatJetsCA12PFCHS"),
+
 	## Lepton collections:
 	electronCollection=cms.InputTag("slimmedElectrons"),
 	muonCollection=cms.InputTag("slimmedMuons"),
@@ -368,9 +439,16 @@ process.tuplizer = cms.EDAnalyzer("JetTuplizer",
 )
 #process.tuplizer.testtt = "test"		# This works.
 
+#process.t = cms.Task(process.tuplizer)
+#process.dump=cms.EDAnalyzer('EventContentAnalyzer')
+
 # PATH:
 process.p = cms.Path(
 	process.filter *
 	process.tuplizer
+#	process.dump
 )
-#process.outpath = cms.EndPath(process.out)
+
+#process.p.associate(process.t)
+
+#process.EndPath = cms.EndPath(process.out)

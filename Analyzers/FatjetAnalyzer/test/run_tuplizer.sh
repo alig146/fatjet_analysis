@@ -1,8 +1,12 @@
-# TESTING:
+# TESTIN
+
+cmsRun tuplizer_cfg.py maxEvents=5 cutPtFilter=0 cutEtaFilter=-1 generation="sg300" suffix="pt20" crab=False inFile='/store/user/agarabag/Sg300To5J/miniaod_sg300to5j_moriond17_cutht500/170824_144942/0000/miniaod_sg300to5j_moriond17_998.root'
+
+#cmsRun tuplizer_cfg_2.py maxEvents=10 cutPtFilter=0 cutEtaFilter=-1 generation="Fall17" suffix="pt0" crab=False inFile='/store/mc/RunIIFall17MiniAODv2/StealthSYY_2t6j_mStop-300_mSo-100_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/50000/E23348BD-C9A3-E811-80C5-1866DA7F94F2.root'
 
 #cmsRun tuplizer_cfg.py maxEvents=100 cutPtFilter=0 cutEtaFilter=-1 inFile="file:/cms/tote/store/examples/maod_mc_qcdmg2000_fall15_10000.root" subprocess="qcdmg2000" generation="fall15" suffix="cutpt0etax" data=False crab=False outFile="tuple.root"
 
-cmsRun tuplizer_cfg.py maxEvents=100 subprocess="ttbarhg" generation="moriond17" suffix="cutpt300eta20" data=False crab=False
+#cmsRun tuplizer_cfg.py maxEvents=100 subprocess="ttbarhg" generation="moriond17" suffix="cutpt300eta20" data=False crab=False
 #cmsRun tuplizer_cfg.py maxEvents=100 subprocess="sq175to4j" generation="moriond17cutht700" suffix="cutpt300eta20" data=False crab=False
 #cmsRun tuplizer_cfg.py maxEvents=1000 cutSmuFilter=true subprocess="smu16f" generation="feb17" suffix="cutsmu" data=True crab=False mask=https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt
 

@@ -1,0 +1,30 @@
+void compare_styler(){
+
+
+	//	TLegend* leg = new TLegend(0.64,0.6818,0.86,0.8148);
+    TFile* p = TFile::Open("anatuple_plots.root");
+
+    TH1* mavg_p_n = (TH1*) p->Get("mavg_p_new");
+    TH1* mavg_p_o = (TH1*) p->Get("mavg_p_old");
+
+
+	gStyle->SetOptStat(0);
+
+    mavg_p_n->Rebin(50);
+    mavg_p_o->Rebin(50);
+
+    mavg_p_n->SetLineColor(kRed); 
+	mavg_p_o->SetLineColor(kBlue);
+
+	mavg_p_n->Draw("hist e");
+	mavg_p_o->Draw("same hist e");
+
+
+
+
+
+
+
+
+
+}
