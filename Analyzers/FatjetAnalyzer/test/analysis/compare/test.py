@@ -1,14 +1,14 @@
 import ROOT
 from DataFormats.FWLite import Events, Handle
-events = Events ('root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/StealthSYY_2t6j_mStop-300_mSo-100_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/50000/E23348BD-C9A3-E811-80C5-1866DA7F94F2.root')
 
-#create handle outside of loop                                                                                                                                                                                 
-handle  = Handle ('std::vector<reco::GenParticle>')
-label = ("genParticles")
-handle2 = Handle ('std::vector<TTTrack< Ref_Phase2TrackerDigi_>>')
-label2 =  ("TTTracksFromTracklet")
+#events = Events ('root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/StealthSYY_2t6j_mStop-300_mSo-100_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/50000/E23348BD-C9A3-E811-80C5-1866DA7F94F2.root')
+events = Events ("test.root")
 
-#loop over events                                                                                                                                                                                              
+#handle  = Handle ('std::vector<reco::GenParticle>')
+#label = ("genParticles")
+#handle2 = Handle ('std::vector<TTTrack< Ref_Phase2TrackerDigi_>>')
+#label2 =  ("TTTracksFromTracklet")
+
 #for event in events:
 #    event.getByLabel (label, handle)
 #    print event.object().id().event()
